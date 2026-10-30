@@ -42,7 +42,9 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 
 ## 사용법
 
-라이트는 실행하면 **Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 설치 결과에는 버전과 실행 경로를 표시합니다.
+라이트는 실행하면 **Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 기본 화면은 **설치 완료 또는 설치 실패**와 짧은 안내로 마무리하고, 필요한 경우에만 경고를 덧붙입니다. 색상이 꺼져 있어도 문구로 구분할 수 있습니다. 상세 내용은 설치 로그에 기록하고, 현재 버전과 실행 경로는 `--check`로 확인합니다.
+
+상태별 문구와 색상은 [안내 메시지 미리보기](./CONTRIBUTING.md#안내-메시지-미리보기)에서, 실제 설치 절차의 모의 실행은 [설치 흐름 테스트](./CONTRIBUTING.md#설치-흐름-테스트)에서 확인할 수 있습니다.
 
 아래 보안 정보 연동은 정식 CLI의 개발 계획입니다. 아직 실행 가능한 기능은 아닙니다.
 
@@ -89,7 +91,7 @@ Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대
 | 5 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Python 실행, 패키지와 가상환경 관리 | Homebrew의 `uv`, uv로 Python 3.14.x 설치 |
 | 6 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHub 저장소와 Pull Request 작업 | Homebrew의 `gh`, 로그인은 별도 진행 |
 
-고정 스펙은 **설치할 도구 묶음**을 뜻합니다. 정상 실행되는 기존 버전은 유지하며, 새 Node.js와 Python에만 위 버전 계열을 적용합니다. 패치 버전까지 고정하지 않으며 실제 버전과 경로는 실행 결과로 확인합니다. GitHub Desktop은 포함하지 않습니다.
+고정 스펙은 **설치할 도구 묶음**을 뜻합니다. 정상 실행되는 기존 버전은 유지하며, 새 Node.js와 Python에만 위 버전 계열을 적용합니다. 패치 버전까지 고정하지 않으며 실제 버전과 경로는 `--check` 결과로 확인합니다. GitHub Desktop은 포함하지 않습니다.
 
 macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니다. 새 Python은 uv가 관리하는 `python3.14`로 제공하고 시스템 Python이나 기존 버전 관리자의 기본 명령을 바꾸지 않습니다. VS Code는 앱 경로로 확인하므로 Cursor의 `code` 명령을 VS Code로 판단하지 않습니다.
 

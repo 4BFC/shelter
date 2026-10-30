@@ -1,7 +1,71 @@
 #!/bin/bash
 # Function definitions only: sourcing this file never installs tools.
 
-shelter_error() { printf '오류: %s\n' "$*" >&2; }
+shelter_text() {
+  local tone=$1 text=$2 color=''
+  # Keep redirected logs plain and respect the terminal's own color palette.
+  if [[ "${SHELTER_COLOR:-auto}" == always ]] || \
+    [[ "${SHELTER_COLOR:-auto}" == auto && -t 1 && "${TERM:-dumb}" != dumb && -z "${NO_COLOR:-}" ]]; then
+    case "$tone" in
+      success) color=$'\033[1;32m' ;;
+      warning) color=$'\033[1;33m' ;;
+      error) color=$'\033[1;31m' ;;
+      *) color=$'\033[1;36m' ;;
+    esac
+    printf '%s%s\033[0m' "$color" "$text"
+  else
+    printf '%s' "$text"
+  fi
+}
+
+shelter_section() {
+  local title=$1 tone=${2:-info}
+  printf '\n'
+  case "$tone" in
+    success|warning|error) shelter_text "$tone" "  $title" ;;
+    *) printf '  %s' "$title" ;;
+  esac
+  printf '\n'
+}
+
+shelter_message() {
+  local tone=$1 prefix=$1
+  case "$tone" in
+    success|warning|error) ;;
+    *) prefix=note ;;
+  esac
+  shelter_text "$tone" '●'
+  printf ' %s: %s\n' "$prefix" "$2"
+}
+
+# Shared by the real installer and the message-only previews.
+shelter_notice() {
+  case "$1" in
+    notification)
+      shelter_message info 'Shelter Lite 초기 설정을 시작합니다.' ;;
+    warning)
+      shelter_message warning '새 실행 경로는 현재 터미널에 아직 반영되지 않았습니다. 터미널과 편집기를 다시 열어 사용하세요.' ;;
+    success)
+      shelter_section '설치 완료' success
+      shelter_message success '개발 도구가 준비되었습니다.' ;;
+    failure)
+      shelter_section '설치 실패' error
+      shelter_message error "${2:-설치를 완료하지 못했습니다.}" ;;
+    *) shelter_error "알 수 없는 메시지 상태: $1"; return 2 ;;
+  esac
+}
+
+shelter_error() {
+  SHELTER_FAILURE_MESSAGE=$*
+  shelter_message error "$*" >&2
+}
+
+shelter_create_log() (
+  local directory="${SHELTER_ENV_FILE%/*}/logs"
+  umask 077
+  mkdir -p "$directory" || return 1
+  mktemp "$directory/install.XXXXXX"
+)
 
 shelter_check_platform() {
   local os major translated
@@ -82,6 +146,7 @@ shelter_probe_command() {
   local command=$1 output
   SHELTER_COMMAND_STATE=missing
   SHELTER_COMMAND_DETAIL="$command 없음"
+  SHELTER_COMMAND_VERSION='없음'
   SHELTER_COMMAND_PATH=$(command -v "$command" 2>/dev/null) || return 0
   # Apple's git/python3 stubs can open an installation dialog even for --version.
   case "$SHELTER_COMMAND_PATH" in
@@ -93,47 +158,64 @@ shelter_probe_command() {
   esac
   if output=$("$SHELTER_COMMAND_PATH" --version 2>/dev/null) && [[ -n "$output" ]]; then
     SHELTER_COMMAND_STATE=ready
-    SHELTER_COMMAND_DETAIL="${output%%$'\n'*} ($SHELTER_COMMAND_PATH)"
+    SHELTER_COMMAND_VERSION=${output%%$'\n'*}
+    SHELTER_COMMAND_DETAIL="$SHELTER_COMMAND_VERSION ($SHELTER_COMMAND_PATH)"
   else
     SHELTER_COMMAND_STATE=blocked
+    SHELTER_COMMAND_VERSION='실행 확인 실패'
     SHELTER_COMMAND_DETAIL="$command 실행 실패 ($SHELTER_COMMAND_PATH)"
   fi
 }
 
 shelter_probe_python() {
-  local found
+  local found installed
   shelter_probe_command python3
   if [[ "$SHELTER_COMMAND_PATH" == /usr/bin/python3 ]]; then
     SHELTER_COMMAND_STATE=missing
+    SHELTER_COMMAND_VERSION='사용자용 Python 없음'
     SHELTER_COMMAND_DETAIL='사용자용 Python 없음 (macOS 개발 도구의 Python은 별도 유지)'
   fi
   [[ "$SHELTER_COMMAND_STATE" == missing ]] || return 0
   if command -v uv >/dev/null 2>&1; then
-    found=$(uv --no-config python find --managed-python --no-python-downloads 2>/dev/null) || return 0
-    [[ "$found" == /* && -x "$found" ]] || return 0
-    shelter_probe_command "$found"
+    # A read-only probe must not depend on writable access to uv's regular cache.
+    if found=$(uv --no-cache --no-config --offline python find --managed-python --no-python-downloads 2>/dev/null); then
+      if [[ "$found" == /* && -x "$found" ]]; then
+        shelter_probe_command "$found"
+        return 0
+      fi
+    else
+      # find uses a non-zero exit code both for absence and for lookup errors.
+      # Only an empty, successful installed list establishes that Python is absent.
+      if installed=$(uv --no-cache --no-config --offline python list --only-installed --managed-python --no-python-downloads 2>/dev/null) && [[ -z "$installed" ]]; then
+        return 0
+      fi
+    fi
+    SHELTER_COMMAND_STATE=blocked
+    SHELTER_COMMAND_VERSION='Python 조회 실패'
+    SHELTER_COMMAND_DETAIL='uv의 Python 조회 실패. 기존 설치와 접근 권한을 확인하세요.'
   fi
 }
 
 shelter_probe() {
-  local tool=$1 first detail second path
+  local tool=$1 first detail second path version
   case "$tool" in
     brew)
       if [[ -z "$SHELTER_BREW" ]]; then
-        SHELTER_STATE=missing; SHELTER_DETAIL='Homebrew 없음'; return 0
+        SHELTER_STATE=missing; SHELTER_DETAIL='Homebrew 없음'; SHELTER_VERSION='없음'; return 0
       fi
       shelter_probe_command "$SHELTER_BREW" ;;
     git|gh) shelter_probe_command "$tool" ;;
     vscode)
       if path=$(shelter_find_vscode); then shelter_probe_command "$path"
-      else SHELTER_STATE=missing; SHELTER_DETAIL='VS Code 앱 없음'; return 0
+      else SHELTER_STATE=missing; SHELTER_DETAIL='VS Code 앱 없음'; SHELTER_VERSION='없음'; return 0
       fi ;;
     node|python)
       if [[ "$tool" == node ]]; then shelter_probe_command node; else shelter_probe_python; fi
-      first=$SHELTER_COMMAND_STATE; detail=$SHELTER_COMMAND_DETAIL
+      first=$SHELTER_COMMAND_STATE; detail=$SHELTER_COMMAND_DETAIL; version=$SHELTER_COMMAND_VERSION
       if [[ "$tool" == node ]]; then shelter_probe_command npm; else shelter_probe_command uv; fi
       second=$SHELTER_COMMAND_STATE
       SHELTER_DETAIL="$detail; $SHELTER_COMMAND_DETAIL"
+      SHELTER_VERSION="$version / $SHELTER_COMMAND_VERSION"
       if [[ "$first" == blocked || "$second" == blocked ]]; then SHELTER_STATE=blocked
       elif [[ "$first" == ready && "$second" == ready ]]; then SHELTER_STATE=ready
       elif [[ "$first" == missing && "$second" == missing ]]; then SHELTER_STATE=missing
@@ -144,6 +226,7 @@ shelter_probe() {
   esac
   SHELTER_STATE=$SHELTER_COMMAND_STATE
   SHELTER_DETAIL=$SHELTER_COMMAND_DETAIL
+  SHELTER_VERSION=$SHELTER_COMMAND_VERSION
 }
 
 shelter_describe_install() {
@@ -170,7 +253,13 @@ shelter_bootstrap_brew() (
 
 shelter_ensure_brew() {
   if [[ -z "$SHELTER_BREW" ]]; then
-    shelter_bootstrap_brew || return 1
+    if [[ -n "${SHELTER_LOG_FILE:-}" ]]; then
+      # The official bootstrapper reads confirmations and may request sudo.
+      # Keep those prompts visible through the console descriptors saved by main.
+      shelter_bootstrap_brew >&3 2>&4 || return 1
+    else
+      shelter_bootstrap_brew || return 1
+    fi
     shelter_refresh_paths || return 1
   fi
   shelter_probe brew
