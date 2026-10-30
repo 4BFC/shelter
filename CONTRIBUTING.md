@@ -81,7 +81,7 @@ The default output announces the start of initial setup and summarizes the final
 
 Warnings appear only when relevant. If no new executable paths were added, the path activation warning is omitted. If execution stopped before installation or shell configuration began, the warning about retained changes is also omitted. Message categories and text remain visible with colors disabled.
 
-The final result is shown as a heading and messages without separator lines. Each message starts with `●`, followed by a lowercase English prefix and colon without brackets. Message bodies remain in Korean. **For ordinary messages, only `●` receives the status color; the prefix and body use the terminal's default color.** Success is green, failures and errors are red, notes are cyan, and warnings are yellow. Result headings such as `설치 완료` (installation complete), `설치 실패` (installation failed), and `확인 필요` (check required) use the status color for the entire heading. Ordinary headings and detailed table text have no assigned color; table rows show status colors only on the leading `●`.
+The final result is shown as a heading and messages without separator lines. Each message starts with `●`, followed by a lowercase English prefix and colon without brackets. Messages, result headings, help, and logs are in English for both previews and installation workflow tests, as well as the actual installer. **For ordinary messages, only `●` receives the status color; the prefix and body use the terminal's default color.** Success is green, failures and errors are red, notes are cyan, and warnings are yellow. Result headings such as `Installation complete`, `Installation failed`, and `Check required` use the status color for the entire heading. Ordinary headings and detailed table text have no assigned color; table rows show status colors only on the leading `●`.
 
 The default `--color auto` uses colors only in a terminal and disables them when `NO_COLOR` is set or `TERM=dumb`. The user's color settings are not changed. To explicitly enable colors, run the following in your Mac terminal.
 
@@ -91,7 +91,7 @@ The default `--color auto` uses colors only in a terminal and disables them when
 
 `always` takes precedence over `NO_COLOR` and automatic terminal detection. `--color never` always disables colors. Output viewers that do not support ANSI colors may not display them even with `always`.
 
-Version tables, individual installation results, package installer output, and shell configuration changes are recorded in `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`. Each run creates a new log that only its owner can read and write, without color codes. Logs are kept after successful runs as well. In the log, `미실행` (not run) means a step was skipped because an earlier step failed. Use `--check` for details about current versions and executable paths.
+Version tables, individual installation results, package installer output, and shell configuration changes are recorded in `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`. Each run creates a new log that only its owner can read and write, without color codes. Logs are kept after successful runs as well. In the log, `Not run` means a step was skipped because an earlier step failed. Use `--check` for details about current versions and executable paths.
 
 After installation, open a new terminal, enter the repository root, and check the results.
 
@@ -100,7 +100,7 @@ After installation, open a new terminal, enter the repository root, and check th
 echo $?
 ```
 
-If every item is marked `설치됨` (installed) and the exit code is `0`, all tools can run. `--dry-run` states at the beginning and end that it makes no actual changes; it does not display actual installation results.
+If every item is marked `Installed` and the exit code is `0`, all tools can run. `--dry-run` states at the beginning and end that it makes no actual changes; it does not display actual installation results.
 
 | Option | Behavior |
 | --- | --- |
@@ -118,7 +118,7 @@ Exit codes are `0` for success, `1` for missing tools or execution/installation 
 
 - Existing versions that run successfully are not reinstalled or directly upgraded to match a target version. New Node.js installations use `node@24`; new Python installations use uv's `3.14` series. Patch versions and versions of other tools follow what the package manager provides at installation time.
 - If only one of Node.js and npm is present, or an existing command fails to run, execution stops before changes are made. For Python and uv, only missing components can be installed. `/usr/bin/python3` remains the macOS developer tools' Python, and a separate user Python installation is prepared.
-- uv's Python lookup does not use the network or the existing cache. Lookup errors are shown as `확인 필요` (check required). Python is treated as missing only when a successful lookup finds no installed Python.
+- uv's Python lookup does not use the network or the existing cache. Lookup errors are shown as `Check required`. Python is treated as missing only when a successful lookup finds no installed Python.
 - VS Code is detected in `/Applications` or the user's `~/Applications` folder. The app is installed using [Homebrew's `--no-binaries`](https://docs.brew.sh/Manpage), preserving an existing `code` command if it belongs to Cursor or another editor. In that case, launch VS Code from the Applications folder.
 
 Git identity and `gh auth login` are not configured automatically. An installation error stops subsequent steps; tools installed earlier remain. After resolving the error, rerun the same command to skip tools that are already ready. There is no rollback for the entire package installation. Homebrew handles dependency changes needed by newly installed packages.
