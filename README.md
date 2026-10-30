@@ -1,15 +1,15 @@
 # Shelter _(shelter)_
 
 [![README style: standard](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![Status: planning](https://img.shields.io/badge/status-planning-D99A4E?style=flat-square)](#개발-계획)
+[![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)](#개발-계획)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](./LICENSE)
 
 나의 환경을 지키는 피난처. 보안 위협 추적부터 알림, 업데이트까지.
 
 Shelter는 사용자가 보안 소식을 일일이 찾아보지 않아도, 자신의 환경에 필요한 업데이트를 알고 적용할 수 있도록 돕는 프로젝트입니다.
-웹사이트에서 보안 이슈와 업데이트 정보를 먼저 제공하고, CLI로 사용자 PC의 상태 확인과 알림, 업데이트를 연결하는 것을 목표로 합니다.
+보안 이슈와 업데이트 정보는 별도 웹사이트에서 제공하고, CLI로 사용자 PC의 상태 확인과 알림, 업데이트를 연결하는 것을 목표로 합니다.
 
-**현재는 기획 단계입니다.** 이 저장소에는 소개 문서, 기여 가이드와 라이선스가 있으며, 웹사이트와 CLI는 아직 구현되지 않았습니다. 아래 기능과 기술 방향은 개발 계획입니다.
+**현재는 라이트 설치기의 첫 구현 단계입니다.** macOS에서 정해진 개발 도구를 한 번에 준비하는 Shell 설치기를 제공합니다. 임시 환경 테스트와 실제 Mac의 설치 미리보기를 검증했으며, 새 Mac에서의 실제 설치 검증과 정식 CLI 구현은 남아 있습니다.
 
 ## 목차
 
@@ -17,7 +17,7 @@ Shelter는 사용자가 보안 소식을 일일이 찾아보지 않아도, 자�
 - [설치](#설치)
 - [사용법](#사용법)
 - [제품 구성](#제품-구성)
-- [초심자용 설치 후보](#초심자용-설치-후보)
+- [라이트 고정 설치 스펙](#라이트-고정-설치-스펙)
 - [기술 방향](#기술-방향)
 - [개발 계획](#개발-계획)
 - [저장소 구조](#저장소-구조)
@@ -35,14 +35,16 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 
 ## 설치
 
-현재 설치 가능한 Shelter 패키지나 실행 파일은 없습니다.
-초기 설치 대상은 macOS입니다. Homebrew 배포와 최초 설치기를 검토하고 있으며, 구체적인 설치 방법은 구현 후 안내할 예정입니다.
+라이트 설치기는 저장소의 Shell 파일로 실행합니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
+별도 Shelter 패키지와 Homebrew Tap은 아직 배포하지 않았습니다.
 
-문서 수정과 개발 참여를 위한 저장소 준비는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비)를 참고하세요.
+저장소 받기와 실행 절차는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비), 설치 시 변경되는 설정은 [라이트 실행](./CONTRIBUTING.md#라이트-실행)을 참고하세요.
 
 ## 사용법
 
-다음은 구현 후 제공하려는 사용자 흐름입니다. 현재 실행 가능한 명령이나 화면은 아닙니다.
+라이트는 실행하면 **Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 설치 결과에는 버전과 실행 경로를 표시합니다.
+
+아래 보안 정보 연동은 정식 CLI의 개발 계획입니다. 아직 실행 가능한 기능은 아닙니다.
 
 ```text
 웹사이트에서 보안 이슈와 업데이트 정보 확인
@@ -53,7 +55,7 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 ```
 
 업데이트의 자동 적용 여부, 사용자 확인 방식과 알림 채널은 설계 단계에서 결정합니다.
-CLI 명령어와 옵션은 구현된 동작을 검증한 뒤 이 문서에 추가합니다.
+정식 CLI 명령어는 구현된 동작을 검증한 뒤 안내합니다.
 
 ## 제품 구성
 
@@ -70,102 +72,79 @@ CLI 명령어와 옵션은 구현된 동작을 검증한 뒤 이 문서에 추�
 보안 이슈를 빠르게 파악할 수 있도록 지속적인 추적을 목표로 합니다. 수집 주기와 알림 지연은 아직 정하지 않았습니다.
 Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대상으로 검토합니다.
 
-## 초심자용 설치 후보
+**라이트 버전**은 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초심자용 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
+**정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
+두 버전의 설치 스크립트는 `installers/macos/`에서 함께 관리합니다. 정식 CLI 본체는 설치기와 구분하며, Python을 채택하면 `src/shelter/`에 구현할 예정입니다.
 
-macOS용 Shell 설치기의 초기 설치 후보입니다. **아직 구현 전이며, 설치 방식과 대상 버전은 미정입니다.**
-사용자가 하려는 작업에 따라 도구를 선택할 수 있도록 기반 도구, 기본 작업 도구와 목적별 선택 도구로 구분합니다.
+## 라이트 고정 설치 스펙
 
-| 분류           | 설치 대상                                                                           | 역할                                                     | 포함 기준                                               |
-| -------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
-| 기반 도구      | [Homebrew](https://docs.brew.sh/Installation)                                       | 프로그램 설치와 업데이트를 관리하는 패키지 관리자        | 선택한 도구의 설치에 필요한 경우 준비                   |
-| 기본 작업 도구 | Git                                                                                 | 파일의 변경 이력을 기록하는 버전 관리 도구               | 개발과 자동화 작업의 기본 구성으로 제안                 |
-| 기본 작업 도구 | [VS Code](https://code.visualstudio.com/docs/setup/mac)                             | 파일과 코드를 편집하는 프로그램                          | 기본 편집기로 제안                                      |
-| 목적별 선택    | [Node.js + npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/) | JavaScript 실행 환경과 패키지 관리자                     | 웹 개발이나 Node.js 실행 환경이 필요한 도구를 사용할 때 |
-| 목적별 선택    | [Python + uv](https://docs.astral.sh/uv/)                                           | Python 실행 환경과 Python, 패키지, 가상환경 관리 도구    | Python 학습, 파일 처리와 자동화 작업을 시작할 때        |
-| 목적별 선택    | [GitHub CLI (`gh`)](https://cli.github.com/)                                        | 터미널에서 GitHub 저장소와 Pull Request 등을 다루는 도구 | GitHub 연동과 터미널 자동화가 필요할 때                 |
+아래 항목은 모두 라이트에 포함됩니다. Homebrew는 설치 관리자, Git은 버전 관리 도구, VS Code는 편집기입니다. Node.js와 Python은 실행 환경이며 npm과 uv는 해당 환경의 관리 도구입니다. GitHub CLI는 GitHub 연동 도구입니다.
 
-GitHub CLI는 Git과 별개의 선택 도구입니다. 기본 작업 도구도 설치 후보로 제안하고, 실제 설치 대상은 사용자가 선택한 구성에 따라 정합니다.
-이미 설치된 프로그램은 버전과 실행 경로를 먼저 확인하도록 설계합니다. 설치 방법, 버전 정책과 정상 실행 확인 명령은 구현 시 구체화합니다.
+| 순서 | 설치 대상 | 역할 | 새로 설치할 때의 정책 |
+| --- | --- | --- | --- |
+| 1 | [Homebrew](https://docs.brew.sh/Installation) | 프로그램 설치 기반 | 공식 설치기로 준비 |
+| 2 | [Git](https://formulae.brew.sh/formula/git) | 파일 변경 이력 관리 | Homebrew의 `git`, 정상 실행되는 Apple Git도 유지 |
+| 3 | [VS Code](https://formulae.brew.sh/cask/visual-studio-code) | 파일과 코드 편집 | Homebrew의 `visual-studio-code`, 기존 `code` 명령 보존 |
+| 4 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScript 실행과 패키지 관리 | `node@24`로 Node.js 24.x와 함께 제공되는 npm 설치 |
+| 5 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Python 실행, 패키지와 가상환경 관리 | Homebrew의 `uv`, uv로 Python 3.14.x 설치 |
+| 6 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHub 저장소와 Pull Request 작업 | Homebrew의 `gh`, 로그인은 별도 진행 |
+
+고정 스펙은 **설치할 도구 묶음**을 뜻합니다. 정상 실행되는 기존 버전은 유지하며, 새 Node.js와 Python에만 위 버전 계열을 적용합니다. 패치 버전까지 고정하지 않으며 실제 버전과 경로는 실행 결과로 확인합니다. GitHub Desktop은 포함하지 않습니다.
+
+macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니다. 새 Python은 uv가 관리하는 `python3.14`로 제공하고 시스템 Python이나 기존 버전 관리자의 기본 명령을 바꾸지 않습니다. VS Code는 앱 경로로 확인하므로 Cursor의 `code` 명령을 VS Code로 판단하지 않습니다.
+
+실행 여부 확인은 보안 취약점 검사나 최신 버전 판정이 아닙니다. 세부 설치와 재실행 정책은 [CONTRIBUTING](./CONTRIBUTING.md#라이트-실행)에 정리합니다.
 
 ## 기술 방향
 
 **초기 Shell 설치기와 CLI의 대상 운영체제는 macOS입니다.** Windows용 설치, 셸 설정, 업데이트와 검증은 현재 범위에 포함하지 않습니다.
-현재 소스 코드, 의존성 선언과 잠금 파일이 없어 **확정된 기술 스택이나 설치 버전은 없습니다.**
-아래는 초기 논의에서 검토한 구성입니다. 웹 기술과 배포 환경은 웹사이트의 첫 구현 범위를 정하면서 선택합니다.
+라이트는 macOS 기본 Bash로 실행하며, 실행 전에 Node.js나 Python을 따로 설치할 필요가 없습니다. 정식 CLI와 웹사이트의 기술은 아직 검토 단계입니다.
 
-| 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
-| 초기 대상 운영체제   | ![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)                                                                                         | Shell 설치기와 CLI의 설치, 실행과 검증 대상 | macOS 대상, Windows는 현재 범위 제외 |
-| 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                         |
-| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                 |
-| CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                      |
-| 최초 설치기          | ![Shell](https://img.shields.io/badge/Shell-4EAA25?style=flat-square&logo=gnubash&logoColor=white)                                                                                       | 새 PC에서 CLI 실행에 필요한 환경 준비       | 역할 검토                            |
-| macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                            |
+| 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
+| 초기 대상 운영체제   | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel, Rosetta, Windows 제외 |
+| 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
+| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                   |
+| CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                        |
+| 초심자용 설치기      | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 고정 스펙의 최초 설치와 실행 환경 준비 | 구현됨, Bash 3.2.57로 검사 |
+| macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                              |
 
-사용자가 Python, npm, 환경변수를 직접 준비하지 않아도 설치를 시작할 수 있는 경험을 목표로 합니다.
-최소 macOS 버전, Apple Silicon과 Intel의 지원 범위, 실제 설치 의존성은 구현과 검증을 거쳐 명시합니다.
+지원 조건과 설치 정책의 근거 파일은 [install.sh](./installers/macos/install.sh), [tools.sh](./installers/macos/tools.sh)입니다. 최소 운영체제는 [Homebrew 설치 요구사항](https://docs.brew.sh/Installation)을 기준으로 제한합니다. 현재 실기기 확인은 macOS 26.6.2의 미리보기까지이며, 지원 범위 전체의 실제 설치를 검증한 것은 아닙니다.
 
 ## 개발 계획
 
-1. **웹사이트 우선:** 보안 공지와 업데이트 정보를 추적하고, 출처와 대응 방법을 읽을 수 있는 첫 버전을 만듭니다.
-2. **CLI 연결:** PC의 설치 상태를 확인하고, 해당 환경에 필요한 업데이트를 알립니다.
+1. **초심자용 설치기 검증:** 환경 확인, 고정 스펙 설치와 결과 확인을 구현했습니다. 새 Mac에서 실제 설치, 터미널 재시작과 재실행을 검증한 뒤 배포합니다.
+2. **CLI 연결:** PC의 설치 상태와 별도 웹사이트의 보안 정보를 연결하고, 해당 환경에 필요한 업데이트를 알립니다.
 3. **업데이트와 확장:** 적용 결과 확인과 실패 대응을 구현하고, 도구 통합 설치를 확장합니다.
 
-라이트 모드와 정식 모드의 기능 구분, 자동 업데이트 정책은 미정입니다.
-초기에는 이 저장소를 중심으로 관리하며, 저장소 분리는 제품 범위와 운영 방식이 구체화되면 검토합니다.
+라이트는 최초 설치부터 시작하고, 정식 CLI는 이후 확장합니다. 세부 기능 범위와 자동 업데이트 정책은 미정입니다.
+두 버전은 이 저장소에서 관리합니다. 웹사이트 코드는 이 저장소에 포함하지 않습니다.
 
 ## 저장소 구조
 
 ### 현재 구조
 
-현재 존재하는 파일입니다.
+현재 생성한 디렉터리, 실행 코드와 문서입니다.
 
 ```text
 shelter/
+├── installers/
+│   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
+│       ├── install.sh # 진입점, 고정 스펙과 설치 순서
+│       ├── tools.sh   # 도구 확인, 설치, 셸 설정
+│       └── tests/
+│           └── test.sh # 임시 환경에서 실행하는 설치기 테스트
 ├── README.md         # 제품 소개, 구성과 개발 방향
 ├── CONTRIBUTING.md   # 개발 준비, 검증과 기여 절차
 └── LICENSE           # MIT 라이선스
 ```
 
-### 구현 예정 구조
+### 구성 요소의 역할
 
-**아래는 아직 생성하지 않은 디렉터리의 설계 초안입니다.** 웹사이트, CLI와 정보 수집 기능을 하나의 저장소에서 관리하며, 각 기능의 첫 구현에 맞춰 해당 디렉터리를 추가합니다.
-프레임워크와 배포 방식이 정해지면 내부 파일 배치를 구체화합니다.
+라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
 
-```text
-shelter/
-├── apps/                    # 실행하는 애플리케이션
-│   ├── cli/                 # PC 상태 확인, 알림과 업데이트 CLI
-│   └── collector/           # 보안 공지와 릴리스 정보 수집 작업
-├── contracts/               # 웹, CLI, 수집기가 주고받는 데이터 규격
-├── installers/              # 사용자 PC의 최초 설치 스크립트
-├── scripts/                 # 저장소 개발, 검사와 배포 보조 스크립트
-├── docs/                    # 프로젝트 문서
-│   ├── architecture/       # 구성 요소, 데이터 흐름과 설계 결정
-│   ├── plans/              # 구현 계획과 단계별 범위
-│   └── standard/           # 코드, 데이터와 문서 작성 기준
-├── .github/
-│   └── workflows/          # 변경 영역별 검사, 빌드와 릴리스 자동화
-├── README.md
-├── CONTRIBUTING.md
-└── LICENSE
-```
-
-`apps/`는 실행 기능을, `contracts/`는 기능 사이의 데이터 약속을 관리합니다.
-`installers/`는 사용자 설치를, `scripts/`는 저장소 개발 작업을 지원합니다. `docs/`는 프로젝트 설계와 작업 기준의 원본을 보관합니다.
-
-| 예정 경로            | 책임과 경계                                                                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/web/`          | 보안 정보 조회 화면과 웹, CLI에 정보를 제공하는 API를 우선 함께 둡니다. 별도 API 서버가 필요해지면 분리를 검토합니다.              |
-| `apps/cli/`          | PC의 소프트웨어와 버전을 확인하고 알림, 업데이트와 결과 확인을 담당합니다. 라이트와 정식 모드는 공통 기능을 이곳에서 재사용합니다. |
-| `apps/collector/`    | 공식 공지 수집, 데이터 정규화, 중복 처리와 확인 시점 기록을 담당합니다. 실행 주기와 저장 방식은 추후 결정합니다.                   |
-| `contracts/`         | 보안 공지, 영향받는 버전, 수정 버전과 조회 API의 데이터 규격을 정의합니다. 언어가 다른 앱도 참조할 수 있도록 관리합니다.           |
-| `installers/`        | CLI 실행 환경과 CLI를 준비합니다. 설치 후 사용하는 업데이트 기능은 CLI 본체에 둡니다.                                              |
-| `scripts/`           | 개발자와 CI가 사용하는 반복 작업을 모읍니다. 사용자 PC의 최초 설치 스크립트와 구분합니다.                                          |
-| `docs/`              | `architecture/`, `plans/`, `standard/`에 설계, 구현 계획과 공통 기준을 각각 기록합니다.                                            |
-| `.github/workflows/` | 앱별 검사와 빌드, 릴리스 절차를 연결합니다. 배포 대상과 승인 방식은 첫 배포 시 정합니다.                                           |
-
-각 앱의 의존성, 실행 명령과 테스트는 해당 앱 디렉터리에서 관리합니다. 공통 데이터 규격과 언어별 구현 코드는 구분하며, 웹과 CLI의 의존성을 한 환경에 섞지 않습니다.
+정식 CLI 본체의 예정 위치인 `src/shelter/`는 Python 구현을 시작할 때 추가합니다. 웹사이트와 수집 서비스, 공통 데이터 규격의 구조는 연동 범위가 정해지면 검토하며, 현재 설치기 구조에 포함하지 않습니다.
+공통 코드나 도구별 처리가 실제로 커질 때 파일을 분리하고, CI와 상세 문서도 필요해지는 시점에 추가합니다.
 디렉터리를 만드는 시점과 문서 갱신 절차는 [CONTRIBUTING의 디렉터리 추가와 변경](./CONTRIBUTING.md#디렉터리-추가와-변경)을 따릅니다.
 
 ## 관리자
