@@ -17,6 +17,7 @@ Shelter는 사용자가 보안 소식을 일일이 찾아보지 않아도, 자�
 - [설치](#설치)
 - [사용법](#사용법)
 - [제품 구성](#제품-구성)
+- [초심자용 설치 후보](#초심자용-설치-후보)
 - [기술 방향](#기술-방향)
 - [개발 계획](#개발-계획)
 - [저장소 구조](#저장소-구조)
@@ -35,7 +36,7 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 ## 설치
 
 현재 설치 가능한 Shelter 패키지나 실행 파일은 없습니다.
-Homebrew 배포와 최초 설치기를 검토하고 있으며, 지원 운영체제와 설치 방법은 구현 후 안내할 예정입니다.
+초기 설치 대상은 macOS입니다. Homebrew 배포와 최초 설치기를 검토하고 있으며, 구체적인 설치 방법은 구현 후 안내할 예정입니다.
 
 문서 수정과 개발 참여를 위한 저장소 준비는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비)를 참고하세요.
 
@@ -69,21 +70,40 @@ CLI 명령어와 옵션은 구현된 동작을 검증한 뒤 이 문서에 추�
 보안 이슈를 빠르게 파악할 수 있도록 지속적인 추적을 목표로 합니다. 수집 주기와 알림 지연은 아직 정하지 않았습니다.
 Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대상으로 검토합니다.
 
+## 초심자용 설치 후보
+
+macOS용 Shell 설치기의 초기 설치 후보입니다. **아직 구현 전이며, 설치 방식과 대상 버전은 미정입니다.**
+사용자가 하려는 작업에 따라 도구를 선택할 수 있도록 기반 도구, 기본 작업 도구와 목적별 선택 도구로 구분합니다.
+
+| 분류           | 설치 대상                                                                           | 역할                                                     | 포함 기준                                               |
+| -------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------- |
+| 기반 도구      | [Homebrew](https://docs.brew.sh/Installation)                                       | 프로그램 설치와 업데이트를 관리하는 패키지 관리자        | 선택한 도구의 설치에 필요한 경우 준비                   |
+| 기본 작업 도구 | Git                                                                                 | 파일의 변경 이력을 기록하는 버전 관리 도구               | 개발과 자동화 작업의 기본 구성으로 제안                 |
+| 기본 작업 도구 | [VS Code](https://code.visualstudio.com/docs/setup/mac)                             | 파일과 코드를 편집하는 프로그램                          | 기본 편집기로 제안                                      |
+| 목적별 선택    | [Node.js + npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/) | JavaScript 실행 환경과 패키지 관리자                     | 웹 개발이나 Node.js 실행 환경이 필요한 도구를 사용할 때 |
+| 목적별 선택    | [Python + uv](https://docs.astral.sh/uv/)                                           | Python 실행 환경과 Python, 패키지, 가상환경 관리 도구    | Python 학습, 파일 처리와 자동화 작업을 시작할 때        |
+| 목적별 선택    | [GitHub CLI (`gh`)](https://cli.github.com/)                                        | 터미널에서 GitHub 저장소와 Pull Request 등을 다루는 도구 | GitHub 연동과 터미널 자동화가 필요할 때                 |
+
+GitHub CLI는 Git과 별개의 선택 도구입니다. 기본 작업 도구도 설치 후보로 제안하고, 실제 설치 대상은 사용자가 선택한 구성에 따라 정합니다.
+이미 설치된 프로그램은 버전과 실행 경로를 먼저 확인하도록 설계합니다. 설치 방법, 버전 정책과 정상 실행 확인 명령은 구현 시 구체화합니다.
+
 ## 기술 방향
 
+**초기 Shell 설치기와 CLI의 대상 운영체제는 macOS입니다.** Windows용 설치, 셸 설정, 업데이트와 검증은 현재 범위에 포함하지 않습니다.
 현재 소스 코드, 의존성 선언과 잠금 파일이 없어 **확정된 기술 스택이나 설치 버전은 없습니다.**
 아래는 초기 논의에서 검토한 구성입니다. 웹 기술과 배포 환경은 웹사이트의 첫 구현 범위를 정하면서 선택합니다.
 
-| 영역                 | 검토 기술                                                                                                                                                                                | 역할                                  | 상태                 |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | -------------------- |
-| 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면    | 기술 선정 전         |
-| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리        | 우선 검토, 버전 미정 |
-| CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리  | 후보, 버전 미정      |
-| 최초 설치기          | ![Shell](https://img.shields.io/badge/Shell-4EAA25?style=flat-square&logo=gnubash&logoColor=white)                                                                                       | 새 PC에서 CLI 실행에 필요한 환경 준비 | 역할 검토            |
-| macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트          | 배포 후보            |
+| 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------ |
+| 초기 대상 운영체제   | ![macOS](https://img.shields.io/badge/macOS-000000?style=flat-square&logo=apple&logoColor=white)                                                                                         | Shell 설치기와 CLI의 설치, 실행과 검증 대상 | macOS 대상, Windows는 현재 범위 제외 |
+| 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                         |
+| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                 |
+| CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                      |
+| 최초 설치기          | ![Shell](https://img.shields.io/badge/Shell-4EAA25?style=flat-square&logo=gnubash&logoColor=white)                                                                                       | 새 PC에서 CLI 실행에 필요한 환경 준비       | 역할 검토                            |
+| macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                            |
 
 사용자가 Python, npm, 환경변수를 직접 준비하지 않아도 설치를 시작할 수 있는 경험을 목표로 합니다.
-지원 운영체제와 실제 설치 의존성은 배포 방식이 결정되면 명시합니다.
+최소 macOS 버전, Apple Silicon과 Intel의 지원 범위, 실제 설치 의존성은 구현과 검증을 거쳐 명시합니다.
 
 ## 개발 계획
 
