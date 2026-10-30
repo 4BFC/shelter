@@ -1,40 +1,44 @@
 # Contributing
 
-Shelter의 문서 개선과 개발에 참여하는 방법을 안내합니다.
-제품 목적, 구성과 기술 방향은 [README](./README.md)를 기준으로 합니다.
+| English | 한국어 | 日本語 |
+| --- | --- | --- |
+| **Current** | [한국어](./language/ko/CONTRIBUTING.md) | [日本語](./language/jp/CONTRIBUTING.md) |
 
-현재 macOS 라이트 설치기와 임시 환경 테스트를 제공합니다. 정식 CLI, CI와 패키지 배포는 아직 준비 전입니다.
+This guide explains how to improve Shelter's documentation and contribute to its development.
+See the [README](./README.md) for the project's purpose, components, and technical direction.
 
-## 목차
+The macOS Lite installer and tests using temporary environments are currently available. The full CLI, CI, and package distribution are not yet ready.
 
-- [질문과 제안](#질문과-제안)
-- [개발 준비](#개발-준비)
-- [라이트 실행](#라이트-실행)
-- [디렉터리 추가와 변경](#디렉터리-추가와-변경)
-- [작업 절차](#작업-절차)
-- [문서 작성](#문서-작성)
-- [구현과 검증](#구현과-검증)
-- [커밋과 Pull Request](#커밋과-pull-request)
-- [배포](#배포)
+## Table of Contents
 
-## 질문과 제안
+- [Questions and Suggestions](#questions-and-suggestions)
+- [Development Setup](#development-setup)
+- [Running Lite](#running-lite)
+- [Adding and Changing Directories](#adding-and-changing-directories)
+- [Workflow](#workflow)
+- [Writing Documentation](#writing-documentation)
+- [Implementation and Validation](#implementation-and-validation)
+- [Commits and Pull Requests](#commits-and-pull-requests)
+- [Distribution](#distribution)
 
-질문, 버그 제보와 기능 제안은 [Issues](https://github.com/4BFC/shelter/issues)를 이용해 주세요.
-문서 수정과 Pull Request를 받습니다. 기술 스택 선정, 지원 운영체제 확대와 큰 기능 추가는 구현 전에 관리자와 범위를 맞춰 주세요.
+## Questions and Suggestions
 
-제안에는 다음 내용을 담아 주세요.
+Use [Issues](https://github.com/4BFC/shelter/issues) for questions, bug reports, and feature suggestions.
+Documentation changes and pull requests are welcome. Before implementation, agree on the scope with the maintainer for technology choices, additional operating systems, and major features.
 
-- 어떤 사용자가 어떤 상황에서 겪는 문제인지
-- 기대하는 동작과 현재 동작의 차이
-- 관련 공지, 재현 방법이나 참고 자료
+Include the following in a proposal:
 
-보안 공지의 내용과 Shelter 자체의 결함은 구분해 주세요. 재현 자료에 토큰, 인증 정보나 개인 경로가 포함됐다면 제거해 주세요.
+- Which users encounter the problem and in what situation
+- The expected behavior and how it differs from the current behavior
+- Related advisories, reproduction steps, or references
 
-## 개발 준비
+Distinguish security advisories from defects in Shelter itself. Remove tokens, credentials, and personal paths from reproduction material before sharing it.
 
-### 저장소 받기
+## Development Setup
 
-Git이 있다면 저장소 루트에서 다음과 같이 시작합니다. 이미 내려받았다면 이 단계는 건너뜁니다.
+### Getting the Repository
+
+If Git is available, clone the repository and enter its root directory as follows. Skip this step if you already have a copy.
 
 ```bash
 git clone https://github.com/4BFC/shelter.git
@@ -42,156 +46,158 @@ cd shelter
 git status --short
 ```
 
-Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고, 터미널에서 해당 폴더로 이동합니다. `install.sh`와 `tools.sh`가 함께 있어야 합니다.
+On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep `install.sh` and `tools.sh` together.
 
-### 실행 환경
+### Runtime Environment
 
-실제 설치 대상은 **macOS 15 이상, Apple Silicon, zsh 또는 bash**입니다. Intel, Rosetta와 Windows에서는 설치하지 않고 종료합니다. macOS 기본 `/bin/bash`로 실행하며 Bash 3.2.57에서 검사했습니다. Python이나 Node.js를 미리 준비할 필요는 없습니다.
+The installation target is **macOS 15 or later, Apple Silicon, and zsh or bash**. On Intel, Rosetta, and Windows, the installer exits without installing. It runs with macOS's `/bin/bash` and has been checked with Bash 3.2.57. Python and Node.js do not need to be installed beforehand.
 
-설치에는 인터넷 연결과 Homebrew 설치 권한이 필요합니다. 공식 Homebrew 설치기가 관리자 인증과 Xcode Command Line Tools 설치를 요청할 수 있습니다. **전체 스크립트를 `sudo`로 실행하지 마세요.** [Homebrew 설치 요구사항](https://docs.brew.sh/Installation)을 참고하세요.
+Installation requires an internet connection and permission to install Homebrew. The official Homebrew installer may request administrator authentication and installation of Xcode Command Line Tools. **Do not run the entire script with `sudo`.** See the [Homebrew installation requirements](https://docs.brew.sh/Installation).
 
-정식 CLI는 아직 구현하지 않았습니다. 향후 런타임 의존성을 추가할 때 버전, 의존성 선언, 잠금 파일과 실행 명령을 함께 기록합니다.
+The full CLI has not been implemented yet. When runtime dependencies are added, document their versions, dependency declarations, lockfiles, and execution commands together.
 
-## 라이트 실행
+## Running Lite
 
-아래 명령은 모두 저장소 루트에서 실행합니다. 먼저 변경 없이 계획을 확인할 수 있습니다.
+Run all commands below from the repository root. You can inspect the plan without making changes first.
 
 ```bash
 /bin/bash installers/macos/install.sh --dry-run
 ```
 
-초기 설정을 시작하는 명령은 다음과 같습니다. 도구 선택이나 제외 옵션 없이 [라이트 고정 설치 스펙](./README.md#라이트-고정-설치-스펙) 전체를 준비합니다.
+Start initial setup with the following command. It prepares the entire [Lite installation specification](./README.md#lite-installation-specification), with no options to select or exclude tools.
 
 ```bash
 /bin/bash installers/macos/install.sh
 ```
 
-기본 화면에는 초기 설정을 시작한다는 안내와 최종 **설치 완료 또는 설치 실패**를 요약하고, 짧은 설명과 다음 행동을 함께 표시합니다. Homebrew가 없는 Mac에서는 공식 최초 설치기의 확인과 관리자 인증 안내를 터미널에 직접 표시합니다.
+The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
 
-| 메시지 | 표시하는 내용 |
+| Message | What it explains |
 | --- | --- |
-| `● note:` | 초기 설정 시작, 실패 후 로그 확인과 재실행 안내 |
-| `● success:` | 개발 도구 준비가 완료되었다는 설명 |
-| `● error:` | 설치나 설정을 완료하지 못한 이유 |
-| `● warning:` | 새 실행 경로의 반영 대기, 실패 후 진행된 설치나 설정 변경이 남는다는 안내 |
+| `● note:` | The start of setup, or how to inspect the log and retry after a failure |
+| `● success:` | Development tools are ready |
+| `● error:` | Why installation or configuration could not be completed |
+| `● warning:` | New executable paths require a restart, or changes already made remain after a failure |
 
-경고는 해당 상황에서만 표시합니다. 새 실행 경로가 없다면 반영 대기 경고를 생략하고, 설치나 셸 설정을 시작하기 전에 중단했다면 변경이 남는다는 경고도 생략합니다. 색상을 꺼도 메시지 분류와 본문은 그대로 표시합니다.
+Warnings appear only when relevant. If no new executable paths were added, the path activation warning is omitted. If execution stopped before installation or shell configuration began, the warning about retained changes is also omitted. Message categories and text remain visible with colors disabled.
 
-최종 결과는 구분선 없이 제목과 메시지로 표시합니다. 메시지 앞에 `●`를 붙이고, 접두어는 대괄호 없이 영문 소문자와 콜론으로 표시하며, 본문은 한국어로 유지합니다. **일반 메시지는 `●`에만 상태 색상을 적용하고 접두어와 본문은 터미널 기본 색상을 사용합니다.** 성공은 초록색, 실패와 오류는 빨간색, 안내는 청록색, 경고는 노란색입니다. `설치 완료`, `설치 실패`, `확인 필요` 같은 결과 제목에는 글자 전체에 상태 색상을 적용합니다. 일반 제목과 상세 표의 본문에는 색상을 지정하지 않으며, 표도 행 앞의 `●`로 상태 색상을 표시합니다.
+The final result is shown as a heading and messages without separator lines. Each message starts with `●`, followed by a lowercase English prefix and colon without brackets. Message bodies remain in Korean. **For ordinary messages, only `●` receives the status color; the prefix and body use the terminal's default color.** Success is green, failures and errors are red, notes are cyan, and warnings are yellow. Result headings such as `설치 완료` (installation complete), `설치 실패` (installation failed), and `확인 필요` (check required) use the status color for the entire heading. Ordinary headings and detailed table text have no assigned color; table rows show status colors only on the leading `●`.
 
-기본 `--color auto`는 실제 터미널에서만 색상을 사용하며, `NO_COLOR`가 설정되거나 `TERM=dumb`이면 끕니다. 사용자의 색상 설정은 변경하지 않습니다. 색상을 명시적으로 켜고 싶을 때만 Mac 터미널에서 다음처럼 실행합니다.
+The default `--color auto` uses colors only in a terminal and disables them when `NO_COLOR` is set or `TERM=dumb`. The user's color settings are not changed. To explicitly enable colors, run the following in your Mac terminal.
 
 ```bash
 /bin/bash installers/macos/install.sh --color always
 ```
 
-`always`는 `NO_COLOR`와 터미널 자동 판별보다 우선합니다. `--color never`는 항상 색상을 끕니다. 출력 뷰어가 ANSI 색상을 지원하지 않으면 `always`를 사용해도 색상이 보이지 않을 수 있습니다.
+`always` takes precedence over `NO_COLOR` and automatic terminal detection. `--color never` always disables colors. Output viewers that do not support ANSI colors may not display them even with `always`.
 
-버전 표, 개별 설치 결과, 패키지 설치 출력과 셸 설정 변경 내용은 `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`에 기록합니다. 로그는 실행마다 새로 만들고, 소유자만 읽고 쓸 수 있으며, 색상 코드는 포함하지 않습니다. 성공 시에도 로그는 보관합니다. 로그의 `미실행`은 앞 단계의 실패로 해당 단계가 실행되지 않았다는 뜻입니다. 현재 버전과 실행 경로의 상세 확인은 `--check`를 사용합니다.
+Version tables, individual installation results, package installer output, and shell configuration changes are recorded in `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`. Each run creates a new log that only its owner can read and write, without color codes. Logs are kept after successful runs as well. In the log, `미실행` (not run) means a step was skipped because an earlier step failed. Use `--check` for details about current versions and executable paths.
 
-설치를 마친 뒤 새 터미널에서 저장소 루트로 이동해 확인합니다.
+After installation, open a new terminal, enter the repository root, and check the results.
 
 ```bash
 /bin/bash installers/macos/install.sh --check
 echo $?
 ```
 
-모든 항목이 `설치됨`이고 마지막 종료 코드가 `0`이면 전체 도구를 실행할 수 있는 상태입니다. `--dry-run`은 처음과 끝에 실제 변경이 없음을 표시하며, 실제 설치 결과는 출력하지 않습니다.
+If every item is marked `설치됨` (installed) and the exit code is `0`, all tools can run. `--dry-run` states at the beginning and end that it makes no actual changes; it does not display actual installation results.
 
-| 옵션 | 동작 |
+| Option | Behavior |
 | --- | --- |
-| 옵션 없음 | 라이트 전체 초기 설정 |
-| `--dry-run` | 설치 계획만 확인, 다운로드와 설정 변경 없음 |
-| `--check` | 전체 도구의 실행 상태 확인, 다운로드와 설정 변경 없음 |
-| `--mode lite` | 기본값과 동일 |
-| `--mode full` | 준비 중 안내 후 종료, 설치하지 않음 |
-| `--color auto\|always\|never` | 자동 색상, 강제 색상 또는 무색 출력 |
-| `--help` | 도움말 |
+| No options | Run the complete Lite initial setup |
+| `--dry-run` | Show the installation plan only; no downloads or configuration changes |
+| `--check` | Check whether all tools run; no downloads or configuration changes |
+| `--mode lite` | Same as the default |
+| `--mode full` | Exit with a message that it is not yet available; do not install |
+| `--color auto\|always\|never` | Automatic colors, forced colors, or plain output |
+| `--help` | Show help |
 
-종료 코드는 성공 `0`, 미설치 상태 또는 실행/설치 오류 `1`, 잘못된 옵션이나 미지원 환경 `2`, Ctrl+C 중단 `130`입니다. `--check`와 `--dry-run`은 함께 사용하지 않습니다. 미리보기에서 정상적으로 설치 계획을 만들면, 미설치 도구가 있어도 `0`으로 종료합니다.
+Exit codes are `0` for success, `1` for missing tools or execution/installation errors, `2` for invalid options or unsupported environments, and `130` for interruption with Ctrl+C. `--check` and `--dry-run` cannot be combined. A preview that successfully produces an installation plan exits with `0`, even if some tools are missing.
 
-### 기존 환경과 재실행
+### Existing Environments and Reruns
 
-- 정상 실행되는 기존 도구는 재설치하거나 버전을 맞추기 위해 직접 업그레이드하지 않습니다. 새 Node.js는 `node@24`, 새 Python은 uv의 `3.14` 계열로 설치합니다. 패치 버전과 나머지 도구의 버전은 설치 시 패키지 관리자가 제공하는 버전을 따릅니다.
-- Node.js와 npm 중 하나만 있거나 기존 명령 실행에 실패하면 변경 전에 중단합니다. Python과 uv는 없는 구성 요소만 설치할 수 있습니다. `/usr/bin/python3`는 macOS 개발 도구용으로 유지하고 별도 사용자용 Python을 준비합니다.
-- uv의 Python 조회는 네트워크와 기존 캐시를 사용하지 않습니다. 조회 오류는 `확인 필요`로 표시하고, 정상 조회에서 설치된 Python이 없을 때만 설치 대상으로 판단합니다.
-- VS Code는 `/Applications` 또는 `~/Applications`의 앱으로 확인합니다. [Homebrew의 `--no-binaries`](https://docs.brew.sh/Manpage)로 앱을 설치하고, 기존 `code` 명령이 Cursor 등 다른 편집기에 연결되어 있으면 보존합니다. 이 경우 VS Code는 응용 프로그램 폴더에서 실행합니다.
+- Existing versions that run successfully are not reinstalled or directly upgraded to match a target version. New Node.js installations use `node@24`; new Python installations use uv's `3.14` series. Patch versions and versions of other tools follow what the package manager provides at installation time.
+- If only one of Node.js and npm is present, or an existing command fails to run, execution stops before changes are made. For Python and uv, only missing components can be installed. `/usr/bin/python3` remains the macOS developer tools' Python, and a separate user Python installation is prepared.
+- uv's Python lookup does not use the network or the existing cache. Lookup errors are shown as `확인 필요` (check required). Python is treated as missing only when a successful lookup finds no installed Python.
+- VS Code is detected in `/Applications` or the user's `~/Applications` folder. The app is installed using [Homebrew's `--no-binaries`](https://docs.brew.sh/Manpage), preserving an existing `code` command if it belongs to Cursor or another editor. In that case, launch VS Code from the Applications folder.
 
-Git 사용자 정보와 `gh auth login`은 자동으로 설정하지 않습니다. 설치 중 오류가 나면 뒤의 설치를 멈추며, 앞서 설치한 도구는 남습니다. 오류를 해결한 뒤 같은 명령을 실행하면 이미 준비된 도구를 건너뜁니다. 패키지 설치 전체를 되돌리는 기능은 없습니다. 새 패키지에 필요한 의존성 변경은 Homebrew가 처리합니다.
+Git identity and `gh auth login` are not configured automatically. An installation error stops subsequent steps; tools installed earlier remain. After resolving the error, rerun the same command to skip tools that are already ready. There is no rollback for the entire package installation. Homebrew handles dependency changes needed by newly installed packages.
 
-개별 `brew install` 실행에는 자동 업데이트, 설치 후 정리, 기존 설치 대상의 자동 업그레이드를 끄는 환경변수를 적용합니다. 의존성 호환성 처리는 Homebrew에 맡깁니다. 관련 동작은 [Homebrew 명령 문서](https://docs.brew.sh/Manpage)를 기준으로 합니다.
+Each `brew install` runs with environment variables that disable automatic updates, post-install cleanup, and automatic upgrades of an already installed target package. Dependency compatibility is left to Homebrew. See the [Homebrew command documentation](https://docs.brew.sh/Manpage) for the relevant behavior.
 
-### 셸 설정과 백업
+### Shell Configuration and Backups
 
-필요한 실행 경로를 현재 `PATH`의 뒤에 추가해 nvm, mise, pyenv 등 기존 설정의 우선순위를 보존합니다. 추가한 경로가 있으면 다음 위치에 저장하고 셸 설정에 한 번만 연결합니다.
+Required executable paths are appended to the current `PATH`, preserving the priority of existing configurations such as nvm, mise, and pyenv. If paths were added, they are saved in the locations below and connected to the shell configuration once.
 
-| 파일 | 변경 내용 |
+| File | Change |
 | --- | --- |
-| `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/env.sh` | Shelter가 추가한 실행 경로, 기존 사용자 파일은 덮어쓰지 않음 |
-| `${ZDOTDIR:-$HOME}/.zshrc` | zsh 사용자의 환경 파일 로드 구문 |
-| `$HOME/.bashrc`, `$HOME/.bash_profile` | bash 사용자의 환경 파일 로드 구문 |
+| `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/env.sh` | Executable paths added by Shelter; an existing user-owned configuration file is not overwritten |
+| `${ZDOTDIR:-$HOME}/.zshrc` | Load the environment file for zsh users |
+| `$HOME/.bashrc`, `$HOME/.bash_profile` | Load the environment file for bash users |
 
-기존 파일을 변경하기 전 환경 파일과 같은 디렉터리에 `env.sh.backup.*` 또는 `shell.backup.*`으로 백업하고 경로를 설치 로그에 기록합니다. 셸 설정은 기존 내용을 유지한 채 로드 구문을 덧붙입니다. 오류로 일부 설정만 반영된 경우에도 완료된 변경과 백업은 남습니다.
+Before modifying existing files, backups named `env.sh.backup.*` or `shell.backup.*` are created in the same directory as the environment file, and their paths are recorded in the installation log. Existing shell configuration content is preserved, and the load statement is appended. Completed changes and backups remain even if an error leaves configuration only partially applied.
 
-새 터미널을 열어 경로 설정을 적용합니다. 현재 터미널에 바로 적용하려면 설치 로그에 기록된 `source` 명령을 실행합니다. 실행 중인 편집기는 재시작해야 새 환경을 사용합니다. 새 Python은 [uv의 버전별 실행 파일 정책](https://docs.astral.sh/uv/guides/install-python/)에 따라 `python3.14`로 제공하며, 시스템의 `python3`나 `python`을 교체하지 않습니다.
+Open a new terminal to activate the paths. To apply them immediately in the current terminal, run the `source` command recorded in the installation log. Restart running editors so they use the new environment. Following [uv's policy for versioned Python executables](https://docs.astral.sh/uv/guides/install-python/), new Python installations provide `python3.14` without replacing the system's `python3` or `python`.
 
-백업 복구가 필요하면 로그에 기록된 원본 경로와 백업을 비교한 뒤 복원합니다. 다른 셸 설정을 유지하려면 `# Shelter Lite`가 붙은 로드 구문만 제거할 수도 있습니다. 이 작업은 설치된 프로그램을 삭제하지 않습니다.
+If you need to restore a backup, compare the original and backup paths recorded in the log before restoring. To preserve other shell configuration, you can instead remove only the load statement marked `# Shelter Lite`. This does not uninstall any programs.
 
-## 디렉터리 추가와 변경
+## Adding and Changing Directories
 
-전체 배치와 각 경로의 책임은 [README의 저장소 구조](./README.md#저장소-구조)를 기준으로 합니다.
-현재 설치기는 두 Shell 파일과 `tests/test.sh`로 구성합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
+Use [Repository Structure in the README](./README.md#repository-structure) as the reference for the overall layout and each path's responsibility.
+The installer currently consists of two shell files and `tests/test.sh`. Add further paths only as their functionality is implemented.
 
-1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
-2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
-3. **정식 CLI 본체는 별도로 구현합니다.** Python을 채택하면 본체는 `src/shelter/`, Python 테스트는 루트 `tests/`, 패키지 설정은 루트 `pyproject.toml`에 둡니다. 이 경로들은 아직 생성하지 않았습니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
+1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
+2. **Connect installation of the full version.** When the full CLI and its distribution artifacts are ready, add its workflow to the same `install.sh` under `full` mode and reuse the tool installation functions. Currently, that mode exits after a message that it is not yet available.
+3. **Implement the full CLI separately.** If Python is chosen, place the implementation in `src/shelter/`, Python tests in the root `tests/` directory, and package configuration in the root `pyproject.toml`. These paths have not been created yet. Do not duplicate ongoing security notification and update management features in the installer.
 
-Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. 버전별 동작을 추가할 때 공통 설치 흐름과 각 버전의 동작을 함께 확인하고, 실제 실행 위치와 명령을 이 문서에 기록합니다.
-웹사이트는 이 저장소 밖에서 관리합니다. 수집 서비스와 데이터 규격의 배치는 연동 범위를 정한 뒤 결정하며, Windows 설치기는 현재 범위에 포함하지 않습니다.
+Manage shell installer tests in `installers/macos/tests/`. When adding behavior for a version, check both the shared installation workflow and the behavior of each version. Record the working directory and actual commands in this document.
+The website is managed outside this repository. The layout of the collection service and data formats will be decided after the integration scope is defined. A Windows installer is outside the current scope.
 
-구조를 적용하거나 바꿀 때는 다음 내용을 같은 변경에 반영합니다.
+When adding or changing structure, include the following documentation updates in the same change:
 
-- README의 **현재 구조**에 실제 추가한 경로를 반영하고, **구성 요소의 역할**에 남은 범위를 표시합니다.
-- CONTRIBUTING에 해당 구성 요소의 설치, 실행과 검증 명령을 작업 디렉터리와 함께 기록합니다.
-- 상세 설계나 별도 계획 문서가 필요해지면 `docs/`에 추가하고 관련 문서에서 연결합니다. 문서 분류를 위한 하위 디렉터리는 미리 만들지 않습니다.
+- Reflect actual paths in the README's **Current Structure** and remaining work in **Component Responsibilities**.
+- Document installation, execution, and validation commands for the component in CONTRIBUTING, including the working directory.
+- Add detailed designs or separate plans to `docs/` when needed, and link them from related documents. Do not create subdirectories merely to classify future documents.
 
-라이트와 정식 버전의 설치기는 같은 경로에서 관리하고, 설치기와 정식 CLI 본체의 책임을 구분합니다. Homebrew 배포를 선택하면 Formula와 Tap의 관리 위치를 배포 절차에서 별도로 정합니다.
+Installers for Lite and the full version share the same location, while the installer and full CLI implementation have separate responsibilities. If Homebrew distribution is chosen, define where the Formula and Tap are managed as part of the distribution process.
 
-## 작업 절차
+## Workflow
 
-1. README에서 제품 방향과 현재 구현 범위를 확인합니다.
-2. 변경할 내용을 정하고 작업 브랜치를 만듭니다.
-3. 관련 문서와 코드를 함께 수정합니다.
-4. 아래 검증 기준에 따라 확인하고 diff를 검토합니다.
-5. 변경 목적과 검증 결과를 담아 Pull Request를 제출합니다.
+1. Read the README to understand the product direction and current implementation scope.
+2. Define the change and create a working branch.
+3. Update the related documentation and code together.
+4. Complete the checks below and review the diff.
+5. Submit a pull request explaining the purpose of the change and validation results.
 
-작업 브랜치 이름의 예시입니다. 동일한 이름의 브랜치가 있다면 작업에 맞는 다른 이름을 사용합니다.
+The following is an example branch name. If it already exists, use another name appropriate for the work.
 
 ```bash
 git switch -c docs/update-introduction
 ```
 
-이미 진행 중인 변경은 보존하고, 요청이나 제안과 관계없는 수정은 같은 변경에 섞지 않습니다.
+Preserve work already in progress, and do not mix unrelated changes into the same change.
 
-## 문서 작성
+## Writing Documentation
 
-**README**는 프로젝트를 이해하는 문서입니다. 소개, 사용 목적, 제품 구성, 기술 스펙과 저장소 구조를 담습니다.
-**CONTRIBUTING**은 프로젝트를 변경하는 절차입니다. 설치, 개발, 검사, 커밋과 배포 방법을 담습니다.
+The **README** explains the project: its introduction, purpose, product components, technical specifications, and repository structure.
+**CONTRIBUTING** explains how to change the project: installation, development, checks, commits, and distribution.
 
-- README는 [Standard Readme 규격](https://github.com/RichardLitt/standard-readme/blob/main/spec.md)의 구조를 따릅니다. 목차를 유지하고 라이선스를 마지막에 둡니다.
-- 짧은 소개 문구는 README, 향후 패키지 메타데이터와 GitHub 저장소 설명이 일치하도록 관리합니다.
-- 현재 동작과 개발 계획을 구분합니다. 아직 없는 명령, 디렉터리와 배포 주소를 사용 가능한 것처럼 적지 않습니다.
-- 비개발자가 읽는 설명에서는 문제와 다음 행동을 먼저 쓰고, 전문 용어는 처음 등장할 때 설명합니다.
-- 기술 스펙에는 확인한 버전과 근거 파일을 함께 적습니다. 버전이 정해지지 않았다면 `미정`으로 표시합니다.
-- 보안 이슈와 업데이트 정보를 설명할 때 원문 출처, 확인 시점, 영향받는 버전과 수정 버전을 구분합니다. 확인하지 못한 내용은 추정으로 표시합니다.
+Maintain the English README and CONTRIBUTING at the repository root, the Korean versions in `language/ko/`, and the Japanese versions in `language/jp/`, with the same content and structure. The language table at the top of each document links to the corresponding document in another language. Commands in this document are relative to the repository root.
 
-상세 설계가 길어지면 `docs/`의 담당 문서로 분리하고 README에서 연결합니다. 문서가 쌓이면 주제에 맞춰 묶고, 같은 내용을 여러 파일에 복제하지 않습니다.
+- Follow the section structure of the [Standard Readme specification](https://github.com/RichardLitt/standard-readme/blob/main/spec.md). Maintain a table of contents and keep the license last. Translation files use this project's `language/<language>/README.md` layout instead of the specification's `README.<language>.md` naming convention.
+- Keep the short description consistent across the README, future package metadata, and the GitHub repository description.
+- Distinguish current behavior from development plans. Do not present commands, directories, or distribution URLs that do not exist as available.
+- When writing for non-developers, explain the problem and next action first, and define technical terms on first use.
+- Include verified versions and reference files in technical specifications. Mark undecided versions as `Undecided`.
+- When explaining security issues and updates, distinguish the original source, verification date, affected versions, and fixed versions. Mark unverified information as an estimate.
 
-## 구현과 검증
+Move lengthy designs to the relevant document in `docs/` and link to it from the README. Group documents by topic as they accumulate, and avoid duplicating the same content across multiple files.
 
-### 안내 메시지 미리보기
+## Implementation and Validation
 
-**각 상태의 표현과 설명만 확인하려면** 저장소 루트에서 `--preview` 뒤에 상태를 지정합니다. 색상을 확인할 때는 Mac 터미널에서 `--color always`를 붙입니다.
+### Message Previews
+
+**To inspect only the wording and explanation for each state**, pass the state after `--preview` from the repository root. Add `--color always` in your Mac terminal to inspect colors.
 
 ```bash
 /bin/bash installers/macos/tests/test.sh --preview notification --color always
@@ -200,42 +206,42 @@ git switch -c docs/update-introduction
 /bin/bash installers/macos/tests/test.sh --preview success --color always
 ```
 
-| 상태 | `●` 색상 (결과 제목에도 적용) | 확인하는 메시지 |
+| State | `●` color (also used for result headings) | Message shown |
 | --- | --- | --- |
-| `notification` | 청록색 | 초기 설정을 시작한다는 안내 |
-| `warning` | 노란색 | 실행 경로 반영 대기와 터미널, 편집기를 다시 열라는 설명 |
-| `failure` | 빨간색 | 설치 실패 제목과 오류 이유 예시 |
-| `success` | 초록색 | 설치 완료 제목과 개발 도구 준비 완료 설명 |
+| `notification` | Cyan | A notice that initial setup is starting |
+| `warning` | Yellow | Paths need to be activated by reopening the terminal and editor |
+| `failure` | Red | An installation failure heading and an example reason |
+| `success` | Green | An installation complete heading and confirmation that development tools are ready |
 
-미리보기는 실제 설치기와 공유하는 메시지 함수만 호출합니다. 설치 상태를 조회하거나 임시 파일을 만들지 않습니다. `--preview`만 입력하면 `success`를 표시합니다. 색상 설정을 생략하면 `auto`로 사용자 설정을 따르며, `--color never`로 무색 출력을 확인할 수 있습니다.
+Previews call only the message functions shared with the actual installer. They do not inspect installed tools or create temporary files. `--preview` without a state shows `success`. Omitting the color setting uses `auto` and respects the user's settings; use `--color never` to inspect plain output.
 
-### 설치 흐름 테스트
+### Installation Workflow Tests
 
-**실제 설치기의 전체 절차를 임시 환경에서 실행하려면** `--install`을 사용합니다.
+**To run the actual installer's complete workflow in a temporary environment**, use `--install`.
 
 ```bash
 /bin/bash installers/macos/tests/test.sh --install --color always
 ```
 
-도구가 없는 테스트 환경에서 Homebrew 준비부터 고정 스펙 설치, 결과 확인, 셸 설정까지 실제 설치기 코드를 실행합니다. 다운로드와 패키지 설치 명령은 가짜 도구로 대체하며, 실제 PC의 프로그램과 사용자 셸 설정은 바꾸지 않습니다. 테스트 파일과 로그는 종료 후 자동 정리합니다.
+The test starts with an environment without the tools and runs the actual installer code, from Homebrew setup through fixed-specification installation, result checks, and shell configuration. Downloads and package installation commands are replaced by fake tools. Programs and shell settings on the actual computer are not changed. Test files and logs are removed automatically on exit.
 
-정식 옵션 표기는 `--install`이며, `--intall`도 같은 동작으로 처리합니다. 아래 상황 이름은 테스트 조건이며 실제 설치할 도구를 선택하는 옵션이 아닙니다.
+The official option spelling is `--install`; `--intall` is also accepted with the same behavior. The scenario names below are test conditions, not options for selecting tools to install.
 
 ```bash
-# uv 설치 도중 실패하고 이후 설치를 멈추는 전체 흐름
+# Fail during uv installation and stop subsequent installation steps
 /bin/bash installers/macos/tests/test.sh --install failure --color always
 
-# 테스트 환경의 설치 예정 안내
+# Inspect the installation plan in the test environment
 /bin/bash installers/macos/tests/test.sh --install dry-run
 ```
 
-`--install success`는 기본 상황과 같습니다. 실패 상황에서는 내부 설치기의 종료 코드 `1`이 예상 결과입니다. 테스트 명령은 예상한 결과가 나오면 `0`, 예상과 다르면 `1`, 잘못된 옵션이면 `2`로 종료합니다. 예상과 다른 경우에만 테스트 오류를 별도로 표시합니다. `--preview`와 `--install`은 함께 사용할 수 없습니다.
+`--install success` is the default scenario. In the failure scenario, the internal installer's exit code `1` is the expected result. The test command exits with `0` when the result matches expectations, `1` when it does not, and `2` for invalid options. A separate test error is printed only for unexpected results. `--preview` and `--install` cannot be combined.
 
-현재 Mac의 실제 상태를 읽어 설치 계획을 확인하는 명령은 `install.sh --dry-run`입니다. 실제 초기 설정은 [라이트 실행](#라이트-실행)의 옵션 없는 명령으로 진행합니다.
+Use `install.sh --dry-run` to read the current Mac's actual state and inspect the installation plan. For real initial setup, use the command without options in [Running Lite](#running-lite).
 
-### Shell 검증
+### Shell Validation
 
-저장소 루트에서 구문 검사와 임시 환경 테스트를 실행합니다. 별도 테스트 패키지가 필요하지 않습니다.
+Run syntax checks and tests using temporary environments from the repository root. No separate test package is required.
 
 ```bash
 for script in installers/macos/install.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
@@ -244,9 +250,9 @@ done
 /bin/bash installers/macos/tests/test.sh
 ```
 
-테스트는 Homebrew, 다운로드, 설치 명령과 환경 판별을 대체하고 임시 디렉터리에만 결과를 씁니다. 실제 프로그램이나 사용자 셸 설정을 변경하지 않습니다. 고정 스펙 설치, 기존 버전 보존, 재실행, 설치 실패, 잘못된 옵션, 미지원 환경, 설정 백업과 다른 편집기의 `code` 명령 보존을 검사합니다. 간결한 화면과 상세 로그의 분리, 로그 권한, `●`와 결과 제목의 색상 및 본문의 기본 색상, 상태별 미리보기, 설치 흐름 테스트의 격리와 종료 코드도 검사합니다.
+Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests.
 
-지원되는 Mac에서는 다음 읽기 전용 명령도 확인합니다.
+On a supported Mac, also check these read-only commands:
 
 ```bash
 /bin/bash installers/macos/install.sh --help
@@ -254,58 +260,58 @@ done
 /bin/bash installers/macos/install.sh --check
 ```
 
-새 Mac에서 실제 다운로드와 설치가 끝나는지, 새 터미널과 VS Code에서 도구를 실행할 수 있는지, 재실행 때 설치와 설정이 중복되지 않는지 별도로 검증합니다. **현재 검증은 임시 환경 테스트와 macOS 26.6.2의 읽기 전용 실행까지입니다. 실제 초기 설치 전체를 검증하지는 않았습니다.**
+Separately verify that actual downloads and installation finish on a new Mac, that tools run in a new terminal and VS Code, and that reruns do not duplicate installations or configuration. **Validation currently covers tests in temporary environments and read-only execution on macOS 26.6.2. The complete real initial installation has not been verified.**
 
-### 문서와 diff 검증
+### Documentation and Diff Checks
 
-저장소 루트에서 실행합니다.
+Run these commands from the repository root.
 
 ```bash
 git diff --check
-git diff -- README.md CONTRIBUTING.md installers/macos/
+git diff -- README.md CONTRIBUTING.md language/ installers/macos/
 git status --short
 ```
 
-`git diff`에는 추적 중인 파일의 변경만 표시됩니다. 새 파일은 편집기에서 전체 내용을 별도로 확인합니다.
+`git diff` shows changes only to tracked files. Review the full contents of new files separately in an editor.
 
-Markdown 미리보기에서 제목, 표, 코드 블록과 배지를 확인하고, 목차와 상대 링크를 직접 점검합니다.
-라이선스 표시의 소유자와 연도는 [LICENSE](./LICENSE)와 일치해야 합니다.
+Check headings, tables, code blocks, and badges in a Markdown preview, and verify the table of contents and relative links.
+The license owner and year must match [LICENSE](./LICENSE).
 
-### 기능별 검증 기준
+### Validation by Feature
 
-Shell 테스트 외 정적 검사 도구와 CI는 아직 준비하지 않았습니다. 아래 기능을 추가할 때 해당 검증도 함께 추가합니다.
+Static analysis tools beyond the shell tests and CI are not yet available. Add the corresponding checks when implementing the features below.
 
-| 변경 영역       | 확인할 동작                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------- |
-| 정보 수집       | 원문 출처와 확인 시점 보존, 중복 공지 처리, 수집 실패와 오래된 정보 표시                  |
-| 영향 판단       | 영향 범위 안팎의 버전 구분, 수정 버전 구분, 알 수 없는 상태를 안전한 상태로 표시하지 않음 |
-| PC 상태 확인    | 설치된 버전과 실제 실행 경로 구분, 관리 도구 간 충돌과 미지원 환경 표시                   |
-| 설치와 업데이트 | 변경 대상과 결과 표시, 다운로드나 적용 실패 처리, 설정 백업과 복구 가능한 범위 확인       |
-| 알림과 안내     | 문제, 필요한 행동과 결과를 이해하기 쉽게 표시, 재시작이 필요한 경우 별도 안내             |
+| Area of change | Behavior to verify |
+| --- | --- |
+| Information collection | Preserve original sources and verification dates, handle duplicate advisories, and show collection failures and stale information |
+| Impact assessment | Distinguish affected and unaffected versions and fixed versions; do not label an unknown state as safe |
+| Computer status checks | Distinguish installed versions from actual executable paths, management tool conflicts, and unsupported environments |
+| Installation and updates | Show targets and results, handle download or application failures, and document configuration backups and recovery limits |
+| Notifications and guidance | Clearly explain the problem, required action, and result; indicate when a restart is needed |
 
-PC 설정을 바꾸는 테스트는 임시 디렉터리나 격리 환경에서 실행합니다. 업데이트 정책이 정해지기 전에는 자동 적용을 기본 동작으로 가정하지 않습니다.
-새 버전 설치와 이미 실행 중인 프로그램의 버전 전환을 구분하고, 재시작이 필요한 상태를 완료로 표시하지 않습니다.
+Run tests that change computer settings in temporary directories or isolated environments. Do not assume automatic updates are the default before the update policy is defined.
+Distinguish installing a new version from switching a running program to it. Do not report a state that still requires a restart as complete.
 
-## 커밋과 Pull Request
+## Commits and Pull Requests
 
-커밋 전에는 변경한 파일과 diff를 확인하고 필요한 파일만 선택해 포함합니다.
-커밋 메시지는 변경 내용을 짧고 구체적으로 설명합니다. 예: `docs: Shelter 소개와 기여 가이드 작성`.
+Before committing, inspect the changed files and diff, and include only the files needed for the change.
+Keep commit messages short and specific. For example: `docs: add Shelter introduction and contribution guide`.
 
-AI 도구와 작업할 때는 변경분을 먼저 검토합니다. 사용자의 명시적 커밋 지시 없이 스테이징하거나 커밋하지 않으며, 커밋에 `Co-Authored-By`를 추가하지 않습니다.
+When working with AI tools, review the diff first. Do not stage or commit without an explicit instruction from the user, and do not add `Co-Authored-By` to commits.
 
-Pull Request에는 다음 내용을 적어 주세요.
+Include the following in a pull request:
 
-- 해결하려는 문제와 변경 후 동작
-- 확인한 명령과 결과, 실행하지 못한 검증
-- 사용자가 알아야 할 제약이나 후속 작업
+- The problem being solved and the resulting behavior
+- Commands checked, their results, and validation that could not be performed
+- Constraints or follow-up work that users should know about
 
-문서 변경에는 링크와 미리보기 확인 결과를, 기능 변경에는 재현 가능한 검증 결과를 포함합니다.
-이슈가 있다면 연결하고, 기여 범위를 벗어나는 이슈나 별도 Pull Request는 자동으로 만들지 않습니다.
+For documentation changes, report link and preview checks. For functional changes, provide reproducible validation results.
+Link a related issue if one exists. Do not automatically create unrelated issues or separate pull requests outside the contribution's scope.
 
-## 배포
+## Distribution
 
-현재 소스에서 라이트 설치기를 실행할 수 있습니다. 배포 워크플로우, Homebrew Tap과 Formula, 원격 단일 설치 명령은 준비되지 않았습니다.
-첫 배포를 구현할 때 지원 운영체제, 설치 의존성, 릴리스 산출물과 검증 방법을 이 절에 추가합니다.
+The Lite installer can currently be run from source. A distribution workflow, Homebrew Tap and Formula, and a single remote installation command are not yet available.
+When implementing the first distribution, add supported operating systems, installation dependencies, release artifacts, and validation methods to this section.
 
-Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프트웨어를 업데이트하는 동작을 구분합니다.
-릴리스 안내에는 변경 내용, 지원 범위와 확인된 제약을 함께 기록하고, 설치와 업데이트를 검증한 후 공개합니다.
+Distinguish updating Shelter itself from Shelter updating software on the user's computer.
+Release notes should include changes, the support scope, and known constraints. Publish only after verifying installation and updates.
