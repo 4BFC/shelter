@@ -7,7 +7,7 @@
 Shelter의 문서 개선과 개발에 참여하는 방법을 안내합니다.
 제품 목적, 구성과 기술 방향은 [한국어 README](./README.md)를 기준으로 합니다.
 
-현재 macOS 라이트 설치기와 임시 환경 테스트를 제공합니다. 정식 CLI, CI와 패키지 배포는 아직 준비 전입니다.
+현재 macOS용 Shelter Lite, 임시 환경 테스트와 로컬 단일 파일 패키징을 제공합니다. 정식 CLI, CI와 공개 릴리스 자동화는 아직 준비 전입니다.
 
 ## 목차
 
@@ -48,6 +48,8 @@ git status --short
 
 Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고, 터미널에서 해당 폴더로 이동합니다. `install.sh`, `messages.sh`, `tools.sh`가 함께 있어야 합니다.
 
+단일 배포 파일은 이 세 파일을 내부에 포함합니다. 생성과 실행 방법은 [배포](#배포)를 참고하세요.
+
 ### 실행 환경
 
 실제 설치 대상은 **macOS 15 이상, Apple Silicon, zsh 또는 bash**입니다. Intel, Rosetta와 Windows에서는 설치하지 않고 종료합니다. macOS 기본 `/bin/bash`로 실행하며 Bash 3.2.57에서 검사했습니다. Python이나 Node.js를 미리 준비할 필요는 없습니다.
@@ -76,7 +78,7 @@ Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으�
 open -a Ghostty
 ```
 
-기본 화면에는 초기 설정을 시작한다는 안내와 최종 **설치 완료 또는 설치 실패**를 요약하고, 짧은 설명과 다음 행동을 함께 표시합니다. Homebrew가 없는 Mac에서는 공식 최초 설치기의 확인과 관리자 인증 안내를 터미널에 직접 표시합니다.
+설치를 시작하면 Shelter Lite ASCII 로고가 한 번 표시됩니다. 기본 화면에는 초기 설정을 시작한다는 안내와 최종 **설치 완료 또는 설치 실패**를 요약하고, 짧은 설명과 다음 행동을 함께 표시합니다. Homebrew가 없는 Mac에서는 공식 최초 설치기의 확인과 관리자 인증 안내를 터미널에 직접 표시합니다.
 
 | 메시지 | 표시하는 내용 |
 | --- | --- |
@@ -160,7 +162,7 @@ Git 사용자 정보와 `gh auth login`은 자동으로 설정하지 않습니�
 ## 디렉터리 추가와 변경
 
 전체 배치와 각 경로의 책임은 [README의 저장소 구조](./README.md#저장소-구조)를 기준으로 합니다.
-현재 설치기는 세 Shell 파일과 `tests/test.sh`로 구성합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
+실행 코드는 `install.sh`, `messages.sh`, `tools.sh`로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
 2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
@@ -262,13 +264,15 @@ git switch -c docs/update-introduction
 저장소 루트에서 구문 검사와 임시 환경 테스트를 실행합니다. 별도 테스트 패키지가 필요하지 않습니다.
 
 ```bash
-for script in installers/macos/install.sh installers/macos/messages.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
+for script in installers/macos/*.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh
 ```
 
 테스트는 Homebrew, 다운로드, 설치 명령과 환경 판별을 대체하고 임시 디렉터리에만 결과를 씁니다. 실제 프로그램이나 사용자 셸 설정을 변경하지 않습니다. 고정 스펙 설치, 기존 버전 보존, 재실행, 설치 실패, 잘못된 옵션, 미지원 환경, 설정 백업과 다른 편집기의 `code` 명령 보존을 검사합니다. 간결한 화면과 상세 로그의 분리, 로그 권한, `●`와 결과 제목의 색상 및 본문의 기본 색상, 상태별 미리보기, 설치 흐름 테스트의 격리와 종료 코드도 검사합니다. Ghostty는 `PATH`에 없는 기존 앱의 보존, 손상된 앱 감지, 설치 실패와 재시도, 설치 후 실행 검증도 검사합니다.
+
+패키징 테스트는 체크섬, 동일 소스의 재현 가능한 출력, 파일 하나를 다른 경로로 옮긴 뒤 도움말 실행, 설치 없이 소스 로드를 검사합니다. 설치 화면에서는 ASCII 로고가 한 번 표시되는지도 검사합니다.
 
 지원되는 Mac에서는 다음 읽기 전용 명령도 확인합니다.
 
@@ -286,7 +290,7 @@ done
 
 ```bash
 git diff --check
-git diff -- README.md CONTRIBUTING.md language/ installers/macos/
+git diff -- .gitignore README.md CONTRIBUTING.md language/ installers/macos/
 git status --short
 ```
 
@@ -328,8 +332,44 @@ Pull Request에는 다음 내용을 적어 주세요.
 
 ## 배포
 
-현재 소스에서 라이트 설치기를 실행할 수 있습니다. 배포 워크플로우, Homebrew Tap과 Formula, 원격 단일 설치 명령은 준비되지 않았습니다.
-첫 배포를 구현할 때 지원 운영체제, 설치 의존성, 릴리스 산출물과 검증 방법을 이 절에 추가합니다.
+저장소 루트에서 Shelter Lite 단일 배포 파일을 생성합니다. 패키징에는 macOS 기본 Bash와 명령줄 도구를 사용하며, 프로그램을 다운로드하거나 설치하지 않습니다.
+
+```bash
+/bin/bash installers/macos/build.sh
+```
+
+생성 결과는 다음과 같습니다.
+
+```text
+dist/
+├── shelter-lite-macos.sh        # 단일 설치 파일
+└── shelter-lite-macos.sh.sha256 # SHA-256 체크섬
+```
+
+`.sh` 파일에 `install.sh`, `messages.sh`, `tools.sh`와 MIT 라이선스를 포함하므로, 이 파일 하나를 어떤 폴더로 옮겨도 실행할 수 있습니다. `dist/`는 Git 관리에서 제외합니다. 생성 파일을 직접 수정하지 말고 원본을 수정한 뒤 다시 생성합니다. 같은 소스에서는 같은 파일이 생성됩니다. 다른 출력 경로가 필요하면 `--output-dir "/path/with spaces"`를 사용합니다.
+
+체크섬을 확인하고 단일 배포 파일의 코드로 격리된 테스트를 실행합니다.
+
+```bash
+(cd dist && shasum -a 256 -c shelter-lite-macos.sh.sha256)
+/bin/bash dist/shelter-lite-macos.sh --help
+SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
+```
+
+`.sh`와 체크섬 파일을 함께 전달합니다. 사용자가 다운로드 폴더에 저장했다면 다음 명령으로 파일을 검증하고 설치 계획을 확인할 수 있습니다.
+
+```bash
+cd ~/Downloads
+shasum -a 256 -c shelter-lite-macos.sh.sha256 && /bin/bash shelter-lite-macos.sh --dry-run
+```
+
+계획을 확인한 뒤 설치를 시작합니다.
+
+```bash
+/bin/bash shelter-lite-macos.sh
+```
+
+지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트가 새 Mac의 전체 설치 검증을 대신하지는 않으므로 공개 릴리스 전에 해당 검증이 필요합니다. 공개 릴리스 자동화, Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
 
 Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프트웨어를 업데이트하는 동작을 구분합니다.
 릴리스 안내에는 변경 내용, 지원 범위와 확인된 제약을 함께 기록하고, 설치와 업데이트를 검증한 후 공개합니다.

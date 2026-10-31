@@ -12,6 +12,9 @@ shelter_copy() {
     invalid_color) template='--color must be auto, always, or never.' ;;
     conflicting_actions) template='--check and --dry-run cannot be combined.' ;;
     unknown_option) template='Unknown option: %s' ;;
+    build_failed) template='Could not build the Shelter Lite distribution file.' ;;
+    build_complete) template='Created: %s' ;;
+    build_checksum) template='SHA-256 checksum: %s' ;;
     full_unavailable) template='The full version is not available yet. Use Lite instead.' ;;
     invalid_mode) template='The supported mode is lite.' ;;
     status_changed) template='The status of %s changed: %s' ;;
@@ -327,11 +330,21 @@ shelter_describe_install() {
   esac
 }
 
-shelter_help() {
-  cat <<'HELP'
-Shelter Lite — A shelter for your environment
+shelter_logo() {
+  cat <<'LOGO'
+  ____  _          _ _              _     _ _
+ / ___|| |__   ___| | |_ ___ _ __   | |   (_) |_ ___
+ \___ \| '_ \ / _ \ | __/ _ \ '__|  | |   | | __/ _ \
+  ___) | | | |  __/ | ||  __/ |     | |___| | ||  __/
+ |____/|_| |_|\___|_|\__\___|_|     |_____|_|\__\___|
 
-Usage: /bin/bash installers/macos/install.sh [options]
+LOGO
+}
+
+shelter_help() {
+  printf 'Shelter Lite — A shelter for your environment\n\n'
+  printf 'Usage: /bin/bash %q [options]\n' "${SHELTER_ENTRY_PATH:-installers/macos/install.sh}"
+  cat <<'HELP'
 
   --check         Check installed tools only. Exit 1 if any tool is missing or fails
   --dry-run       Show the installation plan. No downloads or configuration changes
@@ -347,6 +360,16 @@ Skip existing tools that run successfully. Homebrew handles dependencies for new
 New installations use Node.js 24 and Python 3.14 managed by uv.
 The default output shows the final result and brief guidance, with warnings when needed.
 Details are saved in logs/ under the configuration directory.
+HELP
+}
+
+shelter_build_help() {
+  cat <<'HELP'
+Usage: /bin/bash installers/macos/build.sh [--output-dir DIR]
+
+Build a standalone Shelter Lite installer and its SHA-256 checksum.
+The default output directory is dist/ at the repository root.
+No programs are downloaded or installed during the build.
 HELP
 }
 
@@ -368,5 +391,6 @@ Usage: /bin/bash installers/macos/tests/test.sh [options]
                                Omit MODE to force colors for this run
 
 --intall is an alias for --install. Tests do not install programs on your actual computer.
+Set SHELTER_TEST_INSTALLER to a standalone installer path to test the bundled code.
 HELP
 }

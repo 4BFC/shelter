@@ -1,11 +1,14 @@
 #!/bin/bash
 # macOS ships Bash 3.2. Keep this entry point compatible with it.
 
+SHELTER_ENTRY_PATH=${BASH_SOURCE[0]}
+# BEGIN SHELTER SOURCE IMPORTS
 SHELTER_SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P) || exit 1
 # shellcheck source=messages.sh
 source "$SHELTER_SCRIPT_DIR/messages.sh" || exit 1
 # shellcheck source=tools.sh
 source "$SHELTER_SCRIPT_DIR/tools.sh" || exit 1
+# END SHELTER SOURCE IMPORTS
 
 shelter_plan() {
   local tool missing=0 blocked=0 rc
@@ -107,6 +110,7 @@ shelter_main() {
     shelter_run
     return $?
   fi
+  shelter_logo
   if ! SHELTER_LOG_FILE=$(shelter_create_log); then
     shelter_notice failure log_creation_failed
     shelter_message info check_config_permissions

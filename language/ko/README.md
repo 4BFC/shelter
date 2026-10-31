@@ -13,7 +13,7 @@
 Shelter는 사용자가 보안 소식을 일일이 찾아보지 않아도, 자신의 환경에 필요한 업데이트를 알고 적용할 수 있도록 돕는 프로젝트입니다.
 보안 이슈와 업데이트 정보는 별도 웹사이트에서 제공하고, CLI로 사용자 PC의 상태 확인과 알림, 업데이트를 연결하는 것을 목표로 합니다.
 
-**현재는 라이트 설치기의 첫 구현 단계입니다.** macOS에서 정해진 개발 도구를 한 번에 준비하는 Shell 설치기를 제공합니다. 임시 환경 테스트와 실제 Mac의 설치 미리보기를 검증했으며, 새 Mac에서의 실제 설치 검증과 정식 CLI 구현은 남아 있습니다.
+**현재는 Shelter Lite 설치기의 첫 구현 단계입니다.** macOS에서 정해진 개발 도구를 한 번에 준비하는 Shell 설치기를 제공합니다. 임시 환경 테스트와 실제 Mac의 설치 미리보기를 검증했으며, 새 Mac에서의 실제 설치 검증과 정식 CLI 구현은 남아 있습니다.
 
 ## 목차
 
@@ -39,8 +39,8 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 
 ## 설치
 
-라이트 설치기는 저장소의 Shell 파일로 실행합니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
-별도 Shelter 패키지와 Homebrew Tap은 아직 배포하지 않았습니다.
+Shelter Lite는 저장소의 Shell 파일 또는 생성한 단일 배포 파일 `shelter-lite-macos.sh`로 실행합니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
+로컬에서 단일 파일 패키징을 할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. 공개 릴리스 자동화와 Homebrew Tap은 아직 구성하지 않았습니다.
 
 저장소 받기와 실행 절차는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비), 설치 시 변경되는 설정은 [라이트 실행](./CONTRIBUTING.md#라이트-실행)을 참고하세요.
 
@@ -78,7 +78,7 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 보안 이슈를 빠르게 파악할 수 있도록 지속적인 추적을 목표로 합니다. 수집 주기와 알림 지연은 아직 정하지 않았습니다.
 Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대상으로 검토합니다.
 
-**라이트 버전**은 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초심자용 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
+**Shelter Lite**은 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
 **정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
 두 버전의 설치 스크립트는 `installers/macos/`에서 함께 관리합니다. 정식 CLI 본체는 설치기와 구분하며, Python을 채택하면 `src/shelter/`에 구현할 예정입니다.
 
@@ -113,14 +113,14 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 | 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
 | CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                   |
 | CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                        |
-| 초심자용 설치기      | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 고정 스펙의 최초 설치와 실행 환경 준비 | 구현됨, Bash 3.2.57로 검사 |
+| Shelter Lite      | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 고정 스펙의 최초 설치와 실행 환경 준비 | 구현됨, Bash 3.2.57로 검사 |
 | macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                              |
 
 지원 조건과 설치 정책의 근거 파일은 [install.sh](../../installers/macos/install.sh), [tools.sh](../../installers/macos/tools.sh)입니다. 최소 운영체제는 [Homebrew 설치 요구사항](https://docs.brew.sh/Installation)을 기준으로 제한합니다. 현재 실기기 확인은 macOS 26.6.2의 미리보기까지이며, 지원 범위 전체의 실제 설치를 검증한 것은 아닙니다.
 
 ## 개발 계획
 
-1. **초심자용 설치기 검증:** 환경 확인, 고정 스펙 설치와 결과 확인을 구현했습니다. 새 Mac에서 실제 설치, 터미널 재시작과 재실행을 검증한 뒤 배포합니다.
+1. **Shelter Lite 검증:** 환경 확인, 고정 스펙 설치와 결과 확인을 구현했습니다. 새 Mac에서 실제 설치, 터미널 재시작과 재실행을 검증한 뒤 배포합니다.
 2. **CLI 연결:** PC의 설치 상태와 별도 웹사이트의 보안 정보를 연결하고, 해당 환경에 필요한 업데이트를 알립니다.
 3. **업데이트와 확장:** 적용 결과 확인과 실패 대응을 구현하고, 도구 통합 설치를 확장합니다.
 
@@ -135,8 +135,12 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 
 ```text
 shelter/
+├── dist/             # 생성 결과, Git 관리 제외
+│   ├── shelter-lite-macos.sh
+│   └── shelter-lite-macos.sh.sha256
 ├── installers/
 │   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
+│       ├── build.sh   # 단일 배포 파일 생성
 │       ├── install.sh # 진입점, 고정 스펙과 설치 순서
 │       ├── messages.sh # 영문 메시지, 오류 문구, 색상과 출력 형식
 │       ├── tools.sh   # 도구 확인, 설치, 셸 설정
@@ -157,6 +161,8 @@ shelter/
 ### 구성 요소의 역할
 
 [messages.sh](../../installers/macos/messages.sh)는 설치기와 테스트가 공유하는 영문 안내, 경고, 오류, 도움말과 터미널 출력 형식의 단일 관리 지점(SSOT)입니다. 실패 판단, 설치 중단과 종료 코드는 `install.sh`와 `tools.sh`에서 담당합니다.
+
+[build.sh](../../installers/macos/build.sh)는 실행 소스와 MIT 라이선스를 `dist/shelter-lite-macos.sh` 하나로 묶습니다. 생성 파일에도 같은 메시지와 설치 로직을 포함하며, 수정은 원본에서 하고 다시 생성합니다.
 
 라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
 

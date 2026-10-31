@@ -13,7 +13,7 @@
 Shelterは、ユーザーがセキュリティ情報を一つずつ調べなくても、自分の環境に必要な更新を把握して適用できるようにするプロジェクトです。
 セキュリティ問題と更新情報は別のWebサイトで提供し、CLIを通じてユーザーのPCの状態確認、通知、更新につなげることを目指しています。
 
-**現在はライト版インストーラーの初期実装段階です。** macOS上で決められた開発ツールをまとめて準備するシェルインストーラーを提供しています。一時環境でのテストと実際のMacでのインストールプレビューは検証済みです。新しいMacでの実際のインストール検証と正式版CLIの実装は今後の作業です。
+**現在はShelter Liteインストーラーの初期実装段階です。** macOS上で決められた開発ツールをまとめて準備するシェルインストーラーを提供しています。一時環境でのテストと実際のMacでのインストールプレビューは検証済みです。新しいMacでの実際のインストール検証と正式版CLIの実装は今後の作業です。
 
 ## 目次
 
@@ -39,8 +39,8 @@ Shelterは、この流れを**追跡 → 自分の環境との照合 → 通知 
 
 ## インストール
 
-ライト版インストーラーは、リポジトリ内のシェルファイルから実行します。対象は**macOS 15以降、Apple Siliconのネイティブなターミナル環境**で、zshとbashの設定に対応しています。
-Shelter単体のパッケージとHomebrew Tapはまだ配布していません。
+Shelter Liteは、リポジトリ内のシェルファイル、または生成した単一配布ファイル`shelter-lite-macos.sh`から実行します。対象は**macOS 15以降、Apple Siliconのネイティブなターミナル環境**で、zshとbashの設定に対応しています。
+ローカルで単一ファイルのパッケージングができます。生成、検証、実行の方法は[CONTRIBUTINGの配布](./CONTRIBUTING.md#配布)を参照してください。公開リリースの自動化とHomebrew Tapはまだ構成していません。
 
 リポジトリの取得と実行手順は[CONTRIBUTINGの開発準備](./CONTRIBUTING.md#開発準備)、インストール時に変更される設定は[ライト版の実行](./CONTRIBUTING.md#ライト版の実行)を参照してください。
 
@@ -78,7 +78,7 @@ Webサイトでセキュリティ問題と更新情報を確認
 セキュリティ問題をすばやく把握できるよう、継続的な追跡を目指します。収集間隔と通知までの時間はまだ決めていません。
 CodexやClaude Codeなどのツールをまとめてインストール、管理する機能は、今後の拡張として検討します。
 
-**ライト版**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初心者向けの初期設定です。個別のツールを選択または除外する機能は提供しません。
+**Shelter Lite**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初期設定です。個別のツールを選択または除外する機能は提供しません。
 **正式版**は、インストール後も状態確認、セキュリティ通知、更新を継続して提供するCLIです。
 両バージョンのインストールスクリプトは`installers/macos/`でまとめて管理します。正式版CLI本体はインストーラーと分け、Pythonを採用した場合は`src/shelter/`に実装する予定です。
 
@@ -113,14 +113,14 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 | Webサイトと情報収集 | 未定 | セキュリティ情報の収集、参照、ユーザー画面 | 技術選定前 |
 | CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | 優先候補。バージョンは未定 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | 候補。バージョンは未定 |
-| 初心者向けインストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 固定仕様の初回インストールと実行環境の準備 | 実装済み。Bash 3.2.57で検査 |
+| Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 固定仕様の初回インストールと実行環境の準備 | 実装済み。Bash 3.2.57で検査 |
 | macOSでの配布 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | CLIのインストールとCLI自体の更新 | 配布方法の候補 |
 
 サポート条件とインストール方針の実装は[install.sh](../../installers/macos/install.sh)と[tools.sh](../../installers/macos/tools.sh)にあります。OSの最低要件は[Homebrewのインストール要件](https://docs.brew.sh/Installation)に基づいて制限しています。現在の実機確認はmacOS 26.6.2でのプレビューまでで、サポート範囲全体での実際のインストールを検証したものではありません。
 
 ## 開発計画
 
-1. **初心者向けインストーラーの検証:** 環境確認、固定仕様のインストール、結果確認は実装済みです。新しいMacでのインストール、ターミナルの再起動、再実行を検証してから配布します。
+1. **Shelter Liteの検証:** 環境確認、固定仕様のインストール、結果確認は実装済みです。新しいMacでのインストール、ターミナルの再起動、再実行を検証してから配布します。
 2. **CLIの連携:** PCのインストール状態と別のWebサイトのセキュリティ情報を結び付け、その環境に関係する更新を通知します。
 3. **更新と拡張:** 適用結果の確認と失敗時の対応を実装し、ツールの統合インストールを拡張します。
 
@@ -135,8 +135,12 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 
 ```text
 shelter/
+├── dist/             # 生成結果、Git管理対象外
+│   ├── shelter-lite-macos.sh
+│   └── shelter-lite-macos.sh.sha256
 ├── installers/
 │   └── macos/        # ライト版と将来の正式版のmacOSインストーラー
+│       ├── build.sh   # 単一配布ファイルを生成
 │       ├── install.sh # エントリーポイント、固定仕様、インストール順序
 │       ├── messages.sh # 英語メッセージ、エラー文言、色と出力形式
 │       ├── tools.sh   # ツールの確認、インストール、シェル設定
@@ -157,6 +161,8 @@ shelter/
 ### 各構成要素の役割
 
 [messages.sh](../../installers/macos/messages.sh)は、インストーラーとテストが共有する英語の案内、警告、エラー、ヘルプとターミナルの出力形式を一元管理するファイル（SSOT）です。失敗の判定、インストールの中断と終了コードは`install.sh`と`tools.sh`で管理します。
+
+[build.sh](../../installers/macos/build.sh)は、実行用ソースとMITライセンスを`dist/shelter-lite-macos.sh`にまとめます。生成ファイルにも同じメッセージとインストール処理を含めます。変更は元のソースに加え、再生成してください。
 
 ライト版は`install.sh`で固定仕様全体のインストールを開始し、`tools.sh`の関数を呼び出します。正式版を提供する際も、同じエントリーポイントに正式版CLIのインストール処理を接続する予定です。現在の`--mode full`は準備中の案内を表示して終了します。バージョン別やツール別のインストールディレクトリは事前に分割しません。
 

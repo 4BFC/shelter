@@ -7,7 +7,7 @@
 This guide explains how to improve Shelter's documentation and contribute to its development.
 See the [README](./README.md) for the project's purpose, components, and technical direction.
 
-The macOS Lite installer and tests using temporary environments are currently available. The full CLI, CI, and package distribution are not yet ready.
+Shelter Lite for macOS, tests using temporary environments, and local single-file packaging are available. The full CLI, CI, and public release automation are not yet ready.
 
 ## Table of Contents
 
@@ -48,6 +48,8 @@ git status --short
 
 On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep `install.sh`, `messages.sh`, and `tools.sh` together.
 
+The standalone distribution file includes these three files internally; see [Distribution](#distribution) for how to build and use it.
+
 ### Runtime Environment
 
 The installation target is **macOS 15 or later, Apple Silicon, and zsh or bash**. On Intel, Rosetta, and Windows, the installer exits without installing. It runs with macOS's `/bin/bash` and has been checked with Bash 3.2.57. Python and Node.js do not need to be installed beforehand.
@@ -76,7 +78,7 @@ After setup, open Ghostty from the Applications folder or run:
 open -a Ghostty
 ```
 
-The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
+An ASCII Shelter Lite logo appears once when installation starts. The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
 
 | Message | What it explains |
 | --- | --- |
@@ -160,7 +162,7 @@ If you need to restore a backup, compare the original and backup paths recorded 
 ## Adding and Changing Directories
 
 Use [Repository Structure in the README](./README.md#repository-structure) as the reference for the overall layout and each path's responsibility.
-The installer currently consists of three shell files and `tests/test.sh`. Add further paths only as their functionality is implemented.
+The runtime consists of `install.sh`, `messages.sh`, and `tools.sh`; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
 
 1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
 2. **Connect installation of the full version.** When the full CLI and its distribution artifacts are ready, add its workflow to the same `install.sh` under `full` mode and reuse the tool installation functions. Currently, that mode exits after a message that it is not yet available.
@@ -262,13 +264,15 @@ Use `install.sh --dry-run` to read the current Mac's actual state and inspect th
 Run syntax checks and tests using temporary environments from the repository root. No separate test package is required.
 
 ```bash
-for script in installers/macos/install.sh installers/macos/messages.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
+for script in installers/macos/*.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh
 ```
 
 Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests. Ghostty tests cover keeping an existing app outside `PATH`, detecting damaged apps, installation failure and retry, and verification after installation.
+
+Packaging tests also verify checksums, reproducible output, running help after relocating a single file, and loading it without starting installation. The installation output checks that the ASCII logo appears once.
 
 On a supported Mac, also check these read-only commands:
 
@@ -286,7 +290,7 @@ Run these commands from the repository root.
 
 ```bash
 git diff --check
-git diff -- README.md CONTRIBUTING.md language/ installers/macos/
+git diff -- .gitignore README.md CONTRIBUTING.md language/ installers/macos/
 git status --short
 ```
 
@@ -328,8 +332,44 @@ Link a related issue if one exists. Do not automatically create unrelated issues
 
 ## Distribution
 
-The Lite installer can currently be run from source. A distribution workflow, Homebrew Tap and Formula, and a single remote installation command are not yet available.
-When implementing the first distribution, add supported operating systems, installation dependencies, release artifacts, and validation methods to this section.
+Build the standalone Shelter Lite installer from the repository root. Packaging uses macOS's Bash and standard command-line tools; it does not download or install programs.
+
+```bash
+/bin/bash installers/macos/build.sh
+```
+
+The generated files are:
+
+```text
+dist/
+├── shelter-lite-macos.sh        # Standalone installer
+└── shelter-lite-macos.sh.sha256 # SHA-256 checksum
+```
+
+The `.sh` file embeds `install.sh`, `messages.sh`, `tools.sh`, and the MIT license. It can run by itself from any folder. `dist/` is excluded from Git; edit the sources and rebuild instead of editing the generated file. Unchanged sources produce identical output. To choose another output directory, use `--output-dir "/path/with spaces"`.
+
+Verify the checksum and run the isolated test suite against the bundled code:
+
+```bash
+(cd dist && shasum -a 256 -c shelter-lite-macos.sh.sha256)
+/bin/bash dist/shelter-lite-macos.sh --help
+SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
+```
+
+Share the `.sh` and checksum files together. Users who save them in Downloads can verify the file and inspect the plan as follows:
+
+```bash
+cd ~/Downloads
+shasum -a 256 -c shelter-lite-macos.sh.sha256 && /bin/bash shelter-lite-macos.sh --dry-run
+```
+
+After reviewing the plan, start installation:
+
+```bash
+/bin/bash shelter-lite-macos.sh
+```
+
+The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at startup. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Public release automation, Homebrew distribution, and a remote one-command installer remain planned.
 
 Distinguish updating Shelter itself from Shelter updating software on the user's computer.
 Release notes should include changes, the support scope, and known constraints. Publish only after verifying installation and updates.

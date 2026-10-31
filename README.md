@@ -13,7 +13,7 @@ A shelter for your environment. From tracking security threats to notifications 
 Shelter aims to help users identify and apply the updates their environment needs without having to follow security news themselves.
 Security issues and update information will be provided through a separate website, with a CLI connecting that information to status checks, notifications, and updates on the user's computer.
 
-**The Lite installer is currently in its first implementation stage.** It provides a shell installer that prepares a fixed set of development tools on macOS. Tests in temporary environments and installation previews on a real Mac have been verified. Full installation on a new Mac and implementation of the full CLI remain to be completed.
+**The Shelter Lite installer is currently in its first implementation stage.** It provides a shell installer that prepares a fixed set of development tools on macOS. Tests in temporary environments and installation previews on a real Mac have been verified. Full installation on a new Mac and implementation of the full CLI remain to be completed.
 
 ## Table of Contents
 
@@ -39,8 +39,8 @@ Its primary audience is people unfamiliar with security advisories or developmen
 
 ## Install
 
-Run the Lite installer using the shell files in this repository. It targets **macOS 15 or later in a native Apple Silicon terminal environment** and supports zsh and bash configuration.
-A standalone Shelter package and Homebrew Tap have not been released yet.
+Run Shelter Lite using the shell files in this repository or the generated standalone `shelter-lite-macos.sh` file. It targets **macOS 15 or later in a native Apple Silicon terminal environment** and supports zsh and bash configuration.
+Local single-file packaging is available. See [Distribution in CONTRIBUTING](./CONTRIBUTING.md#distribution) for building, checking, and running the file. Public release automation and a Homebrew Tap are not yet configured.
 
 See [Development Setup in CONTRIBUTING](./CONTRIBUTING.md#development-setup) for obtaining the repository and getting started, and [Running Lite](./CONTRIBUTING.md#running-lite) for settings changed during installation.
 
@@ -78,7 +78,7 @@ The **CLI** connects that information to the state of the user's computer.
 The goal is continuous tracking so security issues can be identified promptly. Collection intervals and notification latency have not been decided.
 Integrated installation and management of tools such as Codex and Claude Code may be considered in later expansions.
 
-The **Lite version** is an initial setup for beginners that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
+The **Shelter Lite** is an initial setup that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
 The **full version** will be a CLI that continues to provide status checks, security notifications, and updates after installation.
 Installation scripts for both versions are managed in `installers/macos/`. The full CLI implementation is separate from the installer; if Python is chosen, it will be implemented in `src/shelter/`.
 
@@ -113,14 +113,14 @@ Lite runs with the Bash included in macOS; Node.js and Python do not need to be 
 | Website and information collection | Undecided | Collect security information and provide access and user interfaces | Technology selection pending |
 | CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Primary candidate; version undecided |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | Candidates; versions undecided |
-| Beginner installer | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Initial installation and environment setup for the fixed specification | Implemented and checked with Bash 3.2.57 |
+| Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Initial installation and environment setup for the fixed specification | Implemented and checked with Bash 3.2.57 |
 | macOS distribution | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Install and update the CLI itself | Distribution candidate |
 
 Support conditions and installation policies are implemented in [install.sh](./installers/macos/install.sh) and [tools.sh](./installers/macos/tools.sh). The minimum operating system is restricted based on the [Homebrew installation requirements](https://docs.brew.sh/Installation). Real-device checks currently cover previews on macOS 26.6.2; actual installation across the full support range has not been verified.
 
 ## Roadmap
 
-1. **Validate the beginner installer:** Environment checks, fixed-specification installation, and result verification are implemented. Verify installation on a new Mac, terminal restarts, and reruns before distribution.
+1. **Validate the Shelter Lite:** Environment checks, fixed-specification installation, and result verification are implemented. Verify installation on a new Mac, terminal restarts, and reruns before distribution.
 2. **Connect the CLI:** Connect the computer's installed software to security information from the separate website, and notify users about relevant updates.
 3. **Updates and expansion:** Implement result verification and failure handling, and expand integrated tool installation.
 
@@ -135,8 +135,12 @@ The directories, executable code, and documentation currently present are listed
 
 ```text
 shelter/
+├── dist/             # Generated output, excluded from Git
+│   ├── shelter-lite-macos.sh
+│   └── shelter-lite-macos.sh.sha256
 ├── installers/
 │   └── macos/        # macOS installer for Lite and the future full version
+│       ├── build.sh   # Generate the standalone distribution file
 │       ├── install.sh # Entry point, fixed specification, and installation order
 │       ├── messages.sh # English messages, errors, colors, and output formatting
 │       ├── tools.sh   # Tool checks, installation, and shell configuration
@@ -157,6 +161,8 @@ shelter/
 ### Component Responsibilities
 
 [messages.sh](./installers/macos/messages.sh) is the single source of truth for English guidance, warnings, errors, help, and terminal formatting shared by the installer and tests. Failure detection, stopping installation, and exit codes remain in `install.sh` and `tools.sh`.
+
+[build.sh](./installers/macos/build.sh) bundles the runtime sources and MIT license into `dist/shelter-lite-macos.sh`. The generated file includes the same messages and installation logic; maintain the original sources and rebuild after changes.
 
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 

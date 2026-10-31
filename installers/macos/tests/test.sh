@@ -3,7 +3,7 @@
 # disposable fixtures; HOME and the user's actual package managers are untouched.
 
 TEST_SOURCE_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P) || exit 1
-source "$TEST_SOURCE_DIR/install.sh" || exit 1
+source "${SHELTER_TEST_INSTALLER:-$TEST_SOURCE_DIR/install.sh}" || exit 1
 TEST_MODE=suite
 TEST_SCENARIO=success
 TEST_COLOR=$SHELTER_DEFAULT_COLOR
@@ -195,6 +195,7 @@ test_preview() {
   assert_contains "$SHELTER_CASE_DIR/output" ' Ghostty: brew install --cask ghostty' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Dry run complete' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Actual installations: 0, configuration changes: 0' || return 1
+  assert_absent "$SHELTER_CASE_DIR/output" ' / ___|| |__' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" ' Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results'
 }
 
@@ -448,6 +449,7 @@ test_success_messages() {
   seed_preview_tools || return 1
   export SHELTER_FAKE_SHOW_LOG=1
   shelter_main --color never > "$SHELTER_CASE_DIR/output" || return 1
+  [[ $(grep -Fc ' / ___|| |__' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Installation complete' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" '------------------------------------------------------------' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● success: Your development tools are ready.' || return 1
@@ -461,7 +463,8 @@ test_success_messages() {
   assert_contains "$SHELTER_LOG_FILE" 'VS Code          | New installation complete | Not installed → code fixture-version' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Ghostty          | New installation complete | Not installed → Ghostty 1.0.0' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Homebrew test log:' || return 1
-  [[ $(wc -l < "$SHELTER_CASE_DIR/output") -le 8 ]] && [[ $(LC_ALL=C ls -ld "$SHELTER_LOG_FILE") == -rw-------* ]]
+  # Six logo lines precede the existing concise guidance.
+  [[ $(wc -l < "$SHELTER_CASE_DIR/output") -le 14 ]] && [[ $(LC_ALL=C ls -ld "$SHELTER_LOG_FILE") == -rw-------* ]]
 }
 
 test_failure_messages() {
@@ -469,6 +472,7 @@ test_failure_messages() {
   export SHELTER_FAKE_FAIL=uv
   shelter_main --color never > "$SHELTER_CASE_DIR/output" 2>&1
   [[ $? == 1 ]] || return 1
+  [[ $(grep -Fc ' / ___|| |__' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Installation failed' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● error: Installation or verification failed for Python + uv' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● warning: Installation and configuration changes already made are not rolled back automatically.' || return 1
@@ -655,6 +659,28 @@ if [[ "$TEST_MODE" == install ]]; then
   exit $?
 fi
 
+test_standalone_build() {
+  local output_dir="$SHELTER_CASE_DIR/bundle" copied="$SHELTER_CASE_DIR/relocated setup.sh"
+  /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir "$output_dir" > /dev/null || return 1
+  [[ -x "$output_dir/shelter-lite-macos.sh" ]] || return 1
+  (cd "$output_dir" && shasum -a 256 -c shelter-lite-macos.sh.sha256) || return 1
+  cp "$output_dir/shelter-lite-macos.sh" "$copied" || return 1
+  /bin/bash "$copied" --help > "$SHELTER_CASE_DIR/help" || return 1
+  assert_contains "$SHELTER_CASE_DIR/help" 'relocated\ setup.sh' || return 1
+  assert_absent "$SHELTER_CASE_DIR/help" 'installers/macos/install.sh' || return 1
+  assert_contains "$copied" 'Copyright (c) 2026 poby' || return 1
+  assert_absent "$copied" 'source "$SHELTER_SCRIPT_DIR/' || return 1
+  # Rebuilding unchanged sources must produce the same artifact and valid checksum.
+  /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir "$output_dir" > /dev/null || return 1
+  cmp "$copied" "$output_dir/shelter-lite-macos.sh" || return 1
+  /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir > /dev/null 2>&1
+  [[ $? == 2 ]] || return 1
+  # Loading the single file must be silent and must not start installation.
+  /bin/bash -c 'source "$1"' bash "$copied" > "$SHELTER_CASE_DIR/source-bundle" 2>&1 || return 1
+  [[ ! -s "$SHELTER_CASE_DIR/source-bundle" ]] && assert_empty_log
+}
+
+run_test standalone_bundle_reproducible_and_relocatable test_standalone_build
 run_test message_catalog_and_error_contract test_message_catalog
 run_test preview_no_mutation test_preview
 run_test check_missing test_check_missing
