@@ -6,49 +6,35 @@ TEST_SOURCE_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P
 source "$TEST_SOURCE_DIR/install.sh" || exit 1
 TEST_MODE=suite
 TEST_SCENARIO=success
-TEST_COLOR=auto
+TEST_COLOR=$SHELTER_DEFAULT_COLOR
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --preview|--install|--intall)
-      [[ "$TEST_MODE" == suite ]] || { printf 'Run either a message preview or an installation workflow test at a time.\n' >&2; exit 2; }
+      [[ "$TEST_MODE" == suite ]] || { shelter_print test_conflicting_modes >&2; exit 2; }
       case "$1" in --preview) TEST_MODE=preview ;; *) TEST_MODE=install ;; esac
       if [[ $# -gt 1 && "$2" != --* ]]; then TEST_SCENARIO=$2; shift; fi
       case "$TEST_MODE:$TEST_SCENARIO" in
         preview:notification|preview:warning|preview:failure|preview:success|install:success|install:failure|install:dry-run) ;;
-        *) printf 'Preview states: notification, warning, failure, success\nInstallation test scenarios: success, failure, dry-run\n' >&2; exit 2 ;;
+        *) shelter_print test_invalid_scenario >&2; exit 2 ;;
       esac ;;
     --color)
-      [[ $# -ge 2 ]] || { printf '%s\n' 'A value is required for --color.' >&2; exit 2; }
-      case "$2" in auto|always|never) TEST_COLOR=$2 ;; *) printf 'Supported color modes: auto, always, never\n' >&2; exit 2 ;; esac
-      shift ;;
+      TEST_COLOR=always
+      if [[ $# -gt 1 && "$2" != -* ]]; then
+        case "$2" in auto|always|never) TEST_COLOR=$2 ;; *) shelter_print test_invalid_color >&2; exit 2 ;; esac
+        shift
+      fi ;;
     --help|-h)
-      cat <<'HELP'
-Usage: /bin/bash installers/macos/tests/test.sh [options]
-
-  No options                   Run the full automated test suite
-  --preview [state]             Show only the selected message (default: success)
-    notification               Notice, cyan ●
-    warning                    Caution and next steps, yellow ●
-    failure                    Failure and reason, red ● and result heading
-    success                    Completion and result, green ● and result heading
-  --install [scenario]          Run the full installer in a temporary environment
-    success                    Complete installation workflow (default)
-    failure                    Verify failure and stop during uv installation
-    dry-run                    Show the installation plan
-  --color auto|always|never     Automatic colors / force colors / disable colors
-
---intall is an alias for --install. Tests do not install programs on your actual computer.
-HELP
+      shelter_test_help
       exit 0 ;;
-    *) printf 'Unknown test option: %s\n' "$1" >&2; exit 2 ;;
+    *) shelter_print test_unknown_option "$1" >&2; exit 2 ;;
   esac
   shift
 done
 TEST_PASSED=0
 TEST_FAILED=0
 
-assert_contains() { grep -Fq -- "$2" "$1" || { printf 'Missing: %s\n' "$2"; return 1; }; }
-assert_absent() { ! grep -Fq -- "$2" "$1" || { printf 'Unexpected: %s\n' "$2"; return 1; }; }
+assert_contains() { grep -Fq -- "$2" "$1" || { shelter_print test_missing "$2"; return 1; }; }
+assert_absent() { ! grep -Fq -- "$2" "$1" || { shelter_print test_unexpected "$2"; return 1; }; }
 assert_empty_log() { [[ ! -s "$SHELTER_FAKE_LOG" ]]; }
 
 setup_fixture() {
@@ -56,6 +42,7 @@ setup_fixture() {
   export SHELTER_FAKE_PREFIX="$SHELTER_CASE_DIR/brew"
   export SHELTER_FAKE_PY_BIN="$SHELTER_CASE_DIR/python-bin"
   export SHELTER_FAKE_DRIVER="$SHELTER_CASE_DIR/driver"
+  export SHELTER_FAKE_MESSAGES="$TEST_SOURCE_DIR/messages.sh"
   export SHELTER_FAKE_LOG="$SHELTER_CASE_DIR/actions.log"
   export SHELTER_FAKE_FAIL='' SHELTER_FAKE_BROKEN='' SHELTER_FAKE_NODE_VERSION=v24.22.2
   export SHELTER_FAKE_SHOW_LOG=0
@@ -68,6 +55,7 @@ setup_fixture() {
   hash -r
   cat > "$SHELTER_FAKE_DRIVER" <<'FAKE'
 #!/bin/bash
+source "$SHELTER_FAKE_MESSAGES" || exit 1
 make_tool() {
   local name=$1 target="$SHELTER_FAKE_PREFIX/bin/$1"
   case "$name" in
@@ -98,8 +86,8 @@ if [[ "$name" == brew ]]; then
       [[ "$HOMEBREW_NO_AUTO_UPDATE" == 1 && "$HOMEBREW_NO_INSTALL_CLEANUP" == 1 && "$HOMEBREW_NO_INSTALL_UPGRADE" == 1 ]] || exit 91
       shift
       printf 'brew install %s\n' "$*" >> "$SHELTER_FAKE_LOG"
-      [[ "$SHELTER_FAKE_SHOW_LOG" != 1 ]] || printf 'Homebrew test log: %s\n' "$*"
-      [[ "$SHELTER_FAKE_FAIL" != "${@: -1}" ]] || { printf 'Homebrew test error: installation failed for %s\n' "${@: -1}" >&2; exit 1; }
+      [[ "$SHELTER_FAKE_SHOW_LOG" != 1 ]] || shelter_print test_brew_log "$*"
+      [[ "$SHELTER_FAKE_FAIL" != "${@: -1}" ]] || { shelter_print test_brew_error "${@: -1}" >&2; exit 1; }
       case "$1" in
         node@24) make_tool node; make_tool npm ;;
         --cask) make_tool code ;;
@@ -131,7 +119,7 @@ elif [[ "$name" == uv ]]; then
       fi ;;
     'python install')
       printf 'uv python install %s\n' "$3" >> "$SHELTER_FAKE_LOG"
-      [[ "$SHELTER_FAKE_SHOW_LOG" != 1 ]] || printf 'uv test log: install Python %s\n' "$3"
+      [[ "$SHELTER_FAKE_SHOW_LOG" != 1 ]] || shelter_print test_uv_log "$3"
       [[ "$SHELTER_FAKE_FAIL" != python ]] || exit 1
       make_tool python3.14 ;;
     *) exit 90 ;;
@@ -168,7 +156,12 @@ FAKE
       shift
     done
     [[ -n "$output" ]] || return 90
-    printf '#!/bin/bash\nprintf "Homebrew initial installation notice (test)\\n"\n"$SHELTER_FAKE_DRIVER" create brew\n' > "$output"
+    cat > "$output" <<'BOOTSTRAP'
+#!/bin/bash
+source "$SHELTER_FAKE_MESSAGES" || exit 1
+shelter_print test_brew_bootstrap
+"$SHELTER_FAKE_DRIVER" create brew
+BOOTSTRAP
   }
 }
 
@@ -356,9 +349,9 @@ seed_preview_tools() {
 
 preview_message() {
   SHELTER_COLOR=$TEST_COLOR
-  printf 'Message preview: %s (no actual installation)\n' "$1"
+  shelter_print test_preview "$1"
   case "$1" in
-    failure) shelter_notice failure 'Installation or verification failed for Python + uv' ;;
+    failure) shelter_notice failure install_failed "$(shelter_tool_name python)" ;;
     *) shelter_notice "$1" ;;
   esac
 }
@@ -367,7 +360,7 @@ run_install_test() (
   local scenario=$1 status expected=0
   setup_fixture "install-$scenario" || return 1
   export SHELTER_FAKE_SHOW_LOG=1
-  printf 'Installation workflow test: running in a temporary environment. No actual PC installation; temporary files are cleaned up automatically.\n'
+  shelter_print test_install_intro
   case "$scenario" in
     dry-run) shelter_main --dry-run --color "$TEST_COLOR"; status=$? ;;
     success) shelter_main --color "$TEST_COLOR"; status=$? ;;
@@ -377,7 +370,7 @@ run_install_test() (
       shelter_main --color "$TEST_COLOR"; status=$? ;;
   esac
   if [[ "$status" != "$expected" ]]; then
-    printf 'Test error: expected exit code %s, got %s\n' "$expected" "$status" >&2
+    shelter_print test_exit_mismatch "$expected" "$status" >&2
     return 1
   fi
 )
@@ -385,7 +378,7 @@ run_install_test() (
 test_success_messages() {
   seed_preview_tools || return 1
   export SHELTER_FAKE_SHOW_LOG=1
-  shelter_main > "$SHELTER_CASE_DIR/output" || return 1
+  shelter_main --color never > "$SHELTER_CASE_DIR/output" || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '  Installation complete' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" '------------------------------------------------------------' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● success: Your development tools are ready.' || return 1
@@ -404,7 +397,7 @@ test_success_messages() {
 test_failure_messages() {
   seed_preview_tools || return 1
   export SHELTER_FAKE_FAIL=uv
-  shelter_main > "$SHELTER_CASE_DIR/output" 2>&1
+  shelter_main --color never > "$SHELTER_CASE_DIR/output" 2>&1
   [[ $? == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '  Installation failed' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● error: Installation or verification failed for Python + uv' || return 1
@@ -421,7 +414,7 @@ test_failure_messages() {
 
 test_check_messages() {
   seed_preview_tools || return 1
-  shelter_main --check --color always > "$SHELTER_CASE_DIR/output"
+  NO_COLOR=1 TERM=dumb shelter_main --check > "$SHELTER_CASE_DIR/output"
   [[ $? == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '  Status check' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '  Current status' || return 1
@@ -441,7 +434,7 @@ test_preview_cli() {
       failure) expected=$'\033[1;31m●\033[0m error: Installation or verification failed for Python + uv' ;;
       success) expected=$'\033[1;32m●\033[0m success: Your development tools are ready.' ;;
     esac
-    NO_COLOR=1 /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview "$scenario" --color always > "$SHELTER_CASE_DIR/$scenario" 2>&1 || return 1
+    NO_COLOR=1 TERM=dumb /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview "$scenario" > "$SHELTER_CASE_DIR/$scenario" 2>&1 || return 1
     assert_contains "$SHELTER_CASE_DIR/$scenario" "Message preview: $scenario (no actual installation)" || return 1
     # Only the dot is colored; the prefix and body remain in the terminal's default color.
     grep -Fxq -- "$expected" "$SHELTER_CASE_DIR/$scenario" || return 1
@@ -455,8 +448,10 @@ test_preview_cli() {
     assert_contains "$SHELTER_CASE_DIR/$scenario-plain" '● ' || return 1
   done
   NO_COLOR=1 /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview > "$SHELTER_CASE_DIR/default-preview" || return 1
-  assert_contains "$SHELTER_CASE_DIR/default-preview" '● success: Your development tools are ready.' || return 1
-  assert_absent "$SHELTER_CASE_DIR/default-preview" $'\033' || return 1
+  assert_contains "$SHELTER_CASE_DIR/default-preview" $'\033[1;32m●\033[0m success: Your development tools are ready.' || return 1
+  NO_COLOR=1 /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview --color auto > "$SHELTER_CASE_DIR/auto-preview" || return 1
+  assert_contains "$SHELTER_CASE_DIR/auto-preview" '● success: Your development tools are ready.' || return 1
+  assert_absent "$SHELTER_CASE_DIR/auto-preview" $'\033' || return 1
   [[ -z $(ls -A "$TMPDIR") ]] || return 1
   /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview unknown > /dev/null 2>&1
   [[ $? == 2 ]] || return 1
@@ -487,7 +482,7 @@ test_install_cli() {
 
 test_forced_color_and_plain_log() {
   seed_preview_tools || return 1
-  NO_COLOR=1 shelter_main --color always > "$SHELTER_CASE_DIR/output" || return 1
+  NO_COLOR=1 TERM=dumb shelter_main > "$SHELTER_CASE_DIR/output" || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;32m  Installation complete\033[0m' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;33m●\033[0m warning:' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;36m●\033[0m note: Starting Shelter Lite setup.' || return 1
@@ -499,6 +494,31 @@ test_forced_color_and_plain_log() {
   shelter_main --color always --unknown > "$SHELTER_CASE_DIR/invalid-stdout" 2> "$SHELTER_CASE_DIR/invalid-stderr"
   [[ $? == 2 ]] && [[ ! -s "$SHELTER_CASE_DIR/invalid-stdout" ]] && \
     assert_contains "$SHELTER_CASE_DIR/invalid-stderr" $'\033[1;31m●\033[0m error: Unknown option: --unknown'
+}
+
+test_color_flag() {
+  NO_COLOR=1 TERM=dumb shelter_main --dry-run > "$SHELTER_CASE_DIR/default-color" || return 1
+  NO_COLOR=1 TERM=dumb shelter_main --dry-run --color > "$SHELTER_CASE_DIR/color-last" || return 1
+  cmp "$SHELTER_CASE_DIR/default-color" "$SHELTER_CASE_DIR/color-last" || return 1
+  assert_contains "$SHELTER_CASE_DIR/color-last" $'\033[1;32m  Dry run complete\033[0m' || return 1
+  NO_COLOR=1 TERM=dumb shelter_main --color --dry-run > "$SHELTER_CASE_DIR/color-first" || return 1
+  cmp "$SHELTER_CASE_DIR/color-last" "$SHELTER_CASE_DIR/color-first" || return 1
+  NO_COLOR=1 shelter_main --dry-run --color auto > "$SHELTER_CASE_DIR/auto" || return 1
+  assert_absent "$SHELTER_CASE_DIR/auto" $'\033' || return 1
+  shelter_main --dry-run --color --color never > "$SHELTER_CASE_DIR/never" || return 1
+  assert_absent "$SHELTER_CASE_DIR/never" $'\033' || return 1
+  local invalid
+  for invalid in unknown ''; do
+    shelter_main --dry-run --color "$invalid" > /dev/null 2>&1
+    [[ $? == 2 ]] || return 1
+  done
+  NO_COLOR=1 TERM=dumb /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --color --preview warning > "$SHELTER_CASE_DIR/preview-first" || return 1
+  assert_contains "$SHELTER_CASE_DIR/preview-first" $'\033[1;33m●\033[0m warning:' || return 1
+  NO_COLOR=1 /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview warning --color > "$SHELTER_CASE_DIR/preview-last" || return 1
+  cmp "$SHELTER_CASE_DIR/preview-first" "$SHELTER_CASE_DIR/preview-last" || return 1
+  NO_COLOR=1 TERM=dumb /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --install > "$SHELTER_CASE_DIR/install" || return 1
+  assert_contains "$SHELTER_CASE_DIR/install" $'\033[1;32m  Installation complete\033[0m' || return 1
+  [[ ! -e "$SHELTER_CASE_DIR/config" && -z $(ls -A "$TMPDIR") ]] && assert_empty_log
 }
 
 test_log_failure_stops_install() {
@@ -517,13 +537,36 @@ test_python_lookup_failure() {
   assert_absent "$SHELTER_CASE_DIR/output" '  Dry run complete' && assert_empty_log
 }
 
+test_message_catalog() {
+  local payload='Package 100% \path $(literal)' expected
+  SHELTER_COLOR=never
+  # Sourcing the catalog alone must be silent and independent of tool setup.
+  /bin/bash -c 'source "$1"' bash "$TEST_SOURCE_DIR/messages.sh" > "$SHELTER_CASE_DIR/source" 2>&1 || return 1
+  [[ ! -s "$SHELTER_CASE_DIR/source" ]] || return 1
+  expected="Installation or verification failed for $payload"
+  [[ "$(shelter_copy install_failed "$payload")" == "$expected" ]] || return 1
+  shelter_error install_failed "$payload" > "$SHELTER_CASE_DIR/stdout" 2> "$SHELTER_CASE_DIR/stderr" || return 1
+  [[ ! -s "$SHELTER_CASE_DIR/stdout" && "$SHELTER_FAILURE_MESSAGE" == "$expected" ]] || return 1
+  grep -Fxq -- "● error: $expected" "$SHELTER_CASE_DIR/stderr" || return 1
+  # Reporting an error keeps control with the caller; the final notice reuses it.
+  shelter_notice failure > "$SHELTER_CASE_DIR/failure" || return 1
+  grep -Fxq -- "● error: $expected" "$SHELTER_CASE_DIR/failure" || return 1
+  shelter_message info missing_message_key > "$SHELTER_CASE_DIR/unknown-out" 2> "$SHELTER_CASE_DIR/unknown-err"
+  [[ $? == 2 && ! -s "$SHELTER_CASE_DIR/unknown-out" ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/unknown-err" 'Unknown message key: missing_message_key' || return 1
+  # The test harness's descriptive copy shares the same source, too.
+  /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --unknown > "$SHELTER_CASE_DIR/test-out" 2> "$SHELTER_CASE_DIR/test-err"
+  [[ $? == 2 && ! -s "$SHELTER_CASE_DIR/test-out" ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/test-err" 'Unknown test option: --unknown' && assert_empty_log
+}
+
 run_test() {
   local name=$1 function=$2 output="$SHELTER_TEST_ROOT/$1.log"
   if (setup_fixture "$name" && "$function") > "$output" 2>&1; then
-    printf 'PASS %s\n' "$name"
+    shelter_print test_pass "$name"
     TEST_PASSED=$((TEST_PASSED + 1))
   else
-    printf 'FAIL %s\n' "$name"
+    shelter_print test_fail "$name"
     cat "$output"
     TEST_FAILED=$((TEST_FAILED + 1))
   fi
@@ -542,6 +585,7 @@ if [[ "$TEST_MODE" == install ]]; then
   exit $?
 fi
 
+run_test message_catalog_and_error_contract test_message_catalog
 run_test preview_no_mutation test_preview
 run_test check_missing test_check_missing
 run_test full_unavailable test_full_unavailable
@@ -565,7 +609,8 @@ run_test check_messages_show_only_observed_state test_check_messages
 run_test preview_states_color_only_dot_and_result_title test_preview_cli
 run_test install_cli_runs_isolated_workflow test_install_cli
 run_test python_lookup_error_is_not_missing test_python_lookup_failure
-run_test explicit_color_overrides_no_color_and_logs_stay_plain test_forced_color_and_plain_log
+run_test default_colors_and_explicit_overrides_keep_logs_plain test_forced_color_and_plain_log
+run_test bare_color_forces_colors_without_consuming_next_option test_color_flag
 run_test log_creation_failure_stops_install test_log_failure_stops_install
-printf '\n%s passed, %s failed\n' "$TEST_PASSED" "$TEST_FAILED"
+shelter_print test_summary "$TEST_PASSED" "$TEST_FAILED"
 [[ $TEST_FAILED == 0 ]]

@@ -1,64 +1,6 @@
 #!/bin/bash
 # Function definitions only: sourcing this file never installs tools.
-
-shelter_text() {
-  local tone=$1 text=$2 color=''
-  # Keep redirected logs plain and respect the terminal's own color palette.
-  if [[ "${SHELTER_COLOR:-auto}" == always ]] || \
-    [[ "${SHELTER_COLOR:-auto}" == auto && -t 1 && "${TERM:-dumb}" != dumb && -z "${NO_COLOR:-}" ]]; then
-    case "$tone" in
-      success) color=$'\033[1;32m' ;;
-      warning) color=$'\033[1;33m' ;;
-      error) color=$'\033[1;31m' ;;
-      *) color=$'\033[1;36m' ;;
-    esac
-    printf '%s%s\033[0m' "$color" "$text"
-  else
-    printf '%s' "$text"
-  fi
-}
-
-shelter_section() {
-  local title=$1 tone=${2:-info}
-  printf '\n'
-  case "$tone" in
-    success|warning|error) shelter_text "$tone" "  $title" ;;
-    *) printf '  %s' "$title" ;;
-  esac
-  printf '\n'
-}
-
-shelter_message() {
-  local tone=$1 prefix=$1
-  case "$tone" in
-    success|warning|error) ;;
-    *) prefix=note ;;
-  esac
-  shelter_text "$tone" '●'
-  printf ' %s: %s\n' "$prefix" "$2"
-}
-
-# Shared by the real installer and the message-only previews.
-shelter_notice() {
-  case "$1" in
-    notification)
-      shelter_message info 'Starting Shelter Lite setup.' ;;
-    warning)
-      shelter_message warning 'New executable paths are not active in this terminal yet. Reopen your terminal and editor to use them.' ;;
-    success)
-      shelter_section 'Installation complete' success
-      shelter_message success 'Your development tools are ready.' ;;
-    failure)
-      shelter_section 'Installation failed' error
-      shelter_message error "${2:-Could not complete the installation.}" ;;
-    *) shelter_error "Unknown message state: $1"; return 2 ;;
-  esac
-}
-
-shelter_error() {
-  SHELTER_FAILURE_MESSAGE=$*
-  shelter_message error "$*" >&2
-}
+# install.sh loads messages.sh before this file.
 
 shelter_create_log() (
   local directory="${SHELTER_ENV_FILE%/*}/logs"
@@ -70,26 +12,26 @@ shelter_create_log() (
 shelter_check_platform() {
   local os major translated
   os=$(uname -s) || return 1
-  [[ "$os" == Darwin ]] || { shelter_error 'This installer supports macOS only.'; return 2; }
+  [[ "$os" == Darwin ]] || { shelter_error macos_only; return 2; }
   SHELTER_ARCH=$(uname -m) || return 1
   SHELTER_OS_VERSION=$(sw_vers -productVersion) || return 1
   major=${SHELTER_OS_VERSION%%.*}
-  case "$major" in ''|*[!0-9]*) shelter_error 'Could not determine the macOS version.'; return 2 ;; esac
+  case "$major" in ''|*[!0-9]*) shelter_error os_version_unknown; return 2 ;; esac
   [[ "$major" -ge 15 && "$SHELTER_ARCH" == arm64 ]] || {
-    shelter_error 'Initial support covers macOS 15 or later on Apple Silicon. Intel and Rosetta have not been verified.'; return 2;
+    shelter_error unsupported_platform; return 2;
   }
   translated=$(sysctl -in sysctl.proc_translated 2>/dev/null) || translated=0
-  [[ "$translated" != 1 ]] || { shelter_error 'Use a native Apple Silicon terminal instead of Rosetta.'; return 2; }
-  [[ "$(id -u)" != 0 ]] || { shelter_error 'Run as a regular user without sudo.'; return 2; }
+  [[ "$translated" != 1 ]] || { shelter_error rosetta_unsupported; return 2; }
+  [[ "$(id -u)" != 0 ]] || { shelter_error root_unsupported; return 2; }
 }
 
 shelter_shell_targets() {
-  [[ -n "${HOME:-}" && "$HOME" == /* ]] || { shelter_error 'Could not determine the user home directory.'; return 2; }
+  [[ -n "${HOME:-}" && "$HOME" == /* ]] || { shelter_error home_unknown; return 2; }
   SHELTER_ENV_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/shelter/env.sh"
   case "${SHELL##*/}" in
     zsh) SHELTER_RC_FILES=("${ZDOTDIR:-$HOME}/.zshrc") ;;
     bash) SHELTER_RC_FILES=("$HOME/.bashrc" "$HOME/.bash_profile") ;;
-    *) shelter_error 'Shell configuration currently supports zsh and bash.'; return 2 ;;
+    *) shelter_error shell_unsupported; return 2 ;;
   esac
 }
 
@@ -129,8 +71,8 @@ shelter_refresh_paths() {
   local path
   SHELTER_BREW=$(shelter_find_brew) || SHELTER_BREW=''
   if [[ -n "$SHELTER_BREW" ]]; then
-    SHELTER_PREFIX=$("$SHELTER_BREW" --prefix 2>/dev/null) || { shelter_error 'The existing Homebrew installation could not run.'; return 1; }
-    [[ "$SHELTER_PREFIX" == /* && "$SHELTER_PREFIX" != *$'\n'* ]] || { shelter_error 'The Homebrew path is invalid.'; return 1; }
+    SHELTER_PREFIX=$("$SHELTER_BREW" --prefix 2>/dev/null) || { shelter_error brew_run_failed; return 1; }
+    [[ "$SHELTER_PREFIX" == /* && "$SHELTER_PREFIX" != *$'\n'* ]] || { shelter_error brew_path_invalid; return 1; }
     shelter_add_path "$SHELTER_PREFIX/bin"
     shelter_add_path "$SHELTER_PREFIX/sbin"
     shelter_add_path "$SHELTER_PREFIX/opt/node@24/bin"
@@ -145,8 +87,8 @@ shelter_refresh_paths() {
 shelter_probe_command() {
   local command=$1 output
   SHELTER_COMMAND_STATE=missing
-  SHELTER_COMMAND_DETAIL="$command not found"
-  SHELTER_COMMAND_VERSION='Not installed'
+  SHELTER_COMMAND_DETAIL=$(shelter_copy command_missing "$command")
+  SHELTER_COMMAND_VERSION=$(shelter_copy not_installed)
   SHELTER_COMMAND_PATH=$(command -v "$command" 2>/dev/null) || return 0
   # Apple's git/python3 stubs can open an installation dialog even for --version.
   case "$SHELTER_COMMAND_PATH" in
@@ -162,8 +104,8 @@ shelter_probe_command() {
     SHELTER_COMMAND_DETAIL="$SHELTER_COMMAND_VERSION ($SHELTER_COMMAND_PATH)"
   else
     SHELTER_COMMAND_STATE=blocked
-    SHELTER_COMMAND_VERSION='Execution check failed'
-    SHELTER_COMMAND_DETAIL="$command failed to run ($SHELTER_COMMAND_PATH)"
+    SHELTER_COMMAND_VERSION=$(shelter_copy execution_check_failed)
+    SHELTER_COMMAND_DETAIL=$(shelter_copy command_failed "$command" "$SHELTER_COMMAND_PATH")
   fi
 }
 
@@ -172,8 +114,8 @@ shelter_probe_python() {
   shelter_probe_command python3
   if [[ "$SHELTER_COMMAND_PATH" == /usr/bin/python3 ]]; then
     SHELTER_COMMAND_STATE=missing
-    SHELTER_COMMAND_VERSION='User Python not found'
-    SHELTER_COMMAND_DETAIL='User Python not found (macOS developer tools Python is preserved separately)'
+    SHELTER_COMMAND_VERSION=$(shelter_copy user_python_missing)
+    SHELTER_COMMAND_DETAIL=$(shelter_copy user_python_missing_detail)
   fi
   [[ "$SHELTER_COMMAND_STATE" == missing ]] || return 0
   if command -v uv >/dev/null 2>&1; then
@@ -191,8 +133,8 @@ shelter_probe_python() {
       fi
     fi
     SHELTER_COMMAND_STATE=blocked
-    SHELTER_COMMAND_VERSION='Python lookup failed'
-    SHELTER_COMMAND_DETAIL='uv could not locate Python. Check the existing installation and access permissions.'
+    SHELTER_COMMAND_VERSION=$(shelter_copy python_lookup_failed)
+    SHELTER_COMMAND_DETAIL=$(shelter_copy python_lookup_failed_detail)
   fi
 }
 
@@ -201,13 +143,13 @@ shelter_probe() {
   case "$tool" in
     brew)
       if [[ -z "$SHELTER_BREW" ]]; then
-        SHELTER_STATE=missing; SHELTER_DETAIL='Homebrew not found'; SHELTER_VERSION='Not installed'; return 0
+        SHELTER_STATE=missing; SHELTER_DETAIL=$(shelter_copy brew_missing); SHELTER_VERSION=$(shelter_copy not_installed); return 0
       fi
       shelter_probe_command "$SHELTER_BREW" ;;
     git|gh) shelter_probe_command "$tool" ;;
     vscode)
       if path=$(shelter_find_vscode); then shelter_probe_command "$path"
-      else SHELTER_STATE=missing; SHELTER_DETAIL='VS Code app not found'; SHELTER_VERSION='Not installed'; return 0
+      else SHELTER_STATE=missing; SHELTER_DETAIL=$(shelter_copy vscode_missing); SHELTER_VERSION=$(shelter_copy not_installed); return 0
       fi ;;
     node|python)
       if [[ "$tool" == node ]]; then shelter_probe_command node; else shelter_probe_python; fi
@@ -227,17 +169,6 @@ shelter_probe() {
   SHELTER_STATE=$SHELTER_COMMAND_STATE
   SHELTER_DETAIL=$SHELTER_COMMAND_DETAIL
   SHELTER_VERSION=$SHELTER_COMMAND_VERSION
-}
-
-shelter_describe_install() {
-  case "$1" in
-    brew) printf '  Homebrew: official initial installer\n' ;;
-    git) printf '  Git: brew install git\n' ;;
-    vscode) printf '  VS Code: brew install --cask --no-binaries visual-studio-code (preserve the existing code command)\n' ;;
-    node) printf '  Node.js + npm: brew install node@24\n' ;;
-    python) printf '  Python + uv: install missing uv with brew install uv, missing Python with uv python install 3.14\n' ;;
-    gh) printf '  GitHub CLI: brew install gh\n' ;;
-  esac
 }
 
 shelter_bootstrap_brew() (
@@ -263,7 +194,7 @@ shelter_ensure_brew() {
     shelter_refresh_paths || return 1
   fi
   shelter_probe brew
-  [[ "$SHELTER_STATE" == ready ]] || { shelter_error 'Could not verify the Homebrew installation.'; return 1; }
+  [[ "$SHELTER_STATE" == ready ]] || { shelter_error brew_verification_failed; return 1; }
 }
 
 shelter_brew_install() {
@@ -299,9 +230,9 @@ shelter_save_paths() (
   directory=${SHELTER_ENV_FILE%/*}
   mkdir -p "$directory" || return 1
   if [[ -e "$SHELTER_ENV_FILE" || -L "$SHELTER_ENV_FILE" ]]; then
-    [[ -f "$SHELTER_ENV_FILE" && ! -L "$SHELTER_ENV_FILE" ]] || { shelter_error 'The environment file is not a regular file.'; return 1; }
+    [[ -f "$SHELTER_ENV_FILE" && ! -L "$SHELTER_ENV_FILE" ]] || { shelter_error env_not_regular; return 1; }
     IFS= read -r line < "$SHELTER_ENV_FILE"
-    [[ "$line" == '# Generated by Shelter Lite' ]] || { shelter_error "Cannot overwrite the existing file: $SHELTER_ENV_FILE"; return 1; }
+    [[ "$line" == '# Generated by Shelter Lite' ]] || { shelter_error env_overwrite_refused "$SHELTER_ENV_FILE"; return 1; }
   fi
   candidate=$(mktemp "$directory/.env.XXXXXX") || return 1
   trap 'rm -f "$candidate"' EXIT
@@ -317,19 +248,19 @@ shelter_save_paths() (
   if [[ -f "$SHELTER_ENV_FILE" ]] && ! cmp -s "$candidate" "$SHELTER_ENV_FILE"; then
     backup=$(mktemp "$directory/env.sh.backup.XXXXXX") || return 1
     cp -p "$SHELTER_ENV_FILE" "$backup" || return 1
-    printf 'Environment file backup: %s\n' "$backup"
+    shelter_print env_backup "$backup"
   fi
   mv "$candidate" "$SHELTER_ENV_FILE" || return 1
   printf -v quoted '%q' "$SHELTER_ENV_FILE"
   line="[ ! -f $quoted ] || . $quoted # Shelter Lite"
   for rc in "${SHELTER_RC_FILES[@]}"; do
-    [[ ! -L "$rc" || -f "$rc" ]] || { shelter_error "The symlink target does not exist: $rc"; return 1; }
-    [[ ! -e "$rc" || -f "$rc" ]] || { shelter_error "The shell configuration is not a regular file: $rc"; return 1; }
+    [[ ! -L "$rc" || -f "$rc" ]] || { shelter_error symlink_target_missing "$rc"; return 1; }
+    [[ ! -e "$rc" || -f "$rc" ]] || { shelter_error rc_not_regular "$rc"; return 1; }
     if [[ -f "$rc" ]]; then
       grep -Fqx -- "$line" "$rc" && continue
       backup=$(mktemp "$directory/shell.backup.XXXXXX") || return 1
       cp -p "$rc" "$backup" || return 1
-      printf 'Shell configuration backup: %s -> %s\n' "$rc" "$backup"
+      shelter_print rc_backup "$rc" "$backup"
     fi
     mkdir -p "${rc%/*}" || return 1
     printf '\n%s\n' "$line" >> "$rc" || return 1

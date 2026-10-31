@@ -46,7 +46,7 @@ cd shelter
 git status --short
 ```
 
-On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep `install.sh` and `tools.sh` together.
+On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep `install.sh`, `messages.sh`, and `tools.sh` together.
 
 ### Runtime Environment
 
@@ -83,13 +83,19 @@ Warnings appear only when relevant. If no new executable paths were added, the p
 
 The final result is shown as a heading and messages without separator lines. Each message starts with `●`, followed by a lowercase English prefix and colon without brackets. Messages, result headings, help, and logs are in English for both previews and installation workflow tests, as well as the actual installer. **For ordinary messages, only `●` receives the status color; the prefix and body use the terminal's default color.** Success is green, failures and errors are red, notes are cyan, and warnings are yellow. Result headings such as `Installation complete`, `Installation failed`, and `Check required` use the status color for the entire heading. Ordinary headings and detailed table text have no assigned color; table rows show status colors only on the leading `●`.
 
-The default `--color auto` uses colors only in a terminal and disables them when `NO_COLOR` is set or `TERM=dumb`. The user's color settings are not changed. To explicitly enable colors, run the following in your Mac terminal.
+Colors are enabled by default in the installer and tests, including `--dry-run` and `--check`. No color option is required, and terminal settings are not changed.
 
 ```bash
-/bin/bash installers/macos/install.sh --color always
+/bin/bash installers/macos/install.sh
 ```
 
-`always` takes precedence over `NO_COLOR` and automatic terminal detection. `--color never` always disables colors. Output viewers that do not support ANSI colors may not display them even with `always`.
+The default `always` mode emits colors even with `NO_COLOR`, `TERM=dumb`, or redirected output. Use `--color auto` to follow terminal detection and `NO_COLOR`, or `--color never` to disable colors. Output viewers that do not support ANSI colors may not display them even with `always`.
+
+Both the installer and test commands still accept `--color` without a value as shorthand for `--color always`, which is now the default. To inspect the installation plan with colors:
+
+```bash
+/bin/bash installers/macos/install.sh --dry-run
+```
 
 Version tables, individual installation results, package installer output, and shell configuration changes are recorded in `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`. Each run creates a new log that only its owner can read and write, without color codes. Logs are kept after successful runs as well. In the log, `Not run` means a step was skipped because an earlier step failed. Use `--check` for details about current versions and executable paths.
 
@@ -109,7 +115,8 @@ If every item is marked `Installed` and the exit code is `0`, all tools can run.
 | `--check` | Check whether all tools run; no downloads or configuration changes |
 | `--mode lite` | Same as the default |
 | `--mode full` | Exit with a message that it is not yet available; do not install |
-| `--color auto\|always\|never` | Automatic colors, forced colors, or plain output |
+| `--color auto\|always\|never` | Automatic colors, always-on colors (default), or plain output |
+| `--color` | Force colors for this run; same as `--color always` |
 | `--help` | Show help |
 
 Exit codes are `0` for success, `1` for missing tools or execution/installation errors, `2` for invalid options or unsupported environments, and `130` for interruption with Ctrl+C. `--check` and `--dry-run` cannot be combined. A preview that successfully produces an installation plan exits with `0`, even if some tools are missing.
@@ -144,7 +151,7 @@ If you need to restore a backup, compare the original and backup paths recorded 
 ## Adding and Changing Directories
 
 Use [Repository Structure in the README](./README.md#repository-structure) as the reference for the overall layout and each path's responsibility.
-The installer currently consists of two shell files and `tests/test.sh`. Add further paths only as their functionality is implemented.
+The installer currently consists of three shell files and `tests/test.sh`. Add further paths only as their functionality is implemented.
 
 1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
 2. **Connect installation of the full version.** When the full CLI and its distribution artifacts are ready, add its workflow to the same `install.sh` under `full` mode and reuse the tool installation functions. Currently, that mode exits after a message that it is not yet available.
@@ -197,13 +204,15 @@ Move lengthy designs to the relevant document in `docs/` and link to it from the
 
 ### Message Previews
 
-**To inspect only the wording and explanation for each state**, pass the state after `--preview` from the repository root. Add `--color always` in your Mac terminal to inspect colors.
+Edit shared copy in [messages.sh](./installers/macos/messages.sh). Add a message key and a fixed template to `shelter_copy`, then pass variable values as arguments, for example `shelter_error install_failed "$name"`. `shelter_error` writes to stderr and saves the failure reason; the caller decides when to stop with `return` or `exit`. Use `shelter_message <tone> <key> [arguments...]` for guidance and `shelter_notice` for the shared start, warning, success, and failure displays. Keep internal status values separate from display text. Tests call the shared messages while keeping expected output literals independent so they can detect unintended wording or formatting changes.
+
+**To inspect only the wording and explanation for each state**, pass the state after `--preview` from the repository root. Colors are enabled without extra options.
 
 ```bash
-/bin/bash installers/macos/tests/test.sh --preview notification --color always
-/bin/bash installers/macos/tests/test.sh --preview warning --color always
-/bin/bash installers/macos/tests/test.sh --preview failure --color always
-/bin/bash installers/macos/tests/test.sh --preview success --color always
+/bin/bash installers/macos/tests/test.sh --preview notification
+/bin/bash installers/macos/tests/test.sh --preview warning
+/bin/bash installers/macos/tests/test.sh --preview failure
+/bin/bash installers/macos/tests/test.sh --preview success
 ```
 
 | State | `●` color (also used for result headings) | Message shown |
@@ -213,14 +222,14 @@ Move lengthy designs to the relevant document in `docs/` and link to it from the
 | `failure` | Red | An installation failure heading and an example reason |
 | `success` | Green | An installation complete heading and confirmation that development tools are ready |
 
-Previews call only the message functions shared with the actual installer. They do not inspect installed tools or create temporary files. `--preview` without a state shows `success`. Omitting the color setting uses `auto` and respects the user's settings; use `--color never` to inspect plain output.
+Previews call only the message functions shared with the actual installer. They do not inspect installed tools or create temporary files. `--preview` without a state shows `success`. Colors are enabled by default. Use `--color auto` to follow the user's terminal settings, or `--color never` to inspect plain output.
 
 ### Installation Workflow Tests
 
 **To run the actual installer's complete workflow in a temporary environment**, use `--install`.
 
 ```bash
-/bin/bash installers/macos/tests/test.sh --install --color always
+/bin/bash installers/macos/tests/test.sh --install
 ```
 
 The test starts with an environment without the tools and runs the actual installer code, from Homebrew setup through fixed-specification installation, result checks, and shell configuration. Downloads and package installation commands are replaced by fake tools. Programs and shell settings on the actual computer are not changed. Test files and logs are removed automatically on exit.
@@ -229,7 +238,7 @@ The official option spelling is `--install`; `--intall` is also accepted with th
 
 ```bash
 # Fail during uv installation and stop subsequent installation steps
-/bin/bash installers/macos/tests/test.sh --install failure --color always
+/bin/bash installers/macos/tests/test.sh --install failure
 
 # Inspect the installation plan in the test environment
 /bin/bash installers/macos/tests/test.sh --install dry-run
@@ -244,7 +253,7 @@ Use `install.sh --dry-run` to read the current Mac's actual state and inspect th
 Run syntax checks and tests using temporary environments from the repository root. No separate test package is required.
 
 ```bash
-for script in installers/macos/install.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
+for script in installers/macos/install.sh installers/macos/messages.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh

@@ -137,6 +137,7 @@ shelter/
 ├── installers/
 │   └── macos/        # macOS installer for Lite and the future full version
 │       ├── install.sh # Entry point, fixed specification, and installation order
+│       ├── messages.sh # English messages, errors, colors, and output formatting
 │       ├── tools.sh   # Tool checks, installation, and shell configuration
 │       └── tests/
 │           └── test.sh # Installer tests using temporary environments
@@ -153,6 +154,8 @@ shelter/
 ```
 
 ### Component Responsibilities
+
+[messages.sh](./installers/macos/messages.sh) is the single source of truth for English guidance, warnings, errors, help, and terminal formatting shared by the installer and tests. Failure detection, stopping installation, and exit codes remain in `install.sh` and `tools.sh`.
 
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 

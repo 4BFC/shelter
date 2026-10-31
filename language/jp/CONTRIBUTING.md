@@ -46,7 +46,7 @@ cd shelter
 git status --short
 ```
 
-Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP**からソース全体を取得して展開し、ターミナルでそのフォルダーに移動してください。`install.sh`と`tools.sh`は同じディレクトリに置く必要があります。
+Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP**からソース全体を取得して展開し、ターミナルでそのフォルダーに移動してください。`install.sh`、`messages.sh`、`tools.sh`は同じディレクトリに置く必要があります。
 
 ### 実行環境
 
@@ -83,13 +83,19 @@ Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP
 
 最終結果は、区切り線を使わず見出しとメッセージで表示します。メッセージの先頭に`●`を付け、接頭辞は角括弧を使わず、英小文字とコロンで表示します。プレビュー、インストール手順のテスト、実際のインストーラーのメッセージ、結果見出し、ヘルプ、ログは英語で表示します。**通常のメッセージでは`●`にだけ状態の色を付け、接頭辞と本文はターミナルの既定色を使用します。** 成功は緑、失敗とエラーは赤、案内はシアン、警告は黄です。`Installation complete`（インストール完了）、`Installation failed`（インストール失敗）、`Check required`（確認が必要）などの結果見出しには、文字全体に状態の色を付けます。通常の見出しと詳細表の本文には色を指定せず、表も各行の先頭の`●`で状態の色を示します。
 
-既定の`--color auto`はターミナルでのみ色を使用し、`NO_COLOR`が設定されている場合や`TERM=dumb`の場合は無効にします。ユーザーの色設定は変更しません。明示的に色を有効にしたい場合は、Macのターミナルで次のように実行してください。
+インストーラーとテストは、`--dry-run`と`--check`を含め、既定で色を使用します。色のオプションを追加する必要はなく、ターミナル自体の設定も変更しません。
 
 ```bash
-/bin/bash installers/macos/install.sh --color always
+/bin/bash installers/macos/install.sh
 ```
 
-`always`は`NO_COLOR`とターミナルの自動判定より優先されます。`--color never`は常に色を無効にします。出力ビューアーがANSIカラーに対応していない場合、`always`を指定しても色が表示されないことがあります。
+既定の`always`は、`NO_COLOR`、`TERM=dumb`、出力のリダイレクトに関係なく色を出力します。ターミナルの判定と`NO_COLOR`に従う場合は`--color auto`、色を無効にする場合は`--color never`を指定します。出力ビューアーがANSIカラーに対応していない場合、`always`を指定しても色が表示されないことがあります。
+
+インストーラーとテストは、値のない`--color`も引き続きサポートし、現在の既定値である`--color always`と同じ動作になります。インストール計画も追加オプションなしで色付きで確認できます。
+
+```bash
+/bin/bash installers/macos/install.sh --dry-run
+```
 
 バージョン表、個別のインストール結果、パッケージのインストール出力、シェル設定の変更内容は`${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`に記録します。ログは実行ごとに新しく作成し、所有者だけが読み書きでき、カラーコードは含みません。成功時もログを保持します。ログの`Not run`（未実行）は、前の段階の失敗によってその処理が実行されなかったことを意味します。現在のバージョンと実行パスの詳細は`--check`で確認してください。
 
@@ -109,7 +115,8 @@ echo $?
 | `--check` | 全ツールの実行状態の確認。ダウンロードと設定変更は行わない |
 | `--mode lite` | 既定の動作と同じ |
 | `--mode full` | 準備中の案内を表示して終了。インストールは行わない |
-| `--color auto\|always\|never` | 自動カラー、強制カラー、または色なしの出力 |
+| `--color auto\|always\|never` | 自動カラー、常にカラー（既定）、または色なしの出力 |
+| `--color` | 今回の実行で色を強制する。`--color always`と同じ |
 | `--help` | ヘルプを表示 |
 
 終了コードは、成功が`0`、未インストールの状態または実行エラー、インストールエラーが`1`、不正なオプションまたは未対応の環境が`2`、Ctrl+Cによる中断が`130`です。`--check`と`--dry-run`は同時に使用できません。プレビューで正常にインストール計画を作成できた場合は、不足するツールがあっても`0`で終了します。
@@ -144,7 +151,7 @@ Gitのユーザー情報と`gh auth login`は自動設定しません。イン�
 ## ディレクトリの追加と変更
 
 全体の配置と各パスの役割は、[READMEのリポジトリ構成](./README.md#リポジトリ構成)を基準とします。
-現在のインストーラーは、2つのシェルファイルと`tests/test.sh`で構成されています。以降のパスは、機能を実装する際に必要な分だけ追加します。
+現在のインストーラーは、3つのシェルファイルと`tests/test.sh`で構成されています。以降のパスは、機能を実装する際に必要な分だけ追加します。
 
 1. **ライト版のインストール処理を管理します。** `installers/macos/install.sh`に環境確認、固定仕様、インストール順序を置き、`tools.sh`にツールごとの状態確認、インストール、シェル設定の関数を置きます。`lib/`、`tools/`、`profiles/`などの別ディレクトリは、実際に分割が必要になったときに検討します。
 2. **正式版のインストールを接続します。** 正式版CLIと配布物が用意できたら、同じ`install.sh`の`full`モードに処理を追加し、ツールのインストール関数を再利用します。現在は準備中の案内を表示して終了します。
@@ -197,13 +204,15 @@ git switch -c docs/update-introduction
 
 ### メッセージのプレビュー
 
-**各状態の表現と説明だけを確認したい場合**は、リポジトリのルートで`--preview`の後に状態を指定します。色を確認するときは、Macのターミナルで`--color always`を付けてください。
+共通の文言は[messages.sh](../../installers/macos/messages.sh)で変更します。`shelter_copy`にメッセージキーと固定テンプレートを追加し、`shelter_error install_failed "$name"`のように可変値を引数で渡します。`shelter_error`はstderrへの出力と失敗理由の保存を行い、`return`や`exit`で中断するタイミングは呼び出し元で決めます。通常の案内には`shelter_message <tone> <key> [arguments...]`、開始、警告、成功、失敗の共通表示には`shelter_notice`を使います。内部の状態値と表示文言は分離します。テストも共通メッセージを呼び出しますが、意図しない文言や形式の変更を検出するため、期待する出力は独立した文字列で保持します。
+
+**各状態の表現と説明だけを確認したい場合**は、リポジトリのルートで`--preview`の後に状態を指定します。色は追加オプションなしで適用されます。
 
 ```bash
-/bin/bash installers/macos/tests/test.sh --preview notification --color always
-/bin/bash installers/macos/tests/test.sh --preview warning --color always
-/bin/bash installers/macos/tests/test.sh --preview failure --color always
-/bin/bash installers/macos/tests/test.sh --preview success --color always
+/bin/bash installers/macos/tests/test.sh --preview notification
+/bin/bash installers/macos/tests/test.sh --preview warning
+/bin/bash installers/macos/tests/test.sh --preview failure
+/bin/bash installers/macos/tests/test.sh --preview success
 ```
 
 | 状態 | `●`の色（結果見出しにも適用） | 確認するメッセージ |
@@ -213,14 +222,14 @@ git switch -c docs/update-introduction
 | `failure` | 赤 | インストール失敗の見出しと理由の例 |
 | `success` | 緑 | インストール完了の見出しと開発ツールの準備完了の説明 |
 
-プレビューは、実際のインストーラーと共有するメッセージ関数だけを呼び出します。インストール状態の確認や一時ファイルの作成は行いません。`--preview`だけを指定すると`success`を表示します。色設定を省略すると`auto`でユーザー設定に従い、`--color never`で色なしの出力を確認できます。
+プレビューは、実際のインストーラーと共有するメッセージ関数だけを呼び出します。インストール状態の確認や一時ファイルの作成は行いません。`--preview`だけを指定すると`success`を表示します。色は既定で有効になります。ターミナルの設定に従う場合は`--color auto`、色なしの出力を確認する場合は`--color never`を使用します。
 
 ### インストール手順のテスト
 
 **実際のインストーラーの全手順を一時環境で実行したい場合**は、`--install`を使用します。
 
 ```bash
-/bin/bash installers/macos/tests/test.sh --install --color always
+/bin/bash installers/macos/tests/test.sh --install
 ```
 
 ツールのないテスト環境で、Homebrewの準備から固定仕様のインストール、結果確認、シェル設定まで、実際のインストーラーのコードを実行します。ダウンロードとパッケージのインストールコマンドは模擬ツールに置き換え、実際のPCのプログラムやユーザーのシェル設定は変更しません。テスト用ファイルとログは終了後に自動削除します。
@@ -229,7 +238,7 @@ git switch -c docs/update-introduction
 
 ```bash
 # uvのインストール中に失敗し、後続のインストールを停止する流れ
-/bin/bash installers/macos/tests/test.sh --install failure --color always
+/bin/bash installers/macos/tests/test.sh --install failure
 
 # テスト環境のインストール計画を確認
 /bin/bash installers/macos/tests/test.sh --install dry-run
@@ -244,7 +253,7 @@ git switch -c docs/update-introduction
 リポジトリのルートで構文検査と一時環境でのテストを実行します。別途テスト用パッケージを用意する必要はありません。
 
 ```bash
-for script in installers/macos/install.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
+for script in installers/macos/install.sh installers/macos/messages.sh installers/macos/tools.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh
