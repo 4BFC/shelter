@@ -195,7 +195,7 @@ test_preview() {
   assert_contains "$SHELTER_CASE_DIR/output" ' Ghostty: brew install --cask ghostty' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Dry run complete' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Actual installations: 0, configuration changes: 0' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" ' / ___|| |__' || return 1
+  [[ $(grep -Fc ' / ___|| |__' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
   assert_absent "$SHELTER_CASE_DIR/output" ' Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results'
 }
 

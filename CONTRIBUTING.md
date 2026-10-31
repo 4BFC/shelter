@@ -78,7 +78,7 @@ After setup, open Ghostty from the Applications folder or run:
 open -a Ghostty
 ```
 
-An ASCII Shelter Lite logo appears once when installation starts. The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
+An ASCII Shelter Lite logo appears once at the start of installation and `--dry-run`. The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
 
 | Message | What it explains |
 | --- | --- |
@@ -272,7 +272,7 @@ done
 
 Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests. Ghostty tests cover keeping an existing app outside `PATH`, detecting damaged apps, installation failure and retry, and verification after installation.
 
-Packaging tests also verify checksums, reproducible output, running help after relocating a single file, and loading it without starting installation. The installation output checks that the ASCII logo appears once.
+Packaging tests also verify checksums, reproducible output, running help after relocating a single file, and loading it without starting installation. The installation and `--dry-run` output checks that the ASCII logo appears once.
 
 On a supported Mac, also check these read-only commands:
 
@@ -369,7 +369,7 @@ After reviewing the plan, start installation:
 /bin/bash shelter-lite-macos.sh
 ```
 
-The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at startup. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Public release automation, Homebrew distribution, and a remote one-command installer remain planned.
+The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Public release automation, Homebrew distribution, and a remote one-command installer remain planned.
 
 Distinguish updating Shelter itself from Shelter updating software on the user's computer.
 Release notes should include changes, the support scope, and known constraints. Publish only after verifying installation and updates.

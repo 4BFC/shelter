@@ -106,11 +106,13 @@ shelter_main() {
   esac
   shelter_check_platform || return
   shelter_shell_targets || return
+  if [[ "$SHELTER_ACTION" == install || "$SHELTER_ACTION" == dry-run ]]; then
+    shelter_logo
+  fi
   if [[ "$SHELTER_ACTION" != install ]]; then
     shelter_run
     return $?
   fi
-  shelter_logo
   if ! SHELTER_LOG_FILE=$(shelter_create_log); then
     shelter_notice failure log_creation_failed
     shelter_message info check_config_permissions
