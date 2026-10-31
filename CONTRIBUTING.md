@@ -83,6 +83,8 @@ Warnings appear only when relevant. If no new executable paths were added, the p
 
 The final result is shown as a heading and messages without separator lines. Each message starts with `●`, followed by a lowercase English prefix and colon without brackets. Messages, result headings, help, and logs are in English for both previews and installation workflow tests, as well as the actual installer. **For ordinary messages, only `●` receives the status color; the prefix and body use the terminal's default color.** Success is green, failures and errors are red, notes are cyan, and warnings are yellow. Result headings such as `Installation complete`, `Installation failed`, and `Check required` use the status color for the entire heading. Ordinary headings and detailed table text have no assigned color; table rows show status colors only on the leading `●`.
 
+Section headings, table headers, installation plan items, and configuration paths use a PUA icon followed by one space in place of their former indentation. Icons are managed by `shelter_icon` in `messages.sh` using the Font Awesome mappings in [Nerd Fonts v3.5.0](https://github.com/ryanoasis/nerd-fonts/blob/v3.5.0/glyphnames.json). Displaying these icons requires a terminal font or fallback font that supports those mappings. Status messages and tool rows retain their existing `●`, colors, and spacing.
+
 Colors are enabled by default in the installer and tests, including `--dry-run` and `--check`. No color option is required, and terminal settings are not changed.
 
 ```bash

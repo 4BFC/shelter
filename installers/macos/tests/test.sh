@@ -173,12 +173,16 @@ test_preview() {
   for tool in Homebrew Git 'VS Code' 'Node.js + npm' 'Python + uv' 'GitHub CLI'; do
     assert_contains "$SHELTER_CASE_DIR/output" "$tool" || return 1
   done
-  assert_contains "$SHELTER_CASE_DIR/output" '  Dry run' || return 1
+  grep -Fxq -- ' Dry run' "$SHELTER_CASE_DIR/output" || return 1
+  grep -Fxq -- ' Before installation' "$SHELTER_CASE_DIR/output" || return 1
+  grep -Fxq -- ' Tool | Current status | Planned action' "$SHELTER_CASE_DIR/output" || return 1
+  grep -Fxq -- " Environment file: $SHELTER_ENV_FILE" "$SHELTER_CASE_DIR/output" || return 1
+  grep -Fxq -- " Shell configuration: ${SHELTER_RC_FILES[0]}" "$SHELTER_CASE_DIR/output" || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'No actual installation or configuration changes will be made.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Install new' || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" '  Dry run complete' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Dry run complete' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Actual installations: 0, configuration changes: 0' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" '  Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" '  Installation results'
+  assert_absent "$SHELTER_CASE_DIR/output" ' Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results'
 }
 
 test_check_missing() {
@@ -379,13 +383,13 @@ test_success_messages() {
   seed_preview_tools || return 1
   export SHELTER_FAKE_SHOW_LOG=1
   shelter_main --color never > "$SHELTER_CASE_DIR/output" || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" '  Installation complete' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Installation complete' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" '------------------------------------------------------------' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● success: Your development tools are ready.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● warning: New executable paths are not active in this terminal yet.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Reopen your terminal and editor' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" '  Before installation' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" '  Installation results' || return 1
+  assert_absent "$SHELTER_CASE_DIR/output" ' Before installation' || return 1
+  assert_absent "$SHELTER_CASE_DIR/output" ' Installation results' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" 'test log' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" 'fixture-version' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Node.js + npm    | Existing installation kept | v24.22.2 / 11.0.0 → v24.22.2 / 11.0.0' || return 1
@@ -399,7 +403,7 @@ test_failure_messages() {
   export SHELTER_FAKE_FAIL=uv
   shelter_main --color never > "$SHELTER_CASE_DIR/output" 2>&1
   [[ $? == 1 ]] || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" '  Installation failed' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Installation failed' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● error: Installation or verification failed for Python + uv' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● warning: Installation and configuration changes already made are not rolled back automatically.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● note: Check the detailed log, resolve the issue, then run the installer again.' || return 1
@@ -409,20 +413,20 @@ test_failure_messages() {
   assert_contains "$SHELTER_LOG_FILE" 'GitHub CLI       | Not run' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Homebrew test error: installation failed for uv' || return 1
   assert_contains "$SHELTER_LOG_FILE" '● error: Installation or verification failed for Python + uv' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" '  Installation complete' && ! grep -Fqx -- '  Shell configuration' "$SHELTER_CASE_DIR/output"
+  assert_absent "$SHELTER_CASE_DIR/output" ' Installation complete' && ! grep -Fqx -- ' Shell configuration' "$SHELTER_CASE_DIR/output"
 }
 
 test_check_messages() {
   seed_preview_tools || return 1
   NO_COLOR=1 TERM=dumb shelter_main --check > "$SHELTER_CASE_DIR/output"
   [[ $? == 1 ]] || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" '  Status check' || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" '  Current status' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Status check' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Current status' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" "$SHELTER_FAKE_PREFIX/bin/git" || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;33m  Check required\033[0m' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;33m Check required\033[0m' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;32m●\033[0m  Homebrew' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" $'\033[1;36m' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" 'Planned' && assert_absent "$SHELTER_CASE_DIR/output" '  Installation results' && assert_empty_log
+  assert_absent "$SHELTER_CASE_DIR/output" 'Planned' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results' && assert_empty_log
 }
 
 test_preview_cli() {
@@ -439,8 +443,8 @@ test_preview_cli() {
     # Only the dot is colored; the prefix and body remain in the terminal's default color.
     grep -Fxq -- "$expected" "$SHELTER_CASE_DIR/$scenario" || return 1
     case "$scenario" in
-      failure) assert_contains "$SHELTER_CASE_DIR/$scenario" $'\033[1;31m  Installation failed\033[0m' || return 1 ;;
-      success) assert_contains "$SHELTER_CASE_DIR/$scenario" $'\033[1;32m  Installation complete\033[0m' || return 1 ;;
+      failure) assert_contains "$SHELTER_CASE_DIR/$scenario" $'\033[1;31m Installation failed\033[0m' || return 1 ;;
+      success) assert_contains "$SHELTER_CASE_DIR/$scenario" $'\033[1;32m Installation complete\033[0m' || return 1 ;;
     esac
     assert_absent "$SHELTER_CASE_DIR/$scenario" 'fixture-version' || return 1
     /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview "$scenario" --color never > "$SHELTER_CASE_DIR/$scenario-plain" 2>&1 || return 1
@@ -483,7 +487,7 @@ test_install_cli() {
 test_forced_color_and_plain_log() {
   seed_preview_tools || return 1
   NO_COLOR=1 TERM=dumb shelter_main > "$SHELTER_CASE_DIR/output" || return 1
-  assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;32m  Installation complete\033[0m' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;32m Installation complete\033[0m' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;33m●\033[0m warning:' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;36m●\033[0m note: Starting Shelter Lite setup.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" $'\033[1;32m●\033[0m success: Your development tools are ready.' || return 1
@@ -500,7 +504,7 @@ test_color_flag() {
   NO_COLOR=1 TERM=dumb shelter_main --dry-run > "$SHELTER_CASE_DIR/default-color" || return 1
   NO_COLOR=1 TERM=dumb shelter_main --dry-run --color > "$SHELTER_CASE_DIR/color-last" || return 1
   cmp "$SHELTER_CASE_DIR/default-color" "$SHELTER_CASE_DIR/color-last" || return 1
-  assert_contains "$SHELTER_CASE_DIR/color-last" $'\033[1;32m  Dry run complete\033[0m' || return 1
+  assert_contains "$SHELTER_CASE_DIR/color-last" $'\033[1;32m Dry run complete\033[0m' || return 1
   NO_COLOR=1 TERM=dumb shelter_main --color --dry-run > "$SHELTER_CASE_DIR/color-first" || return 1
   cmp "$SHELTER_CASE_DIR/color-last" "$SHELTER_CASE_DIR/color-first" || return 1
   NO_COLOR=1 shelter_main --dry-run --color auto > "$SHELTER_CASE_DIR/auto" || return 1
@@ -517,14 +521,14 @@ test_color_flag() {
   NO_COLOR=1 /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --preview warning --color > "$SHELTER_CASE_DIR/preview-last" || return 1
   cmp "$SHELTER_CASE_DIR/preview-first" "$SHELTER_CASE_DIR/preview-last" || return 1
   NO_COLOR=1 TERM=dumb /bin/bash "$TEST_SOURCE_DIR/tests/test.sh" --install > "$SHELTER_CASE_DIR/install" || return 1
-  assert_contains "$SHELTER_CASE_DIR/install" $'\033[1;32m  Installation complete\033[0m' || return 1
+  assert_contains "$SHELTER_CASE_DIR/install" $'\033[1;32m Installation complete\033[0m' || return 1
   [[ ! -e "$SHELTER_CASE_DIR/config" && -z $(ls -A "$TMPDIR") ]] && assert_empty_log
 }
 
 test_log_failure_stops_install() {
   shelter_create_log() { return 1; }
   shelter_main > "$SHELTER_CASE_DIR/output" 2>&1
-  [[ $? == 1 ]] && assert_contains "$SHELTER_CASE_DIR/output" '  Installation failed' && assert_absent "$SHELTER_CASE_DIR/output" 'warning:' && assert_empty_log
+  [[ $? == 1 ]] && assert_contains "$SHELTER_CASE_DIR/output" ' Installation failed' && assert_absent "$SHELTER_CASE_DIR/output" 'warning:' && assert_empty_log
 }
 
 test_python_lookup_failure() {
@@ -534,7 +538,7 @@ test_python_lookup_failure() {
   shelter_main --dry-run > "$SHELTER_CASE_DIR/output" 2>&1
   [[ $? == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Python lookup failed' || return 1
-  assert_absent "$SHELTER_CASE_DIR/output" '  Dry run complete' && assert_empty_log
+  assert_absent "$SHELTER_CASE_DIR/output" ' Dry run complete' && assert_empty_log
 }
 
 test_message_catalog() {

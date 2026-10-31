@@ -89,8 +89,8 @@ shelter_copy() {
     nothing_to_install) template='\nNo new tools need to be installed.' ;;
     planned_configuration) template='Planned configuration' ;;
     configuration_plan) template='Save the required executable paths and load them from the shell configuration. Back up existing files before changing them.' ;;
-    env_path) template='  Environment file: %s' ;;
-    rc_path) template='  Shell configuration: %s' ;;
+    env_path) template="$(shelter_icon file_code) Environment file: %s" ;;
+    rc_path) template="$(shelter_icon terminal) Shell configuration: %s" ;;
     existing_install_blocked) template='Some tools fail to run, or Node.js/npm is only partially installed. Repair the existing installation first.' ;;
     installation_results) template='Installation results' ;;
     installation_failed) template='Installation failed' ;;
@@ -99,6 +99,7 @@ shelter_copy() {
     tools_ready) template='Your development tools are ready.' ;;
     setup_failed) template='Could not complete the installation.' ;;
     unknown_notice) template='Unknown message state: %s' ;;
+    unknown_icon) template='Unknown icon: %s' ;;
     result_failed) template='Failed' ;;
     result_not_run) template='Not run' ;;
     result_kept) template='Existing installation kept' ;;
@@ -161,13 +162,47 @@ shelter_text() {
   fi
 }
 
+shelter_icon() {
+  # Font Awesome PUA mappings from Nerd Fonts v3.5.0:
+  # https://github.com/ryanoasis/nerd-fonts/blob/v3.5.0/glyphnames.json
+  case "$1" in
+    flask) printf '' ;;                 # U+F0C3
+    play) printf '' ;;                  # U+F04B
+    list_check) printf '' ;;            # U+F0AE
+    list) printf '' ;;                  # U+F03A
+    magnifying_glass) printf '' ;;       # U+F002
+    gear) printf '' ;;                  # U+F013
+    download) printf '' ;;              # U+F019
+    file_code) printf '' ;;             # U+F1C9
+    terminal) printf '' ;;              # U+F120
+    check) printf '' ;;                 # U+F00C
+    circle_xmark) printf '' ;;          # U+F05C
+    triangle_exclamation) printf '' ;;  # U+F071
+    circle_info) printf '' ;;           # U+F05A
+    *) shelter_error unknown_icon "$1"; return 2 ;;
+  esac
+}
+
 shelter_section() {
-  local title tone=${2:-info}
+  local title tone=${2:-info} icon
   title=$(shelter_copy "$1") || return
+  case "$1" in
+    dry_run) icon=flask ;;
+    status_check) icon=magnifying_glass ;;
+    current_status|before_installation|installation_results) icon=list_check ;;
+    installation_mode) icon=play ;;
+    planned_installations|installation_progress) icon=download ;;
+    planned_configuration|shell_configuration) icon=gear ;;
+    dry_run_complete|check_complete|installation_complete) icon=check ;;
+    installation_failed) icon=circle_xmark ;;
+    check_required) icon=triangle_exclamation ;;
+    *) icon=circle_info ;;
+  esac
+  title="$(shelter_icon "$icon") $title"
   printf '\n'
   case "$tone" in
-    success|warning|error) shelter_text "$tone" "  $title" ;;
-    *) printf '  %s' "$title" ;;
+    success|warning|error) shelter_text "$tone" "$title" ;;
+    *) printf '%s' "$title" ;;
   esac
   printf '\n'
 }
@@ -234,10 +269,10 @@ shelter_tool_name() {
 shelter_plan_heading() {
   if [[ "$1" == check ]]; then
     shelter_section current_status
-    printf '  Tool | Status | Observed version and executable path\n\n'
+    printf '%s Tool | Status | Observed version and executable path\n\n' "$(shelter_icon list)"
   else
     shelter_section before_installation
-    printf '  Tool | Current status | Planned action\n\n'
+    printf '%s Tool | Current status | Planned action\n\n' "$(shelter_icon list)"
   fi
 }
 
@@ -261,7 +296,7 @@ shelter_plan_row() {
 shelter_results() {
   local i tone row result
   shelter_section installation_results
-  printf '  Tool | Result | Before installation → Verified result\n\n'
+  printf '%s Tool | Result | Before installation → Verified result\n\n' "$(shelter_icon list)"
   for ((i=0; i<${#SHELTER_TOOLS[@]}; i++)); do
     case "${SHELTER_RESULTS[$i]}" in
       failed) tone=error ;;
@@ -277,13 +312,14 @@ shelter_results() {
 }
 
 shelter_describe_install() {
+  printf '%s ' "$(shelter_icon download)"
   case "$1" in
-    brew) printf '  Homebrew: official initial installer\n' ;;
-    git) printf '  Git: brew install git\n' ;;
-    vscode) printf '  VS Code: brew install --cask --no-binaries visual-studio-code (preserve the existing code command)\n' ;;
-    node) printf '  Node.js + npm: brew install node@24\n' ;;
-    python) printf '  Python + uv: install missing uv with brew install uv, missing Python with uv python install 3.14\n' ;;
-    gh) printf '  GitHub CLI: brew install gh\n' ;;
+    brew) printf 'Homebrew: official initial installer\n' ;;
+    git) printf 'Git: brew install git\n' ;;
+    vscode) printf 'VS Code: brew install --cask --no-binaries visual-studio-code (preserve the existing code command)\n' ;;
+    node) printf 'Node.js + npm: brew install node@24\n' ;;
+    python) printf 'Python + uv: install missing uv with brew install uv, missing Python with uv python install 3.14\n' ;;
+    gh) printf 'GitHub CLI: brew install gh\n' ;;
   esac
 }
 
