@@ -46,7 +46,7 @@ Shelter単体のパッケージとHomebrew Tapはまだ配布していません�
 
 ## 使い方
 
-ライト版を実行すると、**Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI**の順に初期環境を準備します。ツールを選択するメニューはありません。正常に実行できる既存のツールは保持し、不足する構成要素をインストールします。通常の画面は**インストール完了またはインストール失敗**と短い案内で終わり、必要な場合にだけ警告を追加します。色が無効でも文言で状態を区別できます。詳細はインストールログに記録し、現在のバージョンと実行ファイルのパスは`--check`で確認できます。
+ライト版を実行すると、**Homebrew → Git → VS Code → Ghostty → Node.js/npm → Python/uv → GitHub CLI**の順に初期環境を準備します。ツールを選択するメニューはありません。正常に実行できる既存のツールは保持し、不足する構成要素をインストールします。通常の画面は**インストール完了またはインストール失敗**と短い案内で終わり、必要な場合にだけ警告を追加します。色が無効でも文言で状態を区別できます。詳細はインストールログに記録し、現在のバージョンと実行ファイルのパスは`--check`で確認できます。
 
 状態ごとの文言と色は[メッセージのプレビュー](./CONTRIBUTING.md#メッセージのプレビュー)、実際のインストール処理の模擬実行は[インストール手順のテスト](./CONTRIBUTING.md#インストール手順のテスト)で確認できます。
 
@@ -84,16 +84,17 @@ CodexやClaude Codeなどのツールをまとめてインストール、管理�
 
 ## ライト版の固定インストール仕様
 
-以下の項目はすべてライト版に含まれます。Homebrewはパッケージマネージャー、Gitはバージョン管理ツール、VS Codeはエディターです。Node.jsとPythonは実行環境で、npmとuvはそれぞれの環境を管理するツールです。GitHub CLIはGitHubと連携するためのツールです。
+以下の項目はすべてライト版に含まれます。Homebrewはパッケージマネージャー、Gitはバージョン管理ツール、VS Codeはエディター、Ghosttyはコマンドを入力して実行するターミナルアプリです。Node.jsとPythonは実行環境で、npmとuvはそれぞれの環境を管理するツールです。GitHub CLIはGitHubと連携するためのツールです。
 
 | 順序 | インストール対象 | 役割 | 新規インストール時の方針 |
 | --- | --- | --- | --- |
 | 1 | [Homebrew](https://docs.brew.sh/Installation) | ソフトウェアをインストールするための基盤 | 公式インストーラーで準備 |
 | 2 | [Git](https://formulae.brew.sh/formula/git) | ファイルの変更履歴を管理 | Homebrewの`git`を使用。正常に動作するApple Gitも保持 |
 | 3 | [VS Code](https://formulae.brew.sh/cask/visual-studio-code) | ファイルとコードを編集 | Homebrewの`visual-studio-code`を使用。既存の`code`コマンドは保持 |
-| 4 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScriptの実行とパッケージ管理 | `node@24`でNode.js 24.xと同梱のnpmをインストール |
-| 5 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Pythonの実行、パッケージと仮想環境の管理 | Homebrewの`uv`を導入し、uvでPython 3.14.xをインストール |
-| 6 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHubリポジトリとプルリクエストの操作 | Homebrewの`gh`を使用。ログインは別途実施 |
+| 4 | [Ghostty](https://ghostty.org/docs/install/binary) | シェルコマンドを入力して実行するターミナル | Homebrewの`ghostty` caskが提供するバージョンをインストール |
+| 5 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScriptの実行とパッケージ管理 | `node@24`でNode.js 24.xと同梱のnpmをインストール |
+| 6 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Pythonの実行、パッケージと仮想環境の管理 | Homebrewの`uv`を導入し、uvでPython 3.14.xをインストール |
+| 7 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHubリポジトリとプルリクエストの操作 | Homebrewの`gh`を使用。ログインは別途実施 |
 
 固定仕様とは、**インストールするツールの組み合わせが決まっていること**を意味します。正常に動作する既存のバージョンは保持し、新規のNode.jsとPythonにだけ上記のバージョン系列を適用します。パッチバージョンまでは固定せず、実際のバージョンとパスは`--check`の結果で確認します。GitHub Desktopは含みません。
 

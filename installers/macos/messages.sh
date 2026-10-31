@@ -75,6 +75,8 @@ shelter_copy() {
     python_lookup_failed_detail) template='uv could not locate Python. Check the existing installation and access permissions.' ;;
     brew_missing) template='Homebrew not found' ;;
     vscode_missing) template='VS Code app not found' ;;
+    ghostty_missing) template='Ghostty app not found' ;;
+    ghostty_invalid) template='Ghostty app found, but its executable is missing or not executable: %s' ;;
     current_status) template='Current status' ;;
     before_installation) template='Before installation' ;;
     not_checked) template='Not checked after execution' ;;
@@ -260,6 +262,7 @@ shelter_tool_name() {
     brew) printf 'Homebrew' ;;
     git) printf 'Git' ;;
     vscode) printf 'VS Code' ;;
+    ghostty) printf 'Ghostty' ;;
     node) printf 'Node.js + npm' ;;
     python) printf 'Python + uv' ;;
     gh) printf 'GitHub CLI' ;;
@@ -317,6 +320,7 @@ shelter_describe_install() {
     brew) printf 'Homebrew: official initial installer\n' ;;
     git) printf 'Git: brew install git\n' ;;
     vscode) printf 'VS Code: brew install --cask --no-binaries visual-studio-code (preserve the existing code command)\n' ;;
+    ghostty) printf 'Ghostty: brew install --cask ghostty\n' ;;
     node) printf 'Node.js + npm: brew install node@24\n' ;;
     python) printf 'Python + uv: install missing uv with brew install uv, missing Python with uv python install 3.14\n' ;;
     gh) printf 'GitHub CLI: brew install gh\n' ;;
@@ -337,7 +341,7 @@ Usage: /bin/bash installers/macos/install.sh [options]
   -h, --help      Show help
 
 Without options, prepare the entire fixed tool set in order. There is no tool selection menu.
-Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI
+Homebrew → Git → VS Code → Ghostty → Node.js/npm → Python/uv → GitHub CLI
 Supported: macOS 15 or later, Apple Silicon, zsh/bash. Do not run with sudo.
 Skip existing tools that run successfully. Homebrew handles dependencies for new packages.
 New installations use Node.js 24 and Python 3.14 managed by uv.

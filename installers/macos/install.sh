@@ -62,7 +62,7 @@ shelter_main() {
   set -o pipefail
   local mode=lite option status
   SHELTER_ACTION=install
-  SHELTER_TOOLS=(brew git vscode node python gh)
+  SHELTER_TOOLS=(brew git vscode ghostty node python gh)
   SHELTER_PATHS=()
   SHELTER_RC_FILES=()
   SHELTER_BEFORE=()

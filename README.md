@@ -46,7 +46,7 @@ See [Development Setup in CONTRIBUTING](./CONTRIBUTING.md#development-setup) for
 
 ## Usage
 
-Lite prepares the initial environment in this order: **Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI**. There is no tool selection menu. Existing tools that run successfully are preserved, and missing components are installed. The default output ends with **installation complete or installation failed**, a short explanation, and warnings only when relevant. The wording distinguishes these states even when colors are disabled. Details are written to the installation log; use `--check` to inspect current versions and executable paths.
+Lite prepares the initial environment in this order: **Homebrew → Git → VS Code → Ghostty → Node.js/npm → Python/uv → GitHub CLI**. There is no tool selection menu. Existing tools that run successfully are preserved, and missing components are installed. The default output ends with **installation complete or installation failed**, a short explanation, and warnings only when relevant. The wording distinguishes these states even when colors are disabled. Details are written to the installation log; use `--check` to inspect current versions and executable paths.
 
 See [Message Previews](./CONTRIBUTING.md#message-previews) for each state's wording and color, and [Installation Workflow Tests](./CONTRIBUTING.md#installation-workflow-tests) for a simulated run of the actual installation process.
 
@@ -84,16 +84,17 @@ Installation scripts for both versions are managed in `installers/macos/`. The f
 
 ## Lite Installation Specification
 
-All items below are included in Lite. Homebrew is the package manager, Git is the version control tool, and VS Code is the editor. Node.js and Python are runtimes; npm and uv manage their respective environments. GitHub CLI provides integration with GitHub.
+All items below are included in Lite. Homebrew is the package manager, Git is the version control tool, VS Code is the editor, and Ghostty is the terminal app for entering commands. Node.js and Python are runtimes; npm and uv manage their respective environments. GitHub CLI provides integration with GitHub.
 
 | Order | Tool | Role | Policy for new installations |
 | --- | --- | --- | --- |
 | 1 | [Homebrew](https://docs.brew.sh/Installation) | Foundation for installing software | Prepare using the official installer |
 | 2 | [Git](https://formulae.brew.sh/formula/git) | Track file changes | Install Homebrew's `git`; preserve a working Apple Git installation |
 | 3 | [VS Code](https://formulae.brew.sh/cask/visual-studio-code) | Edit files and code | Install Homebrew's `visual-studio-code`; preserve an existing `code` command |
-| 4 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | Run JavaScript and manage packages | Install Node.js 24.x and its bundled npm through `node@24` |
-| 5 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Run Python and manage packages and virtual environments | Install Homebrew's `uv`, then Python 3.14.x through uv |
-| 6 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | Work with GitHub repositories and pull requests | Install Homebrew's `gh`; sign in separately |
+| 4 | [Ghostty](https://ghostty.org/docs/install/binary) | Terminal app for running shell commands | Install the version provided by Homebrew's `ghostty` cask |
+| 5 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | Run JavaScript and manage packages | Install Node.js 24.x and its bundled npm through `node@24` |
+| 6 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Run Python and manage packages and virtual environments | Install Homebrew's `uv`, then Python 3.14.x through uv |
+| 7 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | Work with GitHub repositories and pull requests | Install Homebrew's `gh`; sign in separately |
 
 The fixed specification means a **fixed set of tools to install**. Existing versions that run successfully are preserved. The version series above apply only to new Node.js and Python installations. Patch versions are not pinned; check actual versions and paths with `--check`. GitHub Desktop is not included.
 

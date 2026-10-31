@@ -46,7 +46,7 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 
 ## 사용법
 
-라이트는 실행하면 **Homebrew → Git → VS Code → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 기본 화면은 **설치 완료 또는 설치 실패**와 짧은 안내로 마무리하고, 필요한 경우에만 경고를 덧붙입니다. 색상이 꺼져 있어도 문구로 구분할 수 있습니다. 상세 내용은 설치 로그에 기록하고, 현재 버전과 실행 경로는 `--check`로 확인합니다.
+라이트는 실행하면 **Homebrew → Git → VS Code → Ghostty → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 기본 화면은 **설치 완료 또는 설치 실패**와 짧은 안내로 마무리하고, 필요한 경우에만 경고를 덧붙입니다. 색상이 꺼져 있어도 문구로 구분할 수 있습니다. 상세 내용은 설치 로그에 기록하고, 현재 버전과 실행 경로는 `--check`로 확인합니다.
 
 상태별 문구와 색상은 [안내 메시지 미리보기](./CONTRIBUTING.md#안내-메시지-미리보기)에서, 실제 설치 절차의 모의 실행은 [설치 흐름 테스트](./CONTRIBUTING.md#설치-흐름-테스트)에서 확인할 수 있습니다.
 
@@ -84,16 +84,17 @@ Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대
 
 ## 라이트 고정 설치 스펙
 
-아래 항목은 모두 라이트에 포함됩니다. Homebrew는 설치 관리자, Git은 버전 관리 도구, VS Code는 편집기입니다. Node.js와 Python은 실행 환경이며 npm과 uv는 해당 환경의 관리 도구입니다. GitHub CLI는 GitHub 연동 도구입니다.
+아래 항목은 모두 라이트에 포함됩니다. Homebrew는 설치 관리자, Git은 버전 관리 도구, VS Code는 편집기, Ghostty는 명령을 입력하고 실행하는 터미널 앱입니다. Node.js와 Python은 실행 환경이며 npm과 uv는 해당 환경의 관리 도구입니다. GitHub CLI는 GitHub 연동 도구입니다.
 
 | 순서 | 설치 대상 | 역할 | 새로 설치할 때의 정책 |
 | --- | --- | --- | --- |
 | 1 | [Homebrew](https://docs.brew.sh/Installation) | 프로그램 설치 기반 | 공식 설치기로 준비 |
 | 2 | [Git](https://formulae.brew.sh/formula/git) | 파일 변경 이력 관리 | Homebrew의 `git`, 정상 실행되는 Apple Git도 유지 |
 | 3 | [VS Code](https://formulae.brew.sh/cask/visual-studio-code) | 파일과 코드 편집 | Homebrew의 `visual-studio-code`, 기존 `code` 명령 보존 |
-| 4 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScript 실행과 패키지 관리 | `node@24`로 Node.js 24.x와 함께 제공되는 npm 설치 |
-| 5 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Python 실행, 패키지와 가상환경 관리 | Homebrew의 `uv`, uv로 Python 3.14.x 설치 |
-| 6 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHub 저장소와 Pull Request 작업 | Homebrew의 `gh`, 로그인은 별도 진행 |
+| 4 | [Ghostty](https://ghostty.org/docs/install/binary) | 셸 명령을 입력하고 실행하는 터미널 | Homebrew의 `ghostty` cask가 제공하는 버전 설치 |
+| 5 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScript 실행과 패키지 관리 | `node@24`로 Node.js 24.x와 함께 제공되는 npm 설치 |
+| 6 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Python 실행, 패키지와 가상환경 관리 | Homebrew의 `uv`, uv로 Python 3.14.x 설치 |
+| 7 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHub 저장소와 Pull Request 작업 | Homebrew의 `gh`, 로그인은 별도 진행 |
 
 고정 스펙은 **설치할 도구 묶음**을 뜻합니다. 정상 실행되는 기존 버전은 유지하며, 새 Node.js와 Python에만 위 버전 계열을 적용합니다. 패치 버전까지 고정하지 않으며 실제 버전과 경로는 `--check` 결과로 확인합니다. GitHub Desktop은 포함하지 않습니다.
 

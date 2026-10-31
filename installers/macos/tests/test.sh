@@ -41,6 +41,7 @@ setup_fixture() {
   SHELTER_CASE_DIR="$SHELTER_TEST_ROOT/$1 with spaces"
   export SHELTER_FAKE_PREFIX="$SHELTER_CASE_DIR/brew"
   export SHELTER_FAKE_PY_BIN="$SHELTER_CASE_DIR/python-bin"
+  export SHELTER_FAKE_GHOSTTY_APP="$SHELTER_CASE_DIR/Applications/Ghostty.app"
   export SHELTER_FAKE_DRIVER="$SHELTER_CASE_DIR/driver"
   export SHELTER_FAKE_MESSAGES="$TEST_SOURCE_DIR/messages.sh"
   export SHELTER_FAKE_LOG="$SHELTER_CASE_DIR/actions.log"
@@ -61,6 +62,7 @@ make_tool() {
   case "$name" in
     node|npm) target="$SHELTER_FAKE_PREFIX/opt/node@24/bin/$name" ;;
     python3.14) target="$SHELTER_FAKE_PY_BIN/$name" ;;
+    ghostty) target="$SHELTER_FAKE_GHOSTTY_APP/Contents/MacOS/ghostty" ;;
   esac
   mkdir -p "${target%/*}" || exit 1
   cp "$SHELTER_FAKE_DRIVER" "$target" || exit 1
@@ -75,6 +77,7 @@ if [[ "$1" == --version ]]; then
     node) printf '%s\n' "$SHELTER_FAKE_NODE_VERSION" ;;
     npm) printf '11.0.0\n' ;;
     python*) printf 'Python 3.14.0\n' ;;
+    ghostty) printf 'Ghostty 1.0.0\n\nBuild Config\n  - fixture\n' ;;
     *) printf '%s fixture-version\n' "$name" ;;
   esac
   exit 0
@@ -90,7 +93,12 @@ if [[ "$name" == brew ]]; then
       [[ "$SHELTER_FAKE_FAIL" != "${@: -1}" ]] || { shelter_print test_brew_error "${@: -1}" >&2; exit 1; }
       case "$1" in
         node@24) make_tool node; make_tool npm ;;
-        --cask) make_tool code ;;
+        --cask)
+          case "${@: -1}" in
+            visual-studio-code) make_tool code ;;
+            ghostty) make_tool ghostty ;;
+            *) exit 90 ;;
+          esac ;;
         *) make_tool "$1" ;;
       esac ;;
     *) exit 90 ;;
@@ -143,6 +151,10 @@ FAKE
     [[ -x "$SHELTER_FAKE_PREFIX/bin/code" ]] || return 1
     printf '%s\n' "$SHELTER_FAKE_PREFIX/bin/code"
   }
+  shelter_find_ghostty() {
+    [[ -e "$SHELTER_FAKE_GHOSTTY_APP" || -L "$SHELTER_FAKE_GHOSTTY_APP" ]] || return 1
+    printf '%s/Contents/MacOS/ghostty\n' "$SHELTER_FAKE_GHOSTTY_APP"
+  }
   shelter_shell_targets() {
     SHELTER_ENV_FILE="$SHELTER_CASE_DIR/config/env.sh"
     SHELTER_RC_FILES=("$SHELTER_CASE_DIR/zshrc")
@@ -170,7 +182,7 @@ test_preview() {
   assert_empty_log || return 1
   [[ ! -e "$SHELTER_CASE_DIR/config" ]] || return 1
   local tool
-  for tool in Homebrew Git 'VS Code' 'Node.js + npm' 'Python + uv' 'GitHub CLI'; do
+  for tool in Homebrew Git 'VS Code' Ghostty 'Node.js + npm' 'Python + uv' 'GitHub CLI'; do
     assert_contains "$SHELTER_CASE_DIR/output" "$tool" || return 1
   done
   grep -Fxq -- ' Dry run' "$SHELTER_CASE_DIR/output" || return 1
@@ -180,6 +192,7 @@ test_preview() {
   grep -Fxq -- " Shell configuration: ${SHELTER_RC_FILES[0]}" "$SHELTER_CASE_DIR/output" || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'No actual installation or configuration changes will be made.' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Install new' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" ' Ghostty: brew install --cask ghostty' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Dry run complete' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Actual installations: 0, configuration changes: 0' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" ' Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results'
@@ -230,6 +243,7 @@ test_fresh_and_repeat() {
 download brew
 brew install git
 brew install --cask --no-binaries visual-studio-code
+brew install --cask ghostty
 brew install node@24
 brew install uv
 uv python install 3.14
@@ -260,6 +274,57 @@ test_existing_node() {
   PATH="$SHELTER_FAKE_PREFIX/opt/node@24/bin:$TEST_INITIAL_PATH"
   shelter_main > "$SHELTER_CASE_DIR/output" || return 1
   assert_contains "$SHELTER_LOG_FILE" 'v22.0.0' && assert_absent "$SHELTER_FAKE_LOG" 'install node@24'
+}
+
+test_existing_ghostty() {
+  "$SHELTER_FAKE_DRIVER" create ghostty || return 1
+  command -v ghostty >/dev/null 2>&1 && return 1
+  shelter_main --dry-run --color never > "$SHELTER_CASE_DIR/plan" || return 1
+  assert_contains "$SHELTER_CASE_DIR/plan" 'Ghostty          | Installed (Ghostty 1.0.0) | Keep the existing installation' || return 1
+  assert_empty_log || return 1
+  shelter_main > "$SHELTER_CASE_DIR/output" || return 1
+  assert_contains "$SHELTER_LOG_FILE" 'Ghostty          | Existing installation kept | Ghostty 1.0.0 → Ghostty 1.0.0' || return 1
+  assert_absent "$SHELTER_FAKE_LOG" 'brew install --cask ghostty' || return 1
+  shelter_main --check > "$SHELTER_CASE_DIR/check" || return 1
+  assert_contains "$SHELTER_CASE_DIR/check" "Ghostty 1.0.0 ($SHELTER_FAKE_GHOSTTY_APP/Contents/MacOS/ghostty)"
+}
+
+test_broken_ghostty() {
+  mkdir -p "$SHELTER_FAKE_GHOSTTY_APP"
+  shelter_main --check > "$SHELTER_CASE_DIR/missing-binary" 2>&1
+  [[ $? == 1 ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/missing-binary" 'Ghostty app found, but its executable is missing or not executable' || return 1
+  "$SHELTER_FAKE_DRIVER" create ghostty || return 1
+  chmod -x "$SHELTER_FAKE_GHOSTTY_APP/Contents/MacOS/ghostty"
+  shelter_main --check > "$SHELTER_CASE_DIR/not-executable" 2>&1
+  [[ $? == 1 ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/not-executable" 'Ghostty app found, but its executable is missing or not executable' || return 1
+  chmod +x "$SHELTER_FAKE_GHOSTTY_APP/Contents/MacOS/ghostty"
+  export SHELTER_FAKE_BROKEN=ghostty
+  shelter_main > "$SHELTER_CASE_DIR/output" 2>&1
+  [[ $? == 1 ]] || return 1
+  assert_contains "$SHELTER_LOG_FILE" 'Repair the existing environment' && assert_empty_log
+}
+
+test_ghostty_failure_and_retry() {
+  export SHELTER_FAKE_FAIL=ghostty
+  shelter_main > "$SHELTER_CASE_DIR/output" 2>&1
+  [[ $? == 1 ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" 'Installation or verification failed for Ghostty' || return 1
+  assert_absent "$SHELTER_FAKE_LOG" 'brew install node@24' || return 1
+  export SHELTER_FAKE_FAIL=''
+  shelter_main > "$SHELTER_CASE_DIR/retry" || return 1
+  [[ $(grep -c 'brew install --cask ghostty' "$SHELTER_FAKE_LOG") == 2 ]] || return 1
+  [[ $(grep -c 'brew install --cask --no-binaries visual-studio-code' "$SHELTER_FAKE_LOG") == 1 ]]
+}
+
+test_ghostty_verification_failure() {
+  export SHELTER_FAKE_BROKEN=ghostty
+  shelter_main > "$SHELTER_CASE_DIR/output" 2>&1
+  [[ $? == 1 ]] || return 1
+  assert_contains "$SHELTER_FAKE_LOG" 'brew install --cask ghostty' || return 1
+  assert_contains "$SHELTER_CASE_DIR/output" 'Installation or verification failed for Ghostty' || return 1
+  assert_absent "$SHELTER_FAKE_LOG" 'brew install node@24'
 }
 
 test_partial_node() {
@@ -394,6 +459,7 @@ test_success_messages() {
   assert_absent "$SHELTER_CASE_DIR/output" 'fixture-version' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Node.js + npm    | Existing installation kept | v24.22.2 / 11.0.0 → v24.22.2 / 11.0.0' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'VS Code          | New installation complete | Not installed → code fixture-version' || return 1
+  assert_contains "$SHELTER_LOG_FILE" 'Ghostty          | New installation complete | Not installed → Ghostty 1.0.0' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Homebrew test log:' || return 1
   [[ $(wc -l < "$SHELTER_CASE_DIR/output") -le 8 ]] && [[ $(LC_ALL=C ls -ld "$SHELTER_LOG_FILE") == -rw-------* ]]
 }
@@ -597,6 +663,10 @@ run_test no_tool_selection_and_invalid_options test_options
 run_test unsupported_platforms_and_root test_platforms
 run_test fixed_spec_install_and_idempotence test_fresh_and_repeat
 run_test preserve_existing_node test_existing_node
+run_test preserve_existing_ghostty_app_without_path test_existing_ghostty
+run_test broken_ghostty_app_blocks_installation test_broken_ghostty
+run_test ghostty_failure_stops_then_retry test_ghostty_failure_and_retry
+run_test ghostty_install_requires_verification test_ghostty_verification_failure
 run_test partial_node_blocked test_partial_node
 run_test failure_stops_then_retry test_install_failure_and_retry
 run_test download_failure_cleanup test_download_failure

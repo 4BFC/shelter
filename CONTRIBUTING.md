@@ -70,6 +70,12 @@ Start initial setup with the following command. It prepares the entire [Lite ins
 /bin/bash installers/macos/install.sh
 ```
 
+After setup, open Ghostty from the Applications folder or run:
+
+```bash
+open -a Ghostty
+```
+
 The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
 
 | Message | What it explains |
@@ -129,6 +135,7 @@ Exit codes are `0` for success, `1` for missing tools or execution/installation 
 - If only one of Node.js and npm is present, or an existing command fails to run, execution stops before changes are made. For Python and uv, only missing components can be installed. `/usr/bin/python3` remains the macOS developer tools' Python, and a separate user Python installation is prepared.
 - uv's Python lookup does not use the network or the existing cache. Lookup errors are shown as `Check required`. Python is treated as missing only when a successful lookup finds no installed Python.
 - VS Code is detected in `/Applications` or the user's `~/Applications` folder. The app is installed using [Homebrew's `--no-binaries`](https://docs.brew.sh/Manpage), preserving an existing `code` command if it belongs to Cursor or another editor. In that case, launch VS Code from the Applications folder.
+- Ghostty is detected at `/Applications/Ghostty.app` or `~/Applications/Ghostty.app`, even if the `ghostty` command is not on `PATH`. A working app is preserved; a missing app is installed with `brew install --cask ghostty`. A damaged app or a failed version check stops setup. Shelter does not change Ghostty settings, fonts, or the default terminal.
 
 Git identity and `gh auth login` are not configured automatically. An installation error stops subsequent steps; tools installed earlier remain. After resolving the error, rerun the same command to skip tools that are already ready. There is no rollback for the entire package installation. Homebrew handles dependency changes needed by newly installed packages.
 
@@ -261,7 +268,7 @@ done
 /bin/bash installers/macos/tests/test.sh
 ```
 
-Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests.
+Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests. Ghostty tests cover keeping an existing app outside `PATH`, detecting damaged apps, installation failure and retry, and verification after installation.
 
 On a supported Mac, also check these read-only commands:
 
@@ -271,7 +278,7 @@ On a supported Mac, also check these read-only commands:
 /bin/bash installers/macos/install.sh --check
 ```
 
-Separately verify that actual downloads and installation finish on a new Mac, that tools run in a new terminal and VS Code, and that reruns do not duplicate installations or configuration. **Validation currently covers tests in temporary environments and read-only execution on macOS 26.6.2. The complete real initial installation has not been verified.**
+Separately verify that actual downloads and installation finish on a new Mac, that tools run in Ghostty, a new terminal, and VS Code, and that reruns do not duplicate installations or configuration. **Validation currently covers tests in temporary environments and read-only execution on macOS 26.6.2. The complete real initial installation has not been verified.**
 
 ### Documentation and Diff Checks
 

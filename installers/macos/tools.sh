@@ -61,6 +61,18 @@ shelter_find_vscode() {
   return 1
 }
 
+shelter_find_ghostty() {
+  local app
+  for app in /Applications/Ghostty.app "$HOME/Applications/Ghostty.app"; do
+    # Keep damaged app bundles visible so installation stops instead of replacing them.
+    if [[ -e "$app" || -L "$app" ]]; then
+      printf '%s/Contents/MacOS/ghostty\n' "$app"
+      return 0
+    fi
+  done
+  return 1
+}
+
 shelter_editor_paths() {
   local path
   path=$(shelter_find_vscode) || return 0
@@ -151,6 +163,14 @@ shelter_probe() {
       if path=$(shelter_find_vscode); then shelter_probe_command "$path"
       else SHELTER_STATE=missing; SHELTER_DETAIL=$(shelter_copy vscode_missing); SHELTER_VERSION=$(shelter_copy not_installed); return 0
       fi ;;
+    ghostty)
+      if path=$(shelter_find_ghostty); then
+        if [[ ! -x "$path" ]]; then
+          SHELTER_STATE=blocked; SHELTER_DETAIL=$(shelter_copy ghostty_invalid "$path"); SHELTER_VERSION=$(shelter_copy execution_check_failed); return 0
+        fi
+        shelter_probe_command "$path"
+      else SHELTER_STATE=missing; SHELTER_DETAIL=$(shelter_copy ghostty_missing); SHELTER_VERSION=$(shelter_copy not_installed); return 0
+      fi ;;
     node|python)
       if [[ "$tool" == node ]]; then shelter_probe_command node; else shelter_probe_python; fi
       first=$SHELTER_COMMAND_STATE; detail=$SHELTER_COMMAND_DETAIL; version=$SHELTER_COMMAND_VERSION
@@ -208,6 +228,7 @@ shelter_install_tool() {
     brew) return 0 ;;
     git|gh) shelter_brew_install "$1" ;;
     vscode) shelter_brew_install --cask --no-binaries visual-studio-code ;;
+    ghostty) shelter_brew_install --cask ghostty ;;
     node) shelter_brew_install node@24 ;;
     python)
       shelter_probe_command uv
