@@ -170,7 +170,7 @@ The runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `
 3. **Implement the full CLI separately.** If Python is chosen, place the implementation in `src/shelter/`, Python tests in the root `tests/` directory, and package configuration in the root `pyproject.toml`. These paths have not been created yet. Do not duplicate ongoing security notification and update management features in the installer.
 
 Manage shell installer tests in `installers/macos/tests/`. When adding behavior for a version, check both the shared installation workflow and the behavior of each version. Record the working directory and actual commands in this document.
-The website is managed outside this repository. The layout of the collection service and data formats will be decided after the integration scope is defined. A Windows installer is outside the current scope.
+The website is managed outside this repository. The layout of the collection service and data formats will be decided after the integration scope is defined. Windows work is limited to the [preparation plan](./docs/plans/windows-lite.md); runtime scripts, launchers, and release jobs will be added after the support decisions are made.
 
 When adding or changing structure, include the following documentation updates in the same change:
 

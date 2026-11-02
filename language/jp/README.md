@@ -106,12 +106,13 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 
 ## 技術方針
 
-**初期のシェルインストーラーとCLIの対象OSはmacOSです。** Windows向けのインストール、シェル設定、更新、検証は現在の対象に含みません。
+**現在実装しているインストーラーの対象OSはmacOSです。** Windowsは[準備文書](../../docs/plans/windows-lite.md)で範囲と検討事項を整理する段階です。Windows向けのインストール、設定、パッケージング、リリースジョブはまだ実装していません。
 ライト版はmacOS標準のBashで実行し、Node.jsやPythonを事前にインストールする必要はありません。正式版CLIとWebサイトの技術はまだ検討段階です。
 
 | 領域 | 検討している技術 | 役割 | 状態 |
 | --- | --- | --- | --- |
 | 初期の対象OS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | ライト版のインストールとシェル設定 | Apple Silicon、zsh/bash。Intel、Rosetta、Windowsは対象外 |
+| Windowsの準備 | Windows 11、標準PowerShell、WinGet（候補） | Windowsの初期設定と配布方法を検討 | 準備文書のみ。インストーラーと配布ファイルは未提供 |
 | Webサイトと情報収集 | 未定 | セキュリティ情報の収集、参照、ユーザー画面 | 技術選定前 |
 | CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | 優先候補。バージョンは未定 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | 候補。バージョンは未定 |
@@ -140,6 +141,9 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       └── release.yml # リリースの検査、パッケージング、ファイル添付
+├── docs/
+│   └── plans/
+│       └── windows-lite.md # Windows対応の準備文書
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256

@@ -106,12 +106,13 @@ Checking whether a tool runs is not a security vulnerability scan or a check for
 
 ## Technical Direction
 
-**The initial target operating system for the shell installer and CLI is macOS.** Windows installation, shell configuration, updates, and validation are outside the current scope.
+**The implemented target operating system for the installer is macOS.** Windows support is in preparation only; see the [Windows plan](./docs/plans/windows-lite.md). Windows installation, configuration, packaging, and release jobs have not been implemented.
 Lite runs with the Bash included in macOS; Node.js and Python do not need to be installed beforehand. Technologies for the full CLI and website are still under consideration.
 
 | Area | Technology under consideration | Role | Status |
 | --- | --- | --- | --- |
 | Initial target operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Lite installation and shell configuration | Apple Silicon, zsh/bash. Intel, Rosetta, and Windows excluded |
+| Windows preparation | Windows 11, built-in PowerShell, WinGet (candidates) | Define Windows initial setup and distribution | Planning only; no Windows installer or release assets |
 | Website and information collection | Undecided | Collect security information and provide access and user interfaces | Technology selection pending |
 | CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Primary candidate; version undecided |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | Candidates; versions undecided |
@@ -140,6 +141,9 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       └── release.yml # Release tests, packaging, and asset upload
+├── docs/
+│   └── plans/
+│       └── windows-lite.md # Windows preparation notes
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256

@@ -106,12 +106,13 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 
 ## 기술 방향
 
-**초기 Shell 설치기와 CLI의 대상 운영체제는 macOS입니다.** Windows용 설치, 셸 설정, 업데이트와 검증은 현재 범위에 포함하지 않습니다.
+**현재 구현된 설치기의 대상 운영체제는 macOS입니다.** Windows는 [준비 문서](../../docs/plans/windows-lite.md)에 범위와 검토 항목만 정리합니다. Windows 설치, 설정, 패키징과 릴리스 작업은 아직 구현하지 않았습니다.
 라이트는 macOS 기본 Bash로 실행하며, 실행 전에 Node.js나 Python을 따로 설치할 필요가 없습니다. 정식 CLI와 웹사이트의 기술은 아직 검토 단계입니다.
 
 | 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
 | 초기 대상 운영체제   | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel, Rosetta, Windows 제외 |
+| Windows 준비 | Windows 11, 기본 PowerShell, WinGet (후보) | Windows 초기 설정과 배포 방식 검토 | 준비 문서 단계, 설치기와 배포 파일 없음 |
 | 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
 | CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                   |
 | CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                        |
@@ -140,6 +141,9 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
+├── docs/
+│   └── plans/
+│       └── windows-lite.md # Windows 지원 준비 문서
 ├── dist/             # 생성 결과, Git 관리 제외
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
