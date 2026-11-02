@@ -39,8 +39,8 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 
 ## 설치
 
-Shelter Lite는 저장소의 Shell 파일 또는 생성한 단일 배포 파일 `shelter-lite-macos.sh`로 실행합니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
-로컬에서 단일 파일 패키징을 할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. 공개 릴리스 자동화와 Homebrew Tap은 아직 구성하지 않았습니다.
+Shelter Lite는 `shelter-lite-macos.zip`을 풀고 `Shelter Lite.command`를 더블클릭하거나, 단일 `.sh` 파일을 실행하는 방식으로 사용할 수 있습니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
+로컬에서 셸 파일과 더블클릭용 ZIP을 생성할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. 공개 릴리스 자동화와 Homebrew Tap은 아직 구성하지 않았습니다.
 
 저장소 받기와 실행 절차는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비), 설치 시 변경되는 설정은 [라이트 실행](./CONTRIBUTING.md#라이트-실행)을 참고하세요.
 
@@ -137,10 +137,12 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 shelter/
 ├── dist/             # 생성 결과, Git 관리 제외
 │   ├── shelter-lite-macos.sh
-│   └── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.zip
+│   └── shelter-lite-macos.zip.sha256
 ├── installers/
 │   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
-│       ├── build.sh   # 단일 배포 파일 생성
+│       ├── build.sh   # 셸 파일과 더블클릭용 ZIP 생성
 │       ├── install.sh # 진입점, 고정 스펙과 설치 순서
 │       ├── messages.sh # 영문 메시지, 오류 문구, 색상과 출력 형식
 │       ├── tools.sh   # 도구 확인, 설치, 셸 설정
@@ -162,7 +164,7 @@ shelter/
 
 [messages.sh](../../installers/macos/messages.sh)는 설치기와 테스트가 공유하는 영문 안내, 경고, 오류, 도움말과 터미널 출력 형식의 단일 관리 지점(SSOT)입니다. 실패 판단, 설치 중단과 종료 코드는 `install.sh`와 `tools.sh`에서 담당합니다.
 
-[build.sh](../../installers/macos/build.sh)는 실행 소스와 MIT 라이선스를 `dist/shelter-lite-macos.sh` 하나로 묶습니다. 생성 파일에도 같은 메시지와 설치 로직을 포함하며, 수정은 원본에서 하고 다시 생성합니다.
+[build.sh](../../installers/macos/build.sh)는 실행 소스와 MIT 라이선스를 `dist/shelter-lite-macos.sh` 하나로 묶습니다. 생성 파일에도 같은 메시지와 설치 로직을 포함하며, 수정은 원본에서 하고 다시 생성합니다. 같은 실행 파일을 `Shelter Lite.command`라는 이름으로 `dist/shelter-lite-macos.zip`에 담아 터미널에서 열 수 있게 제공합니다.
 
 라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
 

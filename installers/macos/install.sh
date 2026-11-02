@@ -218,8 +218,19 @@ shelter_run() {
   shelter_print identity_guidance
 }
 
+shelter_entry() {
+  local status=0 reply
+  shelter_main "$@" || status=$?
+  # Finder opens .command files in Terminal. Keep the result visible before exit.
+  if [[ "$SHELTER_ENTRY_PATH" == *.command && $# == 0 && -t 0 && -t 1 ]]; then
+    shelter_message info command_finish
+    IFS= read -r reply || :
+  fi
+  return "$status"
+}
+
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   trap 'shelter_print interrupted >&2; exit 130' INT
-  shelter_main "$@"
+  shelter_entry "$@"
   exit $?
 fi

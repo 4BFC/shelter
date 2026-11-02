@@ -7,7 +7,7 @@
 Shelter의 문서 개선과 개발에 참여하는 방법을 안내합니다.
 제품 목적, 구성과 기술 방향은 [한국어 README](./README.md)를 기준으로 합니다.
 
-현재 macOS용 Shelter Lite, 임시 환경 테스트와 로컬 단일 파일 패키징을 제공합니다. 정식 CLI, CI와 공개 릴리스 자동화는 아직 준비 전입니다.
+현재 macOS용 Shelter Lite, 임시 환경 테스트, 로컬 셸 파일과 더블클릭용 ZIP 패키징을 제공합니다. 정식 CLI, CI와 공개 릴리스 자동화는 아직 준비 전입니다.
 
 ## 목차
 
@@ -272,7 +272,7 @@ done
 
 테스트는 Homebrew, 다운로드, 설치 명령과 환경 판별을 대체하고 임시 디렉터리에만 결과를 씁니다. 실제 프로그램이나 사용자 셸 설정을 변경하지 않습니다. 고정 스펙 설치, 기존 버전 보존, 재실행, 설치 실패, 잘못된 옵션, 미지원 환경, 설정 백업과 다른 편집기의 `code` 명령 보존을 검사합니다. 간결한 화면과 상세 로그의 분리, 로그 권한, `●`와 결과 제목의 색상 및 본문의 기본 색상, 상태별 미리보기, 설치 흐름 테스트의 격리와 종료 코드도 검사합니다. Ghostty는 `PATH`에 없는 기존 앱의 보존, 손상된 앱 감지, 설치 실패와 재시도, 설치 후 실행 검증도 검사합니다.
 
-패키징 테스트는 체크섬, 동일 소스의 재현 가능한 출력, 파일 하나를 다른 경로로 옮긴 뒤 도움말 실행, 설치 없이 소스 로드를 검사합니다. 설치와 `--dry-run` 화면에서는 ASCII 로고가 한 번 표시되는지도 검사합니다.
+패키징 테스트는 체크섬, 동일 소스의 재현 가능한 출력, 파일 하나를 다른 경로로 옮긴 뒤 도움말 실행, 설치 없이 소스 로드를 검사합니다. 설치와 `--dry-run` 화면에서는 ASCII 로고가 한 번 표시되는지도 검사합니다. ZIP은 macOS에서 압축을 푼 뒤 실행 권한, 단독 실행, 종료 코드 유지와 동일 소스의 재현 가능한 압축 결과도 검사합니다.
 
 지원되는 Mac에서는 다음 읽기 전용 명령도 확인합니다.
 
@@ -332,6 +332,18 @@ Pull Request에는 다음 내용을 적어 주세요.
 
 ## 배포
 
+### 더블클릭으로 설치
+
+1. `shelter-lite-macos.zip`을 내려받고 ZIP을 더블클릭해 압축을 풉니다.
+2. 압축을 푼 `Shelter Lite.command`를 더블클릭합니다. 터미널이 열리며 설치가 시작되고, Homebrew를 미리 준비할 필요는 없습니다.
+3. Homebrew가 확인이나 관리자 인증을 요청하면 응답합니다. 최종 결과를 읽은 뒤 Return을 눌러 종료합니다.
+
+`.command` 파일 안에 설치기 전체를 포함합니다. ZIP에 실행 권한을 보존하므로 사용자가 `chmod` 명령을 입력할 필요는 없습니다. 옵션 없이 터미널에서 실행하면 설치 실패 시에도 Return 입력 전까지 결과를 유지합니다. `--dry-run` 같은 명령줄 옵션도 그대로 사용할 수 있습니다.
+
+ZIP에는 서명되지 않은 스크립트가 들어 있습니다. 다운로드한 파일에 macOS 보안 확인이 표시될 수 있으며, [Apple 안내](https://support.apple.com/en-us/102445)를 참고하세요. 브라우저 다운로드, Gatekeeper와 Finder 실행 동작은 별도 실기 검증이 남아 있습니다.
+
+### 배포 파일 생성과 검증
+
 저장소 루트에서 Shelter Lite 단일 배포 파일을 생성합니다. 패키징에는 macOS 기본 Bash와 명령줄 도구를 사용하며, 프로그램을 다운로드하거나 설치하지 않습니다.
 
 ```bash
@@ -343,7 +355,9 @@ Pull Request에는 다음 내용을 적어 주세요.
 ```text
 dist/
 ├── shelter-lite-macos.sh        # 단일 설치 파일
-└── shelter-lite-macos.sh.sha256 # SHA-256 체크섬
+├── shelter-lite-macos.sh.sha256 # SHA-256 체크섬
+├── shelter-lite-macos.zip       # 더블클릭용 설치 ZIP
+└── shelter-lite-macos.zip.sha256 # SHA-256 체크섬
 ```
 
 `.sh` 파일에 `install.sh`, `messages.sh`, `tools.sh`와 MIT 라이선스를 포함하므로, 이 파일 하나를 어떤 폴더로 옮겨도 실행할 수 있습니다. `dist/`는 Git 관리에서 제외합니다. 생성 파일을 직접 수정하지 말고 원본을 수정한 뒤 다시 생성합니다. 같은 소스에서는 같은 파일이 생성됩니다. 다른 출력 경로가 필요하면 `--output-dir "/path/with spaces"`를 사용합니다.
@@ -352,6 +366,7 @@ dist/
 
 ```bash
 (cd dist && shasum -a 256 -c shelter-lite-macos.sh.sha256)
+(cd dist && shasum -a 256 -c shelter-lite-macos.zip.sha256)
 /bin/bash dist/shelter-lite-macos.sh --help
 SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
 ```

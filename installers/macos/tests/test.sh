@@ -661,9 +661,22 @@ fi
 
 test_standalone_build() {
   local output_dir="$SHELTER_CASE_DIR/bundle" copied="$SHELTER_CASE_DIR/relocated setup.sh"
+  local extracted="$SHELTER_CASE_DIR/unpacked with spaces" archived="$SHELTER_CASE_DIR/original.zip"
   /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir "$output_dir" > /dev/null || return 1
   [[ -x "$output_dir/shelter-lite-macos.sh" ]] || return 1
   (cd "$output_dir" && shasum -a 256 -c shelter-lite-macos.sh.sha256) || return 1
+  (cd "$output_dir" && shasum -a 256 -c shelter-lite-macos.zip.sha256) || return 1
+  cp "$output_dir/shelter-lite-macos.zip" "$archived" || return 1
+  # Exercise macOS's archive extraction and ensure Finder receives an executable.
+  /usr/bin/ditto -x -k "$archived" "$extracted" || return 1
+  [[ -x "$extracted/Shelter Lite.command" ]] || return 1
+  cmp "$output_dir/shelter-lite-macos.sh" "$extracted/Shelter Lite.command" || return 1
+  "$extracted/Shelter Lite.command" --help > "$SHELTER_CASE_DIR/command-help" || return 1
+  assert_contains "$SHELTER_CASE_DIR/command-help" 'Shelter\ Lite.command' || return 1
+  assert_absent "$SHELTER_CASE_DIR/command-help" 'Press Return' || return 1
+  "$extracted/Shelter Lite.command" --unknown > "$SHELTER_CASE_DIR/command-error" 2>&1
+  [[ $? == 2 ]] || return 1
+  assert_contains "$SHELTER_CASE_DIR/command-error" 'Unknown option: --unknown' || return 1
   cp "$output_dir/shelter-lite-macos.sh" "$copied" || return 1
   /bin/bash "$copied" --help > "$SHELTER_CASE_DIR/help" || return 1
   assert_contains "$SHELTER_CASE_DIR/help" 'relocated\ setup.sh' || return 1
@@ -673,6 +686,7 @@ test_standalone_build() {
   # Rebuilding unchanged sources must produce the same artifact and valid checksum.
   /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir "$output_dir" > /dev/null || return 1
   cmp "$copied" "$output_dir/shelter-lite-macos.sh" || return 1
+  cmp "$archived" "$output_dir/shelter-lite-macos.zip" || return 1
   /bin/bash "$TEST_SOURCE_DIR/build.sh" --output-dir > /dev/null 2>&1
   [[ $? == 2 ]] || return 1
   # Loading the single file must be silent and must not start installation.

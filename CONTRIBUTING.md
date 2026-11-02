@@ -7,7 +7,7 @@
 This guide explains how to improve Shelter's documentation and contribute to its development.
 See the [README](./README.md) for the project's purpose, components, and technical direction.
 
-Shelter Lite for macOS, tests using temporary environments, and local single-file packaging are available. The full CLI, CI, and public release automation are not yet ready.
+Shelter Lite for macOS, tests using temporary environments, and local script and double-click ZIP packaging are available. The full CLI, CI, and public release automation are not yet ready.
 
 ## Table of Contents
 
@@ -272,7 +272,7 @@ done
 
 Tests replace Homebrew, downloads, installation commands, and platform detection, writing results only to temporary directories. They do not modify actual programs or user shell settings. They cover fixed-specification installation, preservation of existing versions, reruns, installation failures, invalid options, unsupported environments, configuration backups, and preservation of another editor's `code` command. They also check separation of concise output and detailed logs, log permissions, colors on `●` and result headings with default-colored message bodies, state previews, and the isolation and exit codes of installation workflow tests. Ghostty tests cover keeping an existing app outside `PATH`, detecting damaged apps, installation failure and retry, and verification after installation.
 
-Packaging tests also verify checksums, reproducible output, running help after relocating a single file, and loading it without starting installation. The installation and `--dry-run` output checks that the ASCII logo appears once.
+Packaging tests also verify checksums, reproducible output, running help after relocating a single file, and loading it without starting installation. The installation and `--dry-run` output checks that the ASCII logo appears once. ZIP checks also cover executable permissions after macOS extraction, standalone execution, preserved exit codes, and reproducible archive contents.
 
 On a supported Mac, also check these read-only commands:
 
@@ -332,6 +332,18 @@ Link a related issue if one exists. Do not automatically create unrelated issues
 
 ## Distribution
 
+### Double-click installation
+
+1. Download `shelter-lite-macos.zip` and double-click the ZIP to extract it.
+2. Double-click the extracted `Shelter Lite.command`. Terminal opens and starts setup; Homebrew does not need to be installed beforehand.
+3. Respond to Homebrew confirmations or administrator authentication if requested. After reading the final result, press Return to finish.
+
+The `.command` file contains the complete installer. ZIP preserves its executable permission so users do not need to type `chmod`. When launched interactively without arguments, it waits for Return before exiting, including after an installation failure. Command-line options such as `--dry-run` still work.
+
+The ZIP contains an unsigned script. Downloaded files may require macOS security confirmation; see [Apple's guidance](https://support.apple.com/en-us/102445). Browser-download, Gatekeeper, and Finder launch behavior still need real-device validation.
+
+### Build and validate distribution files
+
 Build the standalone Shelter Lite installer from the repository root. Packaging uses macOS's Bash and standard command-line tools; it does not download or install programs.
 
 ```bash
@@ -343,7 +355,9 @@ The generated files are:
 ```text
 dist/
 ├── shelter-lite-macos.sh        # Standalone installer
-└── shelter-lite-macos.sh.sha256 # SHA-256 checksum
+├── shelter-lite-macos.sh.sha256 # SHA-256 checksum
+├── shelter-lite-macos.zip       # Double-click installer ZIP
+└── shelter-lite-macos.zip.sha256 # SHA-256 checksum
 ```
 
 The `.sh` file embeds `install.sh`, `messages.sh`, `tools.sh`, and the MIT license. It can run by itself from any folder. `dist/` is excluded from Git; edit the sources and rebuild instead of editing the generated file. Unchanged sources produce identical output. To choose another output directory, use `--output-dir "/path/with spaces"`.
@@ -352,6 +366,7 @@ Verify the checksum and run the isolated test suite against the bundled code:
 
 ```bash
 (cd dist && shasum -a 256 -c shelter-lite-macos.sh.sha256)
+(cd dist && shasum -a 256 -c shelter-lite-macos.zip.sha256)
 /bin/bash dist/shelter-lite-macos.sh --help
 SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
 ```

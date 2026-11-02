@@ -39,8 +39,8 @@ Shelterは、この流れを**追跡 → 自分の環境との照合 → 通知 
 
 ## インストール
 
-Shelter Liteは、リポジトリ内のシェルファイル、または生成した単一配布ファイル`shelter-lite-macos.sh`から実行します。対象は**macOS 15以降、Apple Siliconのネイティブなターミナル環境**で、zshとbashの設定に対応しています。
-ローカルで単一ファイルのパッケージングができます。生成、検証、実行の方法は[CONTRIBUTINGの配布](./CONTRIBUTING.md#配布)を参照してください。公開リリースの自動化とHomebrew Tapはまだ構成していません。
+Shelter Liteは、`shelter-lite-macos.zip`を展開して`Shelter Lite.command`をダブルクリックするか、単一の`.sh`ファイルから実行できます。対象は**macOS 15以降、Apple Siliconのネイティブなターミナル環境**で、zshとbashの設定に対応しています。
+ローカルでシェルファイルとダブルクリック用ZIPを生成できます。生成、検証、実行の方法は[CONTRIBUTINGの配布](./CONTRIBUTING.md#配布)を参照してください。公開リリースの自動化とHomebrew Tapはまだ構成していません。
 
 リポジトリの取得と実行手順は[CONTRIBUTINGの開発準備](./CONTRIBUTING.md#開発準備)、インストール時に変更される設定は[ライト版の実行](./CONTRIBUTING.md#ライト版の実行)を参照してください。
 
@@ -137,10 +137,12 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 shelter/
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh
-│   └── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.zip
+│   └── shelter-lite-macos.zip.sha256
 ├── installers/
 │   └── macos/        # ライト版と将来の正式版のmacOSインストーラー
-│       ├── build.sh   # 単一配布ファイルを生成
+│       ├── build.sh   # シェルファイルとダブルクリック用ZIPを生成
 │       ├── install.sh # エントリーポイント、固定仕様、インストール順序
 │       ├── messages.sh # 英語メッセージ、エラー文言、色と出力形式
 │       ├── tools.sh   # ツールの確認、インストール、シェル設定
@@ -162,7 +164,7 @@ shelter/
 
 [messages.sh](../../installers/macos/messages.sh)は、インストーラーとテストが共有する英語の案内、警告、エラー、ヘルプとターミナルの出力形式を一元管理するファイル（SSOT）です。失敗の判定、インストールの中断と終了コードは`install.sh`と`tools.sh`で管理します。
 
-[build.sh](../../installers/macos/build.sh)は、実行用ソースとMITライセンスを`dist/shelter-lite-macos.sh`にまとめます。生成ファイルにも同じメッセージとインストール処理を含めます。変更は元のソースに加え、再生成してください。
+[build.sh](../../installers/macos/build.sh)は、実行用ソースとMITライセンスを`dist/shelter-lite-macos.sh`にまとめます。生成ファイルにも同じメッセージとインストール処理を含めます。変更は元のソースに加え、再生成してください。 同じ実行ファイルを`Shelter Lite.command`という名前で`dist/shelter-lite-macos.zip`に格納し、Terminalで開ける形式でも提供します。
 
 ライト版は`install.sh`で固定仕様全体のインストールを開始し、`tools.sh`の関数を呼び出します。正式版を提供する際も、同じエントリーポイントに正式版CLIのインストール処理を接続する予定です。現在の`--mode full`は準備中の案内を表示して終了します。バージョン別やツール別のインストールディレクトリは事前に分割しません。
 

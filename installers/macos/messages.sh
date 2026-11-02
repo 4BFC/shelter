@@ -15,6 +15,7 @@ shelter_copy() {
     build_failed) template='Could not build the Shelter Lite distribution file.' ;;
     build_complete) template='Created: %s' ;;
     build_checksum) template='SHA-256 checksum: %s' ;;
+    command_finish) template='Press Return to finish. You can then close this window.' ;;
     full_unavailable) template='The full version is not available yet. Use Lite instead.' ;;
     invalid_mode) template='The supported mode is lite.' ;;
     status_changed) template='The status of %s changed: %s' ;;
@@ -367,7 +368,7 @@ shelter_build_help() {
   cat <<'HELP'
 Usage: /bin/bash installers/macos/build.sh [--output-dir DIR]
 
-Build a standalone Shelter Lite installer and its SHA-256 checksum.
+Build a standalone Shelter Lite script, a double-click ZIP, and SHA-256 checksums.
 The default output directory is dist/ at the repository root.
 No programs are downloaded or installed during the build.
 HELP

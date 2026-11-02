@@ -21,6 +21,7 @@ shelter_write_bundle() {
 
 shelter_build() (
   local output_dir=$1 stage artifact=shelter-lite-macos.sh
+  local archive=shelter-lite-macos.zip clickable='Shelter Lite.command' target
   mkdir -p "$output_dir" || return 1
   output_dir=$(CDPATH= cd -- "$output_dir" && pwd -P) || return 1
   stage=$(mktemp -d "$output_dir/.shelter-build.XXXXXX") || return 1
@@ -28,13 +29,25 @@ shelter_build() (
   shelter_write_bundle > "$stage/$artifact" || return 1
   /bin/bash -n "$stage/$artifact" || return 1
   chmod 755 "$stage/$artifact" || return 1
-  (cd -- "$stage" && shasum -a 256 "$artifact" > "$artifact.sha256") || return 1
+  cp "$stage/$artifact" "$stage/$clickable" || return 1
+  chmod 755 "$stage/$clickable" || return 1
+  # ZIP carries executable permissions. Fix its entry timestamp and omit host metadata
+  # so rebuilding the same sources produces the same archive on this toolchain.
+  TZ=UTC touch -t 198001010000 "$stage/$clickable" || return 1
+  (cd -- "$stage" && TZ=UTC zip -X -q "$archive" "$clickable") || return 1
+  for target in "$artifact" "$archive"; do
+    (cd -- "$stage" && shasum -a 256 "$target" > "$target.sha256") || return 1
+  done
   # Rebuild only these named outputs, preserving any other files in the directory.
-  [[ ! -d "$output_dir/$artifact" && ! -d "$output_dir/$artifact.sha256" ]] || return 1
-  mv -f "$stage/$artifact" "$output_dir/$artifact" || return 1
-  mv -f "$stage/$artifact.sha256" "$output_dir/$artifact.sha256" || return 1
-  shelter_print build_complete "$output_dir/$artifact"
-  shelter_print build_checksum "$output_dir/$artifact.sha256"
+  for target in "$artifact" "$artifact.sha256" "$archive" "$archive.sha256"; do
+    [[ ! -d "$output_dir/$target" ]] || return 1
+  done
+  for target in "$artifact" "$archive"; do
+    mv -f "$stage/$target" "$output_dir/$target" || return 1
+    mv -f "$stage/$target.sha256" "$output_dir/$target.sha256" || return 1
+    shelter_print build_complete "$output_dir/$target"
+    shelter_print build_checksum "$output_dir/$target.sha256"
+  done
 )
 
 shelter_build_main() {

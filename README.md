@@ -39,8 +39,8 @@ Its primary audience is people unfamiliar with security advisories or developmen
 
 ## Install
 
-Run Shelter Lite using the shell files in this repository or the generated standalone `shelter-lite-macos.sh` file. It targets **macOS 15 or later in a native Apple Silicon terminal environment** and supports zsh and bash configuration.
-Local single-file packaging is available. See [Distribution in CONTRIBUTING](./CONTRIBUTING.md#distribution) for building, checking, and running the file. Public release automation and a Homebrew Tap are not yet configured.
+Run Shelter Lite by extracting `shelter-lite-macos.zip` and double-clicking `Shelter Lite.command`, or by running the standalone `.sh` file. It targets **macOS 15 or later in a native Apple Silicon terminal environment** and supports zsh and bash configuration.
+Local script and double-click ZIP packaging are available. See [Distribution in CONTRIBUTING](./CONTRIBUTING.md#distribution) for building, checking, and running the file. Public release automation and a Homebrew Tap are not yet configured.
 
 See [Development Setup in CONTRIBUTING](./CONTRIBUTING.md#development-setup) for obtaining the repository and getting started, and [Running Lite](./CONTRIBUTING.md#running-lite) for settings changed during installation.
 
@@ -137,10 +137,12 @@ The directories, executable code, and documentation currently present are listed
 shelter/
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
-│   └── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.sh.sha256
+│   ├── shelter-lite-macos.zip
+│   └── shelter-lite-macos.zip.sha256
 ├── installers/
 │   └── macos/        # macOS installer for Lite and the future full version
-│       ├── build.sh   # Generate the standalone distribution file
+│       ├── build.sh   # Create the standalone script and double-click ZIP
 │       ├── install.sh # Entry point, fixed specification, and installation order
 │       ├── messages.sh # English messages, errors, colors, and output formatting
 │       ├── tools.sh   # Tool checks, installation, and shell configuration
@@ -162,7 +164,7 @@ shelter/
 
 [messages.sh](./installers/macos/messages.sh) is the single source of truth for English guidance, warnings, errors, help, and terminal formatting shared by the installer and tests. Failure detection, stopping installation, and exit codes remain in `install.sh` and `tools.sh`.
 
-[build.sh](./installers/macos/build.sh) bundles the runtime sources and MIT license into `dist/shelter-lite-macos.sh`. The generated file includes the same messages and installation logic; maintain the original sources and rebuild after changes.
+[build.sh](./installers/macos/build.sh) bundles the runtime sources and MIT license into `dist/shelter-lite-macos.sh`. The generated file includes the same messages and installation logic; maintain the original sources and rebuild after changes. It also packages the same executable as `Shelter Lite.command` in `dist/shelter-lite-macos.zip` for opening in Terminal.
 
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 
