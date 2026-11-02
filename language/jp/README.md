@@ -143,6 +143,7 @@ shelter/
 │       └── release.yml # リリースの検査、パッケージング、ファイル添付
 ├── docs/
 │   └── plans/
+│       ├── readme-usage.md # README使い方中心の整理計画
 │       └── windows-lite.md # Windows対応の準備文書
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh

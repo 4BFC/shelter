@@ -143,6 +143,7 @@ shelter/
 │       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
 ├── docs/
 │   └── plans/
+│       ├── readme-usage.md # README 사용법 중심 정리 계획
 │       └── windows-lite.md # Windows 지원 준비 문서
 ├── dist/             # 생성 결과, Git 관리 제외
 │   ├── shelter-lite-macos.sh

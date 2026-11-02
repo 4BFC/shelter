@@ -143,6 +143,7 @@ shelter/
 │       └── release.yml # Release tests, packaging, and asset upload
 ├── docs/
 │   └── plans/
+│       ├── readme-usage.md # Plan for a usage-first README
 │       └── windows-lite.md # Windows preparation notes
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
