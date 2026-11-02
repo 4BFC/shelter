@@ -671,6 +671,9 @@ test_standalone_build() {
   /usr/bin/ditto -x -k "$archived" "$extracted" || return 1
   [[ -x "$extracted/Shelter Lite.command" ]] || return 1
   cmp "$output_dir/shelter-lite-macos.sh" "$extracted/Shelter Lite.command" || return 1
+  cmp "$TEST_SOURCE_DIR/../../VERSION" "$output_dir/VERSION" || return 1
+  cmp "$output_dir/VERSION" "$extracted/VERSION" || return 1
+  [[ $("$extracted/Shelter Lite.command" --version) == "Shelter Lite $SHELTER_RELEASE_VERSION" ]] || return 1
   "$extracted/Shelter Lite.command" --help > "$SHELTER_CASE_DIR/command-help" || return 1
   assert_contains "$SHELTER_CASE_DIR/command-help" 'Shelter\ Lite.command' || return 1
   assert_absent "$SHELTER_CASE_DIR/command-help" 'Press Return' || return 1
@@ -694,6 +697,56 @@ test_standalone_build() {
   [[ ! -s "$SHELTER_CASE_DIR/source-bundle" ]] && assert_empty_log
 }
 
+test_product_version_contract() {
+  local value
+  # The project-wide reader must work without installer functions or messages.
+  /bin/bash -c 'source "$1"; shelter_read_version "$2"' bash \
+    "$TEST_SOURCE_DIR/../../scripts/version.sh" "$TEST_SOURCE_DIR/../../VERSION" > "$SHELTER_CASE_DIR/shared-version" || return 1
+  cmp "$TEST_SOURCE_DIR/../../VERSION" "$SHELTER_CASE_DIR/shared-version" || return 1
+  for value in 0.1.0 1.0.0 12.34.56 0.2.0-rc.1 1.0.0-0 1.0.0-alpha-beta 1.0.0+001 1.0.0-rc.1+build.01; do
+    shelter_validate_version "$value" || return 1
+  done
+  for value in '' 0.1 v0.1.0 01.2.3 1.02.3 1.2.03 1.0.0-01 1.0.0-rc.01 1.0.0- 1.0.0+ 1.0.0-rc..1 '1.0.0 ' '1.0.0;touch x' $'1.0.0\n1.0.1'; do
+    shelter_validate_version "$value" && return 1
+  done
+  shelter_read_version "$SHELTER_CASE_DIR/missing-version" > "$SHELTER_CASE_DIR/missing" 2>&1
+  [[ $? == 1 ]] || return 1
+  printf '01.0.0\n' > "$SHELTER_CASE_DIR/invalid-version"
+  shelter_read_version "$SHELTER_CASE_DIR/invalid-version" > "$SHELTER_CASE_DIR/invalid" 2>&1
+  [[ $? == 1 ]] || return 1
+  # Version inspection must not depend on platform support or package managers.
+  shelter_check_platform() { return 99; }
+  shelter_main --version > "$SHELTER_CASE_DIR/version" || return 1
+  grep -Fxq -- "Shelter Lite $SHELTER_RELEASE_VERSION" "$SHELTER_CASE_DIR/version" || return 1
+  [[ ! -e "$SHELTER_CASE_DIR/config" ]] && assert_empty_log
+}
+
+test_product_version_frozen_in_bundle() {
+  local project="$SHELTER_CASE_DIR/versioned source" script
+  mkdir -p "$project/installers/macos" "$project/scripts" || return 1
+  cp "$TEST_SOURCE_DIR/../../scripts/version.sh" "$project/scripts/version.sh" || return 1
+  for script in build.sh install.sh messages.sh tools.sh; do
+    cp "$TEST_SOURCE_DIR/$script" "$project/installers/macos/$script" || return 1
+  done
+  cp "$TEST_SOURCE_DIR/../../LICENSE" "$project/LICENSE" || return 1
+  printf '0.2.0-rc.1\n' > "$project/VERSION"
+  /bin/bash "$project/installers/macos/install.sh" --version > "$SHELTER_CASE_DIR/source-version" || return 1
+  grep -Fxq -- 'Shelter Lite 0.2.0-rc.1' "$SHELTER_CASE_DIR/source-version" || return 1
+  /bin/bash "$project/installers/macos/build.sh" > /dev/null || return 1
+  printf '0.2.0\n' > "$project/VERSION"
+  [[ $(/bin/bash "$project/dist/shelter-lite-macos.sh" --version) == 'Shelter Lite 0.2.0-rc.1' ]] || return 1
+  /bin/bash "$project/installers/macos/build.sh" > /dev/null || return 1
+  [[ $(/bin/bash "$project/dist/shelter-lite-macos.sh" --version) == 'Shelter Lite 0.2.0' ]] || return 1
+  cmp "$project/VERSION" "$project/dist/VERSION" || return 1
+  cp "$project/dist/shelter-lite-macos.zip" "$SHELTER_CASE_DIR/good.zip" || return 1
+  printf 'not-a-version\n' > "$project/VERSION"
+  /bin/bash "$project/installers/macos/build.sh" > "$SHELTER_CASE_DIR/build-error" 2>&1
+  [[ $? == 1 ]] || return 1
+  cmp "$SHELTER_CASE_DIR/good.zip" "$project/dist/shelter-lite-macos.zip" && assert_empty_log
+}
+
+run_test product_version_validation_and_read_only_cli test_product_version_contract
+run_test product_version_frozen_until_rebuild test_product_version_frozen_in_bundle
 run_test standalone_bundle_reproducible_and_relocatable test_standalone_build
 run_test message_catalog_and_error_contract test_message_catalog
 run_test preview_no_mutation test_preview

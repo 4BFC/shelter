@@ -7,7 +7,7 @@
 This guide explains how to improve Shelter's documentation and contribute to its development.
 See the [README](./README.md) for the project's purpose, components, and technical direction.
 
-Shelter Lite for macOS, tests using temporary environments, and local script and double-click ZIP packaging are available. The full CLI, CI, and public release automation are not yet ready.
+Shelter Lite for macOS, isolated tests, script and double-click ZIP packaging, and automated release builds are available. The full CLI is not yet ready.
 
 ## Table of Contents
 
@@ -46,9 +46,9 @@ cd shelter
 git status --short
 ```
 
-On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep `install.sh`, `messages.sh`, and `tools.sh` together.
+On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep the repository layout, including `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`, and the root `VERSION` file.
 
-The standalone distribution file includes these three files internally; see [Distribution](#distribution) for how to build and use it.
+The standalone distribution file embeds these four scripts and the product version; see [Distribution](#distribution) for how to build and use it.
 
 ### Runtime Environment
 
@@ -123,6 +123,7 @@ If every item is marked `Installed` and the exit code is `0`, all tools can run.
 | No options | Run the complete Lite initial setup |
 | `--dry-run` | Show the installation plan only; no downloads or configuration changes |
 | `--check` | Check whether all tools run; no downloads or configuration changes |
+| `--version`, `-V` | Show the Shelter Lite product version without changing the environment |
 | `--mode lite` | Same as the default |
 | `--mode full` | Exit with a message that it is not yet available; do not install |
 | `--color auto\|always\|never` | Automatic colors, always-on colors (default), or plain output |
@@ -162,7 +163,7 @@ If you need to restore a backup, compare the original and backup paths recorded 
 ## Adding and Changing Directories
 
 Use [Repository Structure in the README](./README.md#repository-structure) as the reference for the overall layout and each path's responsibility.
-The runtime consists of `install.sh`, `messages.sh`, and `tools.sh`; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
+The runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `tools.sh`, with the product version in the root `VERSION` file; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
 
 1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
 2. **Connect installation of the full version.** When the full CLI and its distribution artifacts are ready, add its workflow to the same `install.sh` under `full` mode and reuse the tool installation functions. Currently, that mode exits after a message that it is not yet available.
@@ -264,7 +265,7 @@ Use `install.sh --dry-run` to read the current Mac's actual state and inspect th
 Run syntax checks and tests using temporary environments from the repository root. No separate test package is required.
 
 ```bash
-for script in installers/macos/*.sh installers/macos/tests/test.sh; do
+for script in scripts/*.sh installers/macos/*.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh
@@ -301,7 +302,7 @@ The license owner and year must match [LICENSE](./LICENSE).
 
 ### Validation by Feature
 
-Static analysis tools beyond the shell tests and CI are not yet available. Add the corresponding checks when implementing the features below.
+The release workflow runs Bash syntax checks and isolated installer tests. Add further static checks alongside the features below.
 
 | Area of change | Behavior to verify |
 | --- | --- |
@@ -320,6 +321,8 @@ Before committing, inspect the changed files and diff, and include only the file
 Keep commit messages short and specific. For example: `docs: add Shelter introduction and contribution guide`.
 
 When working with AI tools, review the diff first. Do not stage or commit without an explicit instruction from the user, and do not add `Co-Authored-By` to commits.
+
+Personal Claude/Codex directories (`.claude/`, `.codex/`, `.agents/`), Claude state files (`.claude.json*`), local instruction overrides (`CLAUDE.local.md`, `AGENTS.local.md`, `AGENTS.override.md`), and `.mcp.local.json` are excluded by `.gitignore`. Keep personal paths and credentials in those local files. Shared project instructions in `CLAUDE.md` and `AGENTS.md` can be tracked.
 
 Include the following in a pull request:
 
@@ -357,10 +360,11 @@ dist/
 ├── shelter-lite-macos.sh        # Standalone installer
 ├── shelter-lite-macos.sh.sha256 # SHA-256 checksum
 ├── shelter-lite-macos.zip       # Double-click installer ZIP
-└── shelter-lite-macos.zip.sha256 # SHA-256 checksum
+├── shelter-lite-macos.zip.sha256 # SHA-256 checksum
+└── VERSION                     # Product version, source of truth
 ```
 
-The `.sh` file embeds `install.sh`, `messages.sh`, `tools.sh`, and the MIT license. It can run by itself from any folder. `dist/` is excluded from Git; edit the sources and rebuild instead of editing the generated file. Unchanged sources produce identical output. To choose another output directory, use `--output-dir "/path/with spaces"`.
+The `.sh` file embeds `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`, the product version, and the MIT license. The ZIP also includes a readable `VERSION` file; `Shelter Lite.command` runs independently of it. `dist/VERSION` is attached to the release separately. It can run by itself from any folder. `dist/` is excluded from Git; edit the sources and rebuild instead of editing the generated file. Unchanged sources produce identical output. To choose another output directory, use `--output-dir "/path/with spaces"`.
 
 Verify the checksum and run the isolated test suite against the bundled code:
 
@@ -384,7 +388,38 @@ After reviewing the plan, start installation:
 /bin/bash shelter-lite-macos.sh
 ```
 
-The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Public release automation, Homebrew distribution, and a remote one-command installer remain planned.
+The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Homebrew distribution and a remote one-command installer remain planned.
+
+### Versioning
+
+The shared functions in [scripts/version.sh](./scripts/version.sh) read and validate product metadata without depending on the installer. Callers choose how to display errors.
+
+The root [VERSION](./VERSION) is the single source of truth for Shelter Lite's product version. Use [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) without the leading `v`, for example `0.1.0` or `0.2.0-rc.1`. Supported prerelease identifiers and optional `+build.metadata` follow SemVer syntax.
+
+During `0.x` development, this project increments PATCH for compatible fixes and MINOR for features or compatibility changes. Declare the first stable command and installation contract with `1.0.0`. After that, incompatible changes increment MAJOR, compatible features increment MINOR, and compatible fixes increment PATCH. A major or minor increment resets the lower components to zero. Release candidates use suffixes such as `0.2.0-rc.1`.
+
+1. Edit `VERSION` for the next release and record the changes in the release notes. Commit the version and implementation together; published version tags must not be moved to changed code.
+2. Rebuild with `build.sh`. The `.sh` and `.command` installers embed the version, and the ZIP and `dist/VERSION` record the same value. Changing the source `VERSION` does not change already-built files.
+3. Publish a GitHub Release whose tag is exactly `v` plus `VERSION`: for `0.1.0`, use `v0.1.0`. Mark release candidates as pre-releases in GitHub. The workflow stops before building or uploading if the tag differs. It validates and packages the chosen version; it does not increment the number.
+
+```bash
+/bin/bash installers/macos/install.sh --version
+/bin/bash installers/macos/build.sh
+/bin/bash dist/shelter-lite-macos.sh --version
+cat dist/VERSION
+```
+
+`--version` prints `Shelter Lite <version>` without platform checks, downloads, or configuration changes. Product metadata uses `SHELTER_RELEASE_VERSION`; `SHELTER_VERSION` remains the observed version of a tool being checked.
+
+### Automated release assets
+
+[release.yml](./.github/workflows/release.yml) runs when a GitHub Release is published, including pre-releases. It checks out the released tag, validates Bash syntax, runs the source tests, builds the distribution files, and verifies both checksums. It extracts the ZIP on a macOS 15 runner and runs the same tests against `Shelter Lite.command`. Only after all checks pass does it upload the five generated files to the release's **Assets** section.
+
+1. Commit and push the workflow and installer sources to GitHub. Choose a release tag whose commit includes this workflow and the intended source version.
+2. In GitHub **Releases**, create a release with that tag and click **Publish release**. Saving a draft or pushing a tag alone does not trigger this workflow.
+3. Wait for **Release Shelter Lite** in Actions to finish successfully, then download `shelter-lite-macos.zip` from the release's **Assets** section. The standalone `.sh` file, both `.sha256` files, and `VERSION` are attached as well.
+
+The workflow uses the repository's built-in `GITHUB_TOKEN` with `contents: write`; no separate release token is needed. Test or build failures stop the upload. After resolving a failure, rerun the job in Actions; uploads replace assets with the same names. This workflow attaches files to an existing release and runs isolated tests, so it does not verify a full installation on a new Mac.
 
 Distinguish updating Shelter itself from Shelter updating software on the user's computer.
 Release notes should include changes, the support scope, and known constraints. Publish only after verifying installation and updates.

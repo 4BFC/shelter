@@ -6,6 +6,10 @@ SHELTER_ENTRY_PATH=${BASH_SOURCE[0]}
 SHELTER_SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P) || exit 1
 # shellcheck source=messages.sh
 source "$SHELTER_SCRIPT_DIR/messages.sh" || exit 1
+source "$SHELTER_SCRIPT_DIR/../../scripts/version.sh" || exit 1
+SHELTER_RELEASE_VERSION=$(shelter_read_version "$SHELTER_SCRIPT_DIR/../../VERSION") || {
+  shelter_error version_invalid "$SHELTER_SCRIPT_DIR/../../VERSION"; exit 1;
+}
 # shellcheck source=tools.sh
 source "$SHELTER_SCRIPT_DIR/tools.sh" || exit 1
 # END SHELTER SOURCE IMPORTS
@@ -82,6 +86,7 @@ shelter_main() {
     option=$1
     case "$option" in
       -h|--help) shelter_help; return 0 ;;
+      -V|--version) shelter_print product_version "$SHELTER_RELEASE_VERSION"; return 0 ;;
       --mode)
         [[ $# -ge 2 && "$2" != --* ]] || { shelter_error option_value_required "$option"; return 2; }
         mode=$2
@@ -143,7 +148,7 @@ shelter_run() {
   # Installation details go to a plain log, regardless of console color mode.
   [[ "$SHELTER_ACTION" != install ]] || SHELTER_COLOR=never
   shelter_refresh_paths || return
-  shelter_print platform_banner "$SHELTER_OS_VERSION" "$SHELTER_ARCH"
+  shelter_print platform_banner "$SHELTER_RELEASE_VERSION" "$SHELTER_OS_VERSION" "$SHELTER_ARCH"
   case "$SHELTER_ACTION" in
     dry-run)
       shelter_section dry_run

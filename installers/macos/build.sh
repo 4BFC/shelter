@@ -3,12 +3,14 @@
 
 SHELTER_BUILD_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P) || exit 1
 source "$SHELTER_BUILD_DIR/messages.sh" || exit 1
+source "$SHELTER_BUILD_DIR/../../scripts/version.sh" || exit 1
 
 shelter_write_bundle() {
   printf '#!/bin/bash\n# Shelter Lite standalone installer — generated; do not edit.\n# Source: https://github.com/4BFC/shelter\n\n' || return 1
   sed 's/^/# /' "$SHELTER_BUILD_DIR/../../LICENSE" || return 1
   printf '\n' || return 1
-  cat "$SHELTER_BUILD_DIR/messages.sh" "$SHELTER_BUILD_DIR/tools.sh" || return 1
+  printf '# Version: %s\nSHELTER_RELEASE_VERSION=%q\n\n' "$1" "$1" || return 1
+  cat "$SHELTER_BUILD_DIR/messages.sh" "$SHELTER_BUILD_DIR/../../scripts/version.sh" "$SHELTER_BUILD_DIR/tools.sh" || return 1
   # Remove only the explicitly marked imports; retain the entry point and main guard.
   # Fail if the markers drift so an incomplete bundle cannot be published by accident.
   awk '
@@ -22,24 +24,30 @@ shelter_write_bundle() {
 shelter_build() (
   local output_dir=$1 stage artifact=shelter-lite-macos.sh
   local archive=shelter-lite-macos.zip clickable='Shelter Lite.command' target
+  local version
+  version=$(shelter_read_version "$SHELTER_BUILD_DIR/../../VERSION") || {
+    shelter_error version_invalid "$SHELTER_BUILD_DIR/../../VERSION"; return 1;
+  }
   mkdir -p "$output_dir" || return 1
   output_dir=$(CDPATH= cd -- "$output_dir" && pwd -P) || return 1
   stage=$(mktemp -d "$output_dir/.shelter-build.XXXXXX") || return 1
   trap 'rm -rf "$stage"' EXIT
-  shelter_write_bundle > "$stage/$artifact" || return 1
+  shelter_write_bundle "$version" > "$stage/$artifact" || return 1
+  printf '%s\n' "$version" > "$stage/VERSION" || return 1
+  chmod 644 "$stage/VERSION" || return 1
   /bin/bash -n "$stage/$artifact" || return 1
   chmod 755 "$stage/$artifact" || return 1
   cp "$stage/$artifact" "$stage/$clickable" || return 1
   chmod 755 "$stage/$clickable" || return 1
   # ZIP carries executable permissions. Fix its entry timestamp and omit host metadata
   # so rebuilding the same sources produces the same archive on this toolchain.
-  TZ=UTC touch -t 198001010000 "$stage/$clickable" || return 1
-  (cd -- "$stage" && TZ=UTC zip -X -q "$archive" "$clickable") || return 1
+  TZ=UTC touch -t 198001010000 "$stage/$clickable" "$stage/VERSION" || return 1
+  (cd -- "$stage" && TZ=UTC zip -X -q "$archive" "$clickable" VERSION) || return 1
   for target in "$artifact" "$archive"; do
     (cd -- "$stage" && shasum -a 256 "$target" > "$target.sha256") || return 1
   done
   # Rebuild only these named outputs, preserving any other files in the directory.
-  for target in "$artifact" "$artifact.sha256" "$archive" "$archive.sha256"; do
+  for target in "$artifact" "$artifact.sha256" "$archive" "$archive.sha256" VERSION; do
     [[ ! -d "$output_dir/$target" ]] || return 1
   done
   for target in "$artifact" "$archive"; do
@@ -48,6 +56,8 @@ shelter_build() (
     shelter_print build_complete "$output_dir/$target"
     shelter_print build_checksum "$output_dir/$target.sha256"
   done
+  mv -f "$stage/VERSION" "$output_dir/VERSION" || return 1
+  shelter_print build_complete "$output_dir/VERSION"
 )
 
 shelter_build_main() {

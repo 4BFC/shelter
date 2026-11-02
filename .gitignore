@@ -1,2 +1,17 @@
 # Generated distribution files. Rebuild from installers/macos/build.sh.
 /dist/
+
+# Personal Claude/Codex configuration, skills, caches, and session data.
+.claude/
+.codex/
+.agents/
+.claude.json
+.claude.json.*
+
+# Local instruction overrides; shared CLAUDE.md and AGENTS.md can be tracked.
+CLAUDE.local.md
+AGENTS.local.md
+AGENTS.override.md
+
+# Local MCP connection settings.
+.mcp.local.json

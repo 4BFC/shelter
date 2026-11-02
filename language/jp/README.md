@@ -40,7 +40,9 @@ Shelterは、この流れを**追跡 → 自分の環境との照合 → 通知 
 ## インストール
 
 Shelter Liteは、`shelter-lite-macos.zip`を展開して`Shelter Lite.command`をダブルクリックするか、単一の`.sh`ファイルから実行できます。対象は**macOS 15以降、Apple Siliconのネイティブなターミナル環境**で、zshとbashの設定に対応しています。
-ローカルでシェルファイルとダブルクリック用ZIPを生成できます。生成、検証、実行の方法は[CONTRIBUTINGの配布](./CONTRIBUTING.md#配布)を参照してください。公開リリースの自動化とHomebrew Tapはまだ構成していません。
+ローカルでシェルファイルとダブルクリック用ZIPを生成できます。生成、検証、実行の方法は[CONTRIBUTINGの配布](./CONTRIBUTING.md#配布)を参照してください。GitHubリリースを公開すると、テスト、パッケージング、インストールファイルの添付を自動実行します。Homebrew Tapはまだ構成していません。
+
+現在の開発バージョン: **0.1.0**。製品バージョンは[VERSION](../../VERSION)で管理し、配布ファイルにも含めます。確認方法とリリース規則は[CONTRIBUTING](./CONTRIBUTING.md#バージョン管理)を参照してください。 共通の読み込みと検証は[scripts/version.sh](../../scripts/version.sh)が担当し、インストーラー、ビルド、リリースworkflowで共有します。
 
 リポジトリの取得と実行手順は[CONTRIBUTINGの開発準備](./CONTRIBUTING.md#開発準備)、インストール時に変更される設定は[ライト版の実行](./CONTRIBUTING.md#ライト版の実行)を参照してください。
 
@@ -135,11 +137,15 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 
 ```text
 shelter/
+├── .github/
+│   └── workflows/
+│       └── release.yml # リリースの検査、パッケージング、ファイル添付
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
-│   └── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-macos.zip.sha256
+│   └── VERSION
 ├── installers/
 │   └── macos/        # ライト版と将来の正式版のmacOSインストーラー
 │       ├── build.sh   # シェルファイルとダブルクリック用ZIPを生成
@@ -148,6 +154,8 @@ shelter/
 │       ├── tools.sh   # ツールの確認、インストール、シェル設定
 │       └── tests/
 │           └── test.sh # 一時環境で実行するインストーラーテスト
+├── scripts/
+│   └── version.sh    # 製品バージョンの形式検証とファイル読み込み
 ├── language/
 │   ├── ko/
 │   │   ├── README.md       # 韓国語の製品紹介、構成、開発方針
@@ -157,6 +165,7 @@ shelter/
 │       └── CONTRIBUTING.md # 日本語の開発準備、検証、貢献手順
 ├── README.md         # 英語の製品紹介、構成、開発方針
 ├── CONTRIBUTING.md   # 英語の開発準備、検証、貢献手順
+├── VERSION           # 製品バージョンの単一管理元
 └── LICENSE           # MITライセンス
 ```
 
@@ -169,7 +178,7 @@ shelter/
 ライト版は`install.sh`で固定仕様全体のインストールを開始し、`tools.sh`の関数を呼び出します。正式版を提供する際も、同じエントリーポイントに正式版CLIのインストール処理を接続する予定です。現在の`--mode full`は準備中の案内を表示して終了します。バージョン別やツール別のインストールディレクトリは事前に分割しません。
 
 正式版CLI本体の予定位置である`src/shelter/`は、Pythonでの実装を始める際に追加します。Webサイト、情報収集サービス、共通データ形式の構成は連携範囲が決まってから検討し、現在のインストーラー構成には含めません。
-共通コードやツール固有の処理が実際に増えたときにファイルを分割し、CIと詳細ドキュメントも必要になった時点で追加します。
+共通コードやツール固有の処理が実際に増えたときにファイルを分割します。リリースworkflowで対象バージョンを検証してパッケージングし、追加の検査と詳細ドキュメントは機能に応じて拡張します。
 ディレクトリを作成するタイミングと文書の更新手順は、[CONTRIBUTINGのディレクトリの追加と変更](./CONTRIBUTING.md#ディレクトリの追加と変更)に従ってください。
 
 ## メンテナー

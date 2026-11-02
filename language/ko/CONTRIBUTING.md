@@ -7,7 +7,7 @@
 Shelter의 문서 개선과 개발에 참여하는 방법을 안내합니다.
 제품 목적, 구성과 기술 방향은 [한국어 README](./README.md)를 기준으로 합니다.
 
-현재 macOS용 Shelter Lite, 임시 환경 테스트, 로컬 셸 파일과 더블클릭용 ZIP 패키징을 제공합니다. 정식 CLI, CI와 공개 릴리스 자동화는 아직 준비 전입니다.
+현재 macOS용 Shelter Lite, 격리된 테스트, 셸 파일과 더블클릭용 ZIP 패키징, 릴리스 자동 빌드를 제공합니다. 정식 CLI는 아직 준비 전입니다.
 
 ## 목차
 
@@ -46,9 +46,9 @@ cd shelter
 git status --short
 ```
 
-Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고, 터미널에서 해당 폴더로 이동합니다. `install.sh`, `messages.sh`, `tools.sh`가 함께 있어야 합니다.
+Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고, 터미널에서 해당 폴더로 이동합니다. `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION` 파일을 포함한 저장소 구조를 유지해야 합니다.
 
-단일 배포 파일은 이 세 파일을 내부에 포함합니다. 생성과 실행 방법은 [배포](#배포)를 참고하세요.
+단일 배포 파일은 이 네 스크립트와 제품 버전을 내부에 포함합니다. 생성과 실행 방법은 [배포](#배포)를 참고하세요.
 
 ### 실행 환경
 
@@ -123,6 +123,7 @@ echo $?
 | 옵션 없음 | 라이트 전체 초기 설정 |
 | `--dry-run` | 설치 계획만 확인, 다운로드와 설정 변경 없음 |
 | `--check` | 전체 도구의 실행 상태 확인, 다운로드와 설정 변경 없음 |
+| `--version`, `-V` | 환경 변경 없이 Shelter Lite 제품 버전 표시 |
 | `--mode lite` | 기본값과 동일 |
 | `--mode full` | 준비 중 안내 후 종료, 설치하지 않음 |
 | `--color auto\|always\|never` | 자동 색상, 항상 색상(기본값) 또는 무색 출력 |
@@ -162,7 +163,7 @@ Git 사용자 정보와 `gh auth login`은 자동으로 설정하지 않습니�
 ## 디렉터리 추가와 변경
 
 전체 배치와 각 경로의 책임은 [README의 저장소 구조](./README.md#저장소-구조)를 기준으로 합니다.
-실행 코드는 `install.sh`, `messages.sh`, `tools.sh`로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
+실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION`으로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
 2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
@@ -264,7 +265,7 @@ git switch -c docs/update-introduction
 저장소 루트에서 구문 검사와 임시 환경 테스트를 실행합니다. 별도 테스트 패키지가 필요하지 않습니다.
 
 ```bash
-for script in installers/macos/*.sh installers/macos/tests/test.sh; do
+for script in scripts/*.sh installers/macos/*.sh installers/macos/tests/test.sh; do
   /bin/bash -n "$script" || exit 1
 done
 /bin/bash installers/macos/tests/test.sh
@@ -301,7 +302,7 @@ Markdown 미리보기에서 제목, 표, 코드 블록과 배지를 확인하고
 
 ### 기능별 검증 기준
 
-Shell 테스트 외 정적 검사 도구와 CI는 아직 준비하지 않았습니다. 아래 기능을 추가할 때 해당 검증도 함께 추가합니다.
+릴리스 workflow에서 Bash 구문 검사와 격리된 설치기 테스트를 실행합니다. 아래 기능을 추가할 때 필요한 정적 검사도 함께 추가합니다.
 
 | 변경 영역       | 확인할 동작                                                                               |
 | --------------- | ----------------------------------------------------------------------------------------- |
@@ -320,6 +321,8 @@ PC 설정을 바꾸는 테스트는 임시 디렉터리나 격리 환경에서 �
 커밋 메시지는 변경 내용을 짧고 구체적으로 설명합니다. 예: `docs: Shelter 소개와 기여 가이드 작성`.
 
 AI 도구와 작업할 때는 변경분을 먼저 검토합니다. 사용자의 명시적 커밋 지시 없이 스테이징하거나 커밋하지 않으며, 커밋에 `Co-Authored-By`를 추가하지 않습니다.
+
+개인 Claude/Codex 디렉터리(`.claude/`, `.codex/`, `.agents/`), Claude 상태 파일(`.claude.json*`), 로컬 지침 파일(`CLAUDE.local.md`, `AGENTS.local.md`, `AGENTS.override.md`)과 `.mcp.local.json`은 `.gitignore`에서 제외합니다. 개인 경로와 인증 정보는 해당 로컬 파일에 둡니다. 공유용 프로젝트 지침인 `CLAUDE.md`, `AGENTS.md`는 Git으로 관리할 수 있습니다.
 
 Pull Request에는 다음 내용을 적어 주세요.
 
@@ -357,10 +360,11 @@ dist/
 ├── shelter-lite-macos.sh        # 단일 설치 파일
 ├── shelter-lite-macos.sh.sha256 # SHA-256 체크섬
 ├── shelter-lite-macos.zip       # 더블클릭용 설치 ZIP
-└── shelter-lite-macos.zip.sha256 # SHA-256 체크섬
+├── shelter-lite-macos.zip.sha256 # SHA-256 체크섬
+└── VERSION                     # 제품 버전의 단일 관리 지점
 ```
 
-`.sh` 파일에 `install.sh`, `messages.sh`, `tools.sh`와 MIT 라이선스를 포함하므로, 이 파일 하나를 어떤 폴더로 옮겨도 실행할 수 있습니다. `dist/`는 Git 관리에서 제외합니다. 생성 파일을 직접 수정하지 말고 원본을 수정한 뒤 다시 생성합니다. 같은 소스에서는 같은 파일이 생성됩니다. 다른 출력 경로가 필요하면 `--output-dir "/path/with spaces"`를 사용합니다.
+`.sh` 파일에 `install.sh`, `messages.sh`, `scripts/version.sh`, 제품 버전과 MIT 라이선스를 포함하므로, 이 파일 하나를 어떤 폴더로 옮겨도 실행할 수 있습니다. `dist/`는 Git 관리에서 제외합니다. 생성 파일을 직접 수정하지 말고 원본을 수정한 뒤 다시 생성합니다. 같은 소스에서는 같은 파일이 생성됩니다. 다른 출력 경로가 필요하면 `--output-dir "/path/with spaces"`를 사용합니다.
 
 체크섬을 확인하고 단일 배포 파일의 코드로 격리된 테스트를 실행합니다.
 
@@ -384,7 +388,38 @@ shasum -a 256 -c shelter-lite-macos.sh.sha256 && /bin/bash shelter-lite-macos.sh
 /bin/bash shelter-lite-macos.sh
 ```
 
-지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트가 새 Mac의 전체 설치 검증을 대신하지는 않으므로 공개 릴리스 전에 해당 검증이 필요합니다. 공개 릴리스 자동화, Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
+지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트가 새 Mac의 전체 설치 검증을 대신하지는 않으므로 공개 릴리스 전에 해당 검증이 필요합니다. Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
+
+### 버전 관리
+
+공통 함수인 [scripts/version.sh](../../scripts/version.sh)는 설치기에 의존하지 않고 버전 데이터를 읽고 검증합니다. 오류 표시 방식은 이를 호출하는 쪽에서 결정합니다.
+
+루트 [VERSION](../../VERSION)을 Shelter Lite 제품 버전의 단일 관리 지점으로 사용합니다. [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) 형식으로 앞의 `v` 없이 기록합니다. 예시는 `0.1.0`, `0.2.0-rc.1`이며, 사전 버전 식별자와 선택적인 `+build.metadata`도 SemVer 문법을 따릅니다.
+
+현재 `0.x` 개발 단계에서는 호환되는 수정에 PATCH를, 기능 추가나 호환성 변경에 MINOR를 올립니다. 명령과 설치 동작의 안정적인 규약을 처음 제공할 때 `1.0.0`으로 전환합니다. 이후 호환되지 않는 변경은 MAJOR, 호환되는 기능 추가는 MINOR, 호환되는 수정은 PATCH를 올립니다. MAJOR나 MINOR를 올리면 하위 숫자는 0으로 초기화합니다. 릴리스 후보는 `0.2.0-rc.1`처럼 표기합니다.
+
+1. 다음 릴리스의 `VERSION`을 수정하고 변경 내용을 릴리스 노트에 작성합니다. 버전과 구현을 함께 커밋하며, 공개한 버전의 태그를 다른 코드로 옮기지 않습니다.
+2. `build.sh`로 다시 생성합니다. `.sh`와 `.command` 내부에 버전을 고정하고, ZIP 내부와 `dist/VERSION`에도 같은 값을 기록합니다. 원본 `VERSION`을 바꿔도 이미 만든 배포 파일은 바뀌지 않습니다.
+3. `VERSION` 앞에 `v`를 붙인 태그로 GitHub 릴리스를 게시합니다. 값이 `0.1.0`이면 태그는 `v0.1.0`입니다. 릴리스 후보는 GitHub에서 사전 릴리스로 표시합니다. 태그가 다르면 workflow는 빌드와 업로드 전에 중단합니다. workflow는 지정한 버전을 검증하고 패키징하며, 버전 숫자를 자동으로 올리지는 않습니다.
+
+```bash
+/bin/bash installers/macos/install.sh --version
+/bin/bash installers/macos/build.sh
+/bin/bash dist/shelter-lite-macos.sh --version
+cat dist/VERSION
+```
+
+`--version`은 플랫폼 검사, 다운로드와 설정 변경 없이 `Shelter Lite <version>`을 출력합니다. 제품 버전에는 `SHELTER_RELEASE_VERSION`을 사용하며, `SHELTER_VERSION`은 확인 중인 도구의 실제 버전 값으로 유지합니다. ZIP에는 확인용 `VERSION` 파일도 포함되지만 `.command` 실행에 필요한 별도 파일은 아닙니다. `dist/VERSION`은 릴리스에도 따로 첨부합니다.
+
+### 릴리스 파일 자동 첨부
+
+[release.yml](../../.github/workflows/release.yml)은 사전 릴리스를 포함하여 GitHub 릴리스를 게시할 때 실행됩니다. 릴리스 태그의 소스를 내려받아 Bash 구문 검사, 원본 테스트와 배포 파일 빌드를 수행하고 두 체크섬을 검증합니다. macOS 15 runner에서 ZIP을 풀고 `Shelter Lite.command`에도 같은 테스트를 실행합니다. 모든 검사가 성공해야 생성한 파일 5개를 릴리스 페이지의 **Assets**에 첨부합니다.
+
+1. workflow와 설치기 소스를 커밋하고 GitHub에 push합니다. 릴리스 태그는 이 workflow와 배포할 소스를 포함한 커밋으로 지정합니다.
+2. GitHub **Releases**에서 해당 태그로 릴리스를 만들고 **Publish release**를 누릅니다. 초안 저장이나 태그 push만으로는 이 workflow가 실행되지 않습니다.
+3. Actions의 **Release Shelter Lite**가 성공한 뒤 릴리스 페이지 **Assets**에서 `shelter-lite-macos.zip`을 내려받습니다. 단일 `.sh`, 두 `.sha256` 파일과 `VERSION`도 함께 첨부됩니다.
+
+저장소 기본 `GITHUB_TOKEN`에 `contents: write` 권한을 사용하므로 별도 릴리스 토큰은 필요하지 않습니다. 테스트나 빌드에 실패하면 업로드를 중단합니다. 문제를 해결한 뒤 Actions에서 작업을 재실행할 수 있으며, 같은 이름의 첨부 파일은 교체합니다. 기존 릴리스에 파일을 첨부하고 격리된 테스트를 실행하는 방식이므로, 새 Mac의 전체 설치 검증을 대신하지는 않습니다.
 
 Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프트웨어를 업데이트하는 동작을 구분합니다.
 릴리스 안내에는 변경 내용, 지원 범위와 확인된 제약을 함께 기록하고, 설치와 업데이트를 검증한 후 공개합니다.

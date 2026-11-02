@@ -40,7 +40,9 @@ Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데
 ## 설치
 
 Shelter Lite는 `shelter-lite-macos.zip`을 풀고 `Shelter Lite.command`를 더블클릭하거나, 단일 `.sh` 파일을 실행하는 방식으로 사용할 수 있습니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
-로컬에서 셸 파일과 더블클릭용 ZIP을 생성할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. 공개 릴리스 자동화와 Homebrew Tap은 아직 구성하지 않았습니다.
+로컬에서 셸 파일과 더블클릭용 ZIP을 생성할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. GitHub 릴리스를 게시하면 테스트, 패키징과 설치 파일 첨부를 자동으로 실행합니다. Homebrew Tap은 아직 구성하지 않았습니다.
+
+현재 개발 버전: **0.1.0**. 제품 버전은 [VERSION](../../VERSION)에서 관리합니다. 배포 파일에 해당 값을 포함하며, 버전 확인과 릴리스 규칙은 [CONTRIBUTING](./CONTRIBUTING.md#버전-관리)에 정리합니다. 공통 버전 읽기와 검증은 [scripts/version.sh](../../scripts/version.sh)에서 담당하며, 설치기, 빌드와 릴리스 workflow가 함께 사용합니다.
 
 저장소 받기와 실행 절차는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비), 설치 시 변경되는 설정은 [라이트 실행](./CONTRIBUTING.md#라이트-실행)을 참고하세요.
 
@@ -135,11 +137,15 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 
 ```text
 shelter/
+├── .github/
+│   └── workflows/
+│       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
 ├── dist/             # 생성 결과, Git 관리 제외
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
-│   └── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-macos.zip.sha256
+│   └── VERSION
 ├── installers/
 │   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
 │       ├── build.sh   # 셸 파일과 더블클릭용 ZIP 생성
@@ -148,6 +154,8 @@ shelter/
 │       ├── tools.sh   # 도구 확인, 설치, 셸 설정
 │       └── tests/
 │           └── test.sh # 임시 환경에서 실행하는 설치기 테스트
+├── scripts/
+│   └── version.sh    # 제품 버전 형식 검증과 파일 읽기
 ├── language/
 │   ├── ko/
 │   │   ├── README.md       # 한국어 제품 소개, 구성과 개발 방향
@@ -157,6 +165,7 @@ shelter/
 │       └── CONTRIBUTING.md # 일본어 개발 준비, 검증과 기여 절차
 ├── README.md         # 영문 제품 소개, 구성과 개발 방향
 ├── CONTRIBUTING.md   # 영문 개발 준비, 검증과 기여 절차
+├── VERSION           # 제품 버전의 단일 관리 지점
 └── LICENSE           # MIT 라이선스
 ```
 
@@ -169,7 +178,7 @@ shelter/
 라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
 
 정식 CLI 본체의 예정 위치인 `src/shelter/`는 Python 구현을 시작할 때 추가합니다. 웹사이트와 수집 서비스, 공통 데이터 규격의 구조는 연동 범위가 정해지면 검토하며, 현재 설치기 구조에 포함하지 않습니다.
-공통 코드나 도구별 처리가 실제로 커질 때 파일을 분리하고, CI와 상세 문서도 필요해지는 시점에 추가합니다.
+공통 코드나 도구별 처리가 실제로 커질 때 파일을 분리합니다. 릴리스 workflow는 해당 버전을 검증하고 패키징하며, 추가 검사와 상세 문서는 기능에 맞춰 확장합니다.
 디렉터리를 만드는 시점과 문서 갱신 절차는 [CONTRIBUTING의 디렉터리 추가와 변경](./CONTRIBUTING.md#디렉터리-추가와-변경)을 따릅니다.
 
 ## 관리자

@@ -40,7 +40,9 @@ Its primary audience is people unfamiliar with security advisories or developmen
 ## Install
 
 Run Shelter Lite by extracting `shelter-lite-macos.zip` and double-clicking `Shelter Lite.command`, or by running the standalone `.sh` file. It targets **macOS 15 or later in a native Apple Silicon terminal environment** and supports zsh and bash configuration.
-Local script and double-click ZIP packaging are available. See [Distribution in CONTRIBUTING](./CONTRIBUTING.md#distribution) for building, checking, and running the file. Public release automation and a Homebrew Tap are not yet configured.
+Local script and double-click ZIP packaging are available. See [Distribution in CONTRIBUTING](./CONTRIBUTING.md#distribution) for building, checking, and running the file. Publishing a GitHub Release triggers automated tests, packaging, and attachment of the installers. A Homebrew Tap is not yet configured.
+
+Current development version: **0.1.0**. The product version is managed in [VERSION](./VERSION). Built installers embed that value; version inspection and release rules are documented in [CONTRIBUTING](./CONTRIBUTING.md#versioning). The shared reader in [scripts/version.sh](./scripts/version.sh) validates the version for the installer, build, and release workflow without performing installation.
 
 See [Development Setup in CONTRIBUTING](./CONTRIBUTING.md#development-setup) for obtaining the repository and getting started, and [Running Lite](./CONTRIBUTING.md#running-lite) for settings changed during installation.
 
@@ -135,11 +137,15 @@ The directories, executable code, and documentation currently present are listed
 
 ```text
 shelter/
+├── .github/
+│   └── workflows/
+│       └── release.yml # Release tests, packaging, and asset upload
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
-│   └── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-macos.zip.sha256
+│   └── VERSION
 ├── installers/
 │   └── macos/        # macOS installer for Lite and the future full version
 │       ├── build.sh   # Create the standalone script and double-click ZIP
@@ -148,6 +154,8 @@ shelter/
 │       ├── tools.sh   # Tool checks, installation, and shell configuration
 │       └── tests/
 │           └── test.sh # Installer tests using temporary environments
+├── scripts/
+│   └── version.sh    # Product version format, validation, and file reading
 ├── language/
 │   ├── ko/
 │   │   ├── README.md       # Korean introduction, components, and direction
@@ -157,6 +165,7 @@ shelter/
 │       └── CONTRIBUTING.md # Japanese setup, validation, and contribution guide
 ├── README.md         # English introduction, components, and direction
 ├── CONTRIBUTING.md   # English setup, validation, and contribution guide
+├── VERSION           # Product version, source of truth
 └── LICENSE           # MIT license
 ```
 
@@ -169,7 +178,7 @@ shelter/
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 
 The planned location for the full CLI, `src/shelter/`, will be added when Python implementation begins. The structure of the website, collection service, and shared data formats will be considered after the integration scope is defined; they are not part of the current installer structure.
-Split files when shared code or tool-specific logic actually grows. Add CI and detailed documentation when needed.
+Split files when shared code or tool-specific logic actually grows. The release workflow validates and packages released versions; add further checks and detailed documentation as features require them.
 Follow [Adding and Changing Directories in CONTRIBUTING](./CONTRIBUTING.md#adding-and-changing-directories) for when to create directories and update documentation.
 
 ## Maintainer

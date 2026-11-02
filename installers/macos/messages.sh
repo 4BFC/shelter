@@ -15,6 +15,9 @@ shelter_copy() {
     build_failed) template='Could not build the Shelter Lite distribution file.' ;;
     build_complete) template='Created: %s' ;;
     build_checksum) template='SHA-256 checksum: %s' ;;
+    product_version) template='Shelter Lite %s' ;;
+    version_invalid) template='Could not read a valid Semantic Version such as 0.1.0 or 0.2.0-rc.1 from: %s' ;;
+    release_version_mismatch) template='Release tag %s does not match expected tag %s from VERSION.' ;;
     command_finish) template='Press Return to finish. You can then close this window.' ;;
     full_unavailable) template='The full version is not available yet. Use Lite instead.' ;;
     invalid_mode) template='The supported mode is lite.' ;;
@@ -52,7 +55,7 @@ shelter_copy() {
     installation_progress) template='Installation progress' ;;
     shell_configuration) template='Shell configuration' ;;
     installation_complete) template='Installation complete' ;;
-    platform_banner) template='Shelter Lite — macOS %s / %s' ;;
+    platform_banner) template='Shelter Lite %s — macOS %s / %s' ;;
     dry_run_intro) template='No actual installation or configuration changes will be made.' ;;
     check_intro) template='Checking the current installation status only.' ;;
     install_intro) template='Starting setup for the entire fixed tool set.' ;;
@@ -343,11 +346,12 @@ LOGO
 }
 
 shelter_help() {
-  printf 'Shelter Lite — A shelter for your environment\n\n'
+  printf 'Shelter Lite %s — A shelter for your environment\n\n' "$SHELTER_RELEASE_VERSION"
   printf 'Usage: /bin/bash %q [options]\n' "${SHELTER_ENTRY_PATH:-installers/macos/install.sh}"
   cat <<'HELP'
 
   --check         Check installed tools only. Exit 1 if any tool is missing or fails
+  -V, --version   Show the Shelter Lite version without changing the environment
   --dry-run       Show the installation plan. No downloads or configuration changes
   --mode lite     Lite version (default). full is not available yet
   --color [MODE]  Colors: always (default), auto (terminal settings), never (off)
