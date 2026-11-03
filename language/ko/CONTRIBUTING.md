@@ -66,16 +66,10 @@ Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으�
 /bin/bash installers/macos/install.sh --dry-run
 ```
 
-초기 설정을 시작하는 명령은 다음과 같습니다. 도구 선택이나 제외 옵션 없이 [라이트 고정 설치 스펙](./README.md#라이트-고정-설치-스펙) 전체를 준비합니다.
+초기 설정을 시작하는 명령은 다음과 같습니다. 도구 선택이나 제외 옵션 없이 [라이트 고정 설치 스펙](../../docs/specification.ko.md#라이트-고정-설치-스펙) 전체를 준비합니다.
 
 ```bash
 /bin/bash installers/macos/install.sh
-```
-
-설정이 끝나면 응용 프로그램 폴더에서 Ghostty를 열거나 다음 명령을 실행합니다.
-
-```bash
-open -a Ghostty
 ```
 
 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 한 번 표시됩니다. 기본 화면에는 초기 설정을 시작한다는 안내와 최종 **설치 완료 또는 설치 실패**를 요약하고, 짧은 설명과 다음 행동을 함께 표시합니다. Homebrew가 없는 Mac에서는 공식 최초 설치기의 확인과 관리자 인증 안내를 터미널에 직접 표시합니다.
@@ -107,30 +101,9 @@ open -a Ghostty
 /bin/bash installers/macos/install.sh --dry-run
 ```
 
-버전 표, 개별 설치 결과, 패키지 설치 출력과 셸 설정 변경 내용은 `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`에 기록합니다. 로그는 실행마다 새로 만들고, 소유자만 읽고 쓸 수 있으며, 색상 코드는 포함하지 않습니다. 성공 시에도 로그는 보관합니다. 로그의 `Not run`(미실행)은 앞 단계의 실패로 해당 단계가 실행되지 않았다는 뜻입니다. 현재 버전과 실행 경로의 상세 확인은 `--check`를 사용합니다.
+실행 결과와 설치 후 할 일은 [README 사용법](./README.md#사용법)을, 전체 옵션과 종료 코드는 [명령 참조](../../docs/specification.ko.md#명령-참조)를 참고하세요. 저장소에서 상태를 확인할 때는 `/bin/bash installers/macos/install.sh --check`를 사용합니다.
 
-설치를 마친 뒤 새 터미널에서 저장소 루트로 이동해 확인합니다.
-
-```bash
-/bin/bash installers/macos/install.sh --check
-echo $?
-```
-
-모든 항목이 `Installed`(설치됨)이고 마지막 종료 코드가 `0`이면 전체 도구를 실행할 수 있는 상태입니다. `--dry-run`은 처음과 끝에 실제 변경이 없음을 표시하며, 실제 설치 결과는 출력하지 않습니다.
-
-| 옵션 | 동작 |
-| --- | --- |
-| 옵션 없음 | 라이트 전체 초기 설정 |
-| `--dry-run` | 설치 계획만 확인, 다운로드와 설정 변경 없음 |
-| `--check` | 전체 도구의 실행 상태 확인, 다운로드와 설정 변경 없음 |
-| `--version`, `-V` | 환경 변경 없이 Shelter Lite 제품 버전 표시 |
-| `--mode lite` | 기본값과 동일 |
-| `--mode full` | 준비 중 안내 후 종료, 설치하지 않음 |
-| `--color auto\|always\|never` | 자동 색상, 항상 색상(기본값) 또는 무색 출력 |
-| `--color` | 이번 실행에 색상 강제 적용, `--color always`와 동일 |
-| `--help` | 도움말 |
-
-종료 코드는 성공 `0`, 미설치 상태 또는 실행/설치 오류 `1`, 잘못된 옵션이나 미지원 환경 `2`, Ctrl+C 중단 `130`입니다. `--check`와 `--dry-run`은 함께 사용하지 않습니다. 미리보기에서 정상적으로 설치 계획을 만들면, 미설치 도구가 있어도 `0`으로 종료합니다.
+설치 로그는 소유자만 읽고 쓸 수 있으며 색상 코드를 포함하지 않습니다.
 
 ### 기존 환경과 재실행
 
@@ -140,7 +113,7 @@ echo $?
 - VS Code는 `/Applications` 또는 `~/Applications`의 앱으로 확인합니다. [Homebrew의 `--no-binaries`](https://docs.brew.sh/Manpage)로 앱을 설치하고, 기존 `code` 명령이 Cursor 등 다른 편집기에 연결되어 있으면 보존합니다. 이 경우 VS Code는 응용 프로그램 폴더에서 실행합니다.
 - Ghostty는 `PATH`에 `ghostty` 명령이 없어도 `/Applications/Ghostty.app` 또는 `~/Applications/Ghostty.app`에서 확인합니다. 정상 실행되는 앱은 유지하고, 없으면 `brew install --cask ghostty`로 설치합니다. 앱이 손상되었거나 버전 확인에 실패하면 중단합니다. Ghostty 설정, 폰트와 기본 터미널은 변경하지 않습니다.
 
-Git 사용자 정보와 `gh auth login`은 자동으로 설정하지 않습니다. 설치 중 오류가 나면 뒤의 설치를 멈추며, 앞서 설치한 도구는 남습니다. 오류를 해결한 뒤 같은 명령을 실행하면 이미 준비된 도구를 건너뜁니다. 패키지 설치 전체를 되돌리는 기능은 없습니다. 새 패키지에 필요한 의존성 변경은 Homebrew가 처리합니다.
+사용자 설정과 재실행 절차는 [README 사용법](./README.md#사용법)을 참고하세요. 오류가 나면 뒤의 설치를 멈추며 완료된 변경은 남습니다. 새 패키지에 필요한 의존성 변경은 Homebrew가 처리합니다.
 
 개별 `brew install` 실행에는 자동 업데이트, 설치 후 정리, 기존 설치 대상의 자동 업그레이드를 끄는 환경변수를 적용합니다. 의존성 호환성 처리는 Homebrew에 맡깁니다. 관련 동작은 [Homebrew 명령 문서](https://docs.brew.sh/Manpage)를 기준으로 합니다.
 
@@ -162,7 +135,7 @@ Git 사용자 정보와 `gh auth login`은 자동으로 설정하지 않습니�
 
 ## 디렉터리 추가와 변경
 
-전체 배치와 각 경로의 책임은 [README의 저장소 구조](./README.md#저장소-구조)를 기준으로 합니다.
+전체 배치와 각 경로의 책임은 [기술 사양의 저장소 구조](../../docs/specification.ko.md#저장소-구조)를 기준으로 합니다.
 실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION`으로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
@@ -174,7 +147,7 @@ Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. �
 
 구조를 적용하거나 바꿀 때는 다음 내용을 같은 변경에 반영합니다.
 
-- README의 **현재 구조**에 실제 추가한 경로를 반영하고, **구성 요소의 역할**에 남은 범위를 표시합니다.
+- 기술 사양의 **현재 구조**에 실제 추가한 경로를 반영하고, **구성 요소의 역할**에 남은 범위를 표시합니다.
 - CONTRIBUTING에 해당 구성 요소의 설치, 실행과 검증 명령을 작업 디렉터리와 함께 기록합니다.
 - 상세 설계나 별도 계획 문서가 필요해지면 `docs/`에 추가하고 관련 문서에서 연결합니다. 문서 분류를 위한 하위 디렉터리는 미리 만들지 않습니다.
 
@@ -182,7 +155,7 @@ Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. �
 
 ## 작업 절차
 
-1. README에서 제품 방향과 현재 구현 범위를 확인합니다.
+1. README에서 사용법을, `docs/`의 기술 사양에서 현재 구현 범위를 확인합니다.
 2. 변경할 내용을 정하고 작업 브랜치를 만듭니다.
 3. 관련 문서와 코드를 함께 수정합니다.
 4. 아래 검증 기준에 따라 확인하고 diff를 검토합니다.
@@ -198,8 +171,8 @@ git switch -c docs/update-introduction
 
 ## 문서 작성
 
-**README**는 프로젝트를 이해하는 문서입니다. 소개, 사용 목적, 제품 구성, 기술 스펙과 저장소 구조를 담습니다.
-**CONTRIBUTING**은 프로젝트를 변경하는 절차입니다. 설치, 개발, 검사, 커밋과 배포 방법을 담습니다.
+**README**는 제품 소개, 스펙 표, 설치와 사용법을 안내합니다. 상세 사양, 기술 선택, 개발 계획과 저장소 구조는 `docs/`에서 관리합니다.
+**CONTRIBUTING**은 프로젝트를 변경하는 절차입니다. 소스 실행 준비, 개발, 검사, 커밋과 배포 방법을 담습니다.
 
 영문 README와 CONTRIBUTING은 저장소 루트, 한국어 문서는 `language/ko/`, 일본어 문서는 `language/jp/`에서 같은 내용과 구조로 관리합니다. 각 문서 상단의 언어 표는 같은 문서의 다른 언어 버전으로 연결합니다. 이 문서의 실행 명령은 저장소 루트를 기준으로 합니다.
 
@@ -337,13 +310,9 @@ Pull Request에는 다음 내용을 적어 주세요.
 
 ### 더블클릭으로 설치
 
-1. `shelter-lite-macos.zip`을 내려받고 ZIP을 더블클릭해 압축을 풉니다.
-2. 압축을 푼 `Shelter Lite.command`를 더블클릭합니다. 터미널이 열리며 설치가 시작되고, Homebrew를 미리 준비할 필요는 없습니다.
-3. Homebrew가 확인이나 관리자 인증을 요청하면 응답합니다. 최종 결과를 읽은 뒤 Return을 눌러 종료합니다.
+사용자용 설치 단계와 macOS 보안 확인 안내는 [README 설치](./README.md#설치)를 참고하세요.
 
 `.command` 파일 안에 설치기 전체를 포함합니다. ZIP에 실행 권한을 보존하므로 사용자가 `chmod` 명령을 입력할 필요는 없습니다. 옵션 없이 터미널에서 실행하면 설치 실패 시에도 Return 입력 전까지 결과를 유지합니다. `--dry-run` 같은 명령줄 옵션도 그대로 사용할 수 있습니다.
-
-ZIP에는 서명되지 않은 스크립트가 들어 있습니다. 다운로드한 파일에 macOS 보안 확인이 표시될 수 있으며, [Apple 안내](https://support.apple.com/en-us/102445)를 참고하세요. 브라우저 다운로드, Gatekeeper와 Finder 실행 동작은 별도 실기 검증이 남아 있습니다.
 
 ### 배포 파일 생성과 검증
 
@@ -375,18 +344,7 @@ dist/
 SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
 ```
 
-`.sh`와 체크섬 파일을 함께 전달합니다. 사용자가 다운로드 폴더에 저장했다면 다음 명령으로 파일을 검증하고 설치 계획을 확인할 수 있습니다.
-
-```bash
-cd ~/Downloads
-shasum -a 256 -c shelter-lite-macos.sh.sha256 && /bin/bash shelter-lite-macos.sh --dry-run
-```
-
-계획을 확인한 뒤 설치를 시작합니다.
-
-```bash
-/bin/bash shelter-lite-macos.sh
-```
+사용자용 설치 단계와 macOS 보안 확인 안내는 [README 설치](./README.md#설치)를 참고하세요.
 
 지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트가 새 Mac의 전체 설치 검증을 대신하지는 않으므로 공개 릴리스 전에 해당 검증이 필요합니다. Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
 

@@ -1,202 +1,132 @@
-# Shelter _(shelter)_
+```text
+  ____  _          _ _
+ / ___|| |__   ___| | |_ ___ _ __
+ \___ \| '_ \ / _ \ | __/ _ \ '__|
+  ___) | | | |  __/ | ||  __/ |
+ |____/|_| |_|\___|_|\__\___|_|
+```
 
-[![README style: standard](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)](#개발-계획)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](../../LICENSE)
+# Shelter
 
-나의 환경을 지키는 피난처. 보안 위협 추적부터 알림, 업데이트까지.
+Shelter는 Mac에 개발 도구를 설치하고 실행 상태를 확인합니다. 정상 작동하는 도구는 유지하고, 없는 구성 요소를 준비합니다.
 
-| English | 한국어 | 日本語 |
-| --- | --- | --- |
-| [English](../../README.md) | **현재 문서** | [日本語](../jp/README.md) |
+![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white)
+![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-M_series-000000?style=flat-square&logo=apple&logoColor=white)
+![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
+![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)
 
-Shelter는 사용자가 보안 소식을 일일이 찾아보지 않아도, 자신의 환경에 필요한 업데이트를 알고 적용할 수 있도록 돕는 프로젝트입니다.
-보안 이슈와 업데이트 정보는 별도 웹사이트에서 제공하고, CLI로 사용자 PC의 상태 확인과 알림, 업데이트를 연결하는 것을 목표로 합니다.
+[English](../../README.md) · [한국어](README.md) · [日本語](../jp/README.md)
 
-**현재는 Shelter Lite 설치기의 첫 구현 단계입니다.** macOS에서 정해진 개발 도구를 한 번에 준비하는 Shell 설치기를 제공합니다. 임시 환경 테스트와 실제 Mac의 설치 미리보기를 검증했으며, 새 Mac에서의 실제 설치 검증과 정식 CLI 구현은 남아 있습니다.
+<!-- 검증된 터미널 실행 화면을 준비하면 이 위치에 추가합니다. -->
 
 ## 목차
 
-- [배경](#배경)
+- [스펙](#스펙)
 - [설치](#설치)
 - [사용법](#사용법)
-- [제품 구성](#제품-구성)
-- [라이트 고정 설치 스펙](#라이트-고정-설치-스펙)
-- [기술 방향](#기술-방향)
-- [개발 계획](#개발-계획)
-- [저장소 구조](#저장소-구조)
-- [관리자](#관리자)
-- [기여](#기여)
+- [문서](#문서)
 - [라이선스](#라이선스)
 
-## 배경
+## 스펙
 
-새로운 보안 문제가 발표되어도 사용자가 직접 공지를 찾아 읽고, 설치된 버전이 영향을 받는지 판단하고, 업데이트 방법까지 알아내기는 어렵습니다.
-도구마다 설치 경로와 업데이트 방식이 다르면 관리 부담도 커집니다.
+| 구성 | 기술 | 설명 |
+| --- | --- | --- |
+| 운영체제 | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
+| 설치기 | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS에 포함된 Bash로 실행 |
+| 패키지 관리 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 개발 도구 설치 |
+| CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 검토 중, 버전 미정 |
+| CLI 개발 도구 | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 검토 중, 버전 미정 |
 
-Shelter는 이 과정을 **추적 → 내 환경과 대조 → 알림 → 업데이트 → 결과 확인**으로 연결하려고 합니다.
-주요 대상은 보안 공지나 개발 도구에 익숙하지 않은 일반 사용자입니다. 무엇이 문제인지, 나에게 해당하는지, 다음에 무엇을 하면 되는지를 이해하기 쉽게 전달합니다.
+설치 정책과 기술별 세부 내용은 [기술 사양](../../docs/specification.ko.md)에 정리합니다.
 
 ## 설치
 
-Shelter Lite는 `shelter-lite-macos.zip`을 풀고 `Shelter Lite.command`를 더블클릭하거나, 단일 `.sh` 파일을 실행하는 방식으로 사용할 수 있습니다. 대상은 **macOS 15 이상, Apple Silicon의 기본 터미널 환경**이며, zsh와 bash 설정을 지원합니다.
-로컬에서 셸 파일과 더블클릭용 ZIP을 생성할 수 있습니다. 생성, 검증과 실행 방법은 [CONTRIBUTING의 배포](./CONTRIBUTING.md#배포)를 참고하세요. GitHub 릴리스를 게시하면 테스트, 패키징과 설치 파일 첨부를 자동으로 실행합니다. Homebrew Tap은 아직 구성하지 않았습니다.
+### 지원 조건
 
-현재 개발 버전: **0.1.0**. 제품 버전은 [VERSION](../../VERSION)에서 관리합니다. 배포 파일에 해당 값을 포함하며, 버전 확인과 릴리스 규칙은 [CONTRIBUTING](./CONTRIBUTING.md#버전-관리)에 정리합니다. 공통 버전 읽기와 검증은 [scripts/version.sh](../../scripts/version.sh)에서 담당하며, 설치기, 빌드와 릴리스 workflow가 함께 사용합니다.
+- macOS 15 이상, Apple Silicon(M 시리즈 칩)의 기본 터미널 환경. Intel Mac, Rosetta와 Windows는 지원하지 않습니다.
+- 인터넷 연결과 Homebrew 인증 요청에 사용할 macOS 관리자 계정.
+- 셸 설정은 zsh와 bash를 지원합니다. Homebrew, Node.js와 Python을 미리 설치할 필요는 없습니다. Shelter 자체는 `sudo` 없이 일반 사용자로 실행합니다.
 
-저장소 받기와 실행 절차는 [CONTRIBUTING의 개발 준비](./CONTRIBUTING.md#개발-준비), 설치 시 변경되는 설정은 [라이트 실행](./CONTRIBUTING.md#라이트-실행)을 참고하세요.
+### 내려받기와 실행
+
+[GitHub Releases](https://github.com/4BFC/shelter/releases)에서 설치 파일을 내려받습니다. 아래는 **Assets**에 `shelter-lite-macos.zip`이 게시된 경우의 절차입니다. 아직 파일이 없다면 [소스 빌드 안내](./CONTRIBUTING.md#배포)를 참고하세요.
+
+1. 릴리스의 **Assets**에서 `shelter-lite-macos.zip`을 내려받습니다. GitHub의 소스 코드 ZIP과는 다른 파일입니다.
+2. ZIP을 더블클릭해 풀고, `Shelter Lite.command`를 더블클릭합니다. 터미널이 열리며 설치를 시작합니다.
+3. Homebrew의 진행 확인이나 관리자 비밀번호 요청이 나오면 응답합니다. 비밀번호를 입력해도 화면에 글자가 표시되지 않을 수 있습니다. Mac 로그인 비밀번호를 입력하고 Return을 누르세요.
+4. 마지막 결과를 읽고 Return을 눌러 마칩니다. [사용법](#사용법)에 따라 새 환경을 적용하고 확인합니다.
+
+설치 파일은 서명되지 않은 스크립트입니다. macOS가 실행을 막으면 내려받은 출처를 확인하고 [Apple의 보안 안내](https://support.apple.com/en-us/102445)를 참고하세요. 확인되지 않은 개발자 경고의 경우, Apple은 파일을 신뢰할 때 실행 시도 후 **시스템 설정 → 개인정보 보호 및 보안 → 확인 없이 열기**로 허용하는 절차를 안내합니다.
+
+<details>
+<summary>선택: 내려받은 파일 확인</summary>
+
+체크섬은 내려받은 파일이 게시된 파일과 같은지 확인하는 값입니다. `shelter-lite-macos.zip.sha256`도 ZIP과 같은 폴더에 내려받으세요. 두 파일이 다운로드 폴더에 있다면 터미널에서 실행합니다.
+
+```bash
+cd ~/Downloads
+shasum -a 256 -c shelter-lite-macos.zip.sha256
+```
+
+`shelter-lite-macos.zip: OK`가 나올 때만 진행합니다. 값이 다르면 설치기를 실행하기 전에 두 파일을 다시 내려받으세요.
+
+</details>
 
 ## 사용법
 
-라이트는 실행하면 **Homebrew → Git → VS Code → Ghostty → Node.js/npm → Python/uv → GitHub CLI** 순서로 초기 환경을 준비합니다. 도구 선택 메뉴는 없으며, 정상 실행되는 기존 도구는 유지하고 없는 구성 요소를 설치합니다. 기본 화면은 **설치 완료 또는 설치 실패**와 짧은 안내로 마무리하고, 필요한 경우에만 경고를 덧붙입니다. 색상이 꺼져 있어도 문구로 구분할 수 있습니다. 상세 내용은 설치 로그에 기록하고, 현재 버전과 실행 경로는 `--check`로 확인합니다.
+### 결과 읽기
 
-상태별 문구와 색상은 [안내 메시지 미리보기](./CONTRIBUTING.md#안내-메시지-미리보기)에서, 실제 설치 절차의 모의 실행은 [설치 흐름 테스트](./CONTRIBUTING.md#설치-흐름-테스트)에서 확인할 수 있습니다.
+메시지와 로그는 영어로 표시합니다.
 
-아래 보안 정보 연동은 정식 CLI의 개발 계획입니다. 아직 실행 가능한 기능은 아닙니다.
+- `Installation complete`(설치 완료): 도구가 준비되었습니다. 새 터미널을 열고 실행 중인 편집기를 다시 시작해 추가된 실행 경로를 적용하세요.
+- `Installation failed`(설치 실패): 설치가 중단되었습니다. 터미널에 표시된 오류를 확인하세요.
+- `warning`(경고): 재시작이 필요하거나 실패 후 변경 사항이 남았다는 안내를 확인하세요.
 
-```text
-웹사이트에서 보안 이슈와 업데이트 정보 확인
-  → CLI로 내 PC의 소프트웨어와 버전 확인
-  → 내 환경에 해당하는 업데이트 알림
-  → 필요한 업데이트 적용
-  → 적용 결과와 재시작 필요 여부 확인
+<details>
+<summary>설치 후 할 일</summary>
+
+응용 프로그램 폴더에서 Ghostty를 열거나 터미널에서 `open -a Ghostty`를 실행합니다. Ghostty 설정, 폰트와 기본 터미널은 변경하지 않습니다.
+
+Git을 사용한다면 커밋에 기록할 사용자 정보를 직접 설정하세요. 예시의 이름과 이메일을 본인 정보로 바꿔 실행합니다. 이 전역 설정은 현재 사용자 계정에 적용됩니다. 이미 올바르게 설정했다면 유지하세요.
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
 ```
 
-업데이트의 자동 적용 여부, 사용자 확인 방식과 알림 채널은 설계 단계에서 결정합니다.
-정식 CLI 명령어는 구현된 동작을 검증한 뒤 안내합니다.
+GitHub CLI를 GitHub 계정과 연결하려면 다음 명령을 실행하고 안내를 따릅니다.
 
-## 제품 구성
-
-**웹사이트**는 보안 정보와 대응 방법을 제공하는 사용자 접점입니다.
-**정보 수집 기능**은 공식 보안 공지와 릴리스 정보를 추적하는 기반입니다.
-**CLI**는 그 정보를 사용자 PC의 상태와 연결하는 도구입니다.
-
-| 구성           | 계획한 역할                                     | 사용자에게 제공할 정보                       |
-| -------------- | ----------------------------------------------- | -------------------------------------------- |
-| 웹사이트       | 보안 이슈와 업데이트 정보를 모아 쉽게 설명      | 문제의 내용, 영향받는 버전, 대응 방법과 출처 |
-| 정보 수집 기능 | 보안 공지와 업데이트 변경 사항 추적             | 원문 링크, 게시 시점, 마지막 확인 시점       |
-| CLI            | 설치 상태 확인, 관련 알림, 업데이트와 결과 검증 | 현재 상태, 필요한 변경, 적용 결과            |
-
-보안 이슈를 빠르게 파악할 수 있도록 지속적인 추적을 목표로 합니다. 수집 주기와 알림 지연은 아직 정하지 않았습니다.
-Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대상으로 검토합니다.
-
-**Shelter Lite**은 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
-**정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
-두 버전의 설치 스크립트는 `installers/macos/`에서 함께 관리합니다. 정식 CLI 본체는 설치기와 구분하며, Python을 채택하면 `src/shelter/`에 구현할 예정입니다.
-
-## 라이트 고정 설치 스펙
-
-아래 항목은 모두 라이트에 포함됩니다. Homebrew는 설치 관리자, Git은 버전 관리 도구, VS Code는 편집기, Ghostty는 명령을 입력하고 실행하는 터미널 앱입니다. Node.js와 Python은 실행 환경이며 npm과 uv는 해당 환경의 관리 도구입니다. GitHub CLI는 GitHub 연동 도구입니다.
-
-| 순서 | 설치 대상 | 역할 | 새로 설치할 때의 정책 |
-| --- | --- | --- | --- |
-| 1 | [Homebrew](https://docs.brew.sh/Installation) | 프로그램 설치 기반 | 공식 설치기로 준비 |
-| 2 | [Git](https://formulae.brew.sh/formula/git) | 파일 변경 이력 관리 | Homebrew의 `git`, 정상 실행되는 Apple Git도 유지 |
-| 3 | [VS Code](https://formulae.brew.sh/cask/visual-studio-code) | 파일과 코드 편집 | Homebrew의 `visual-studio-code`, 기존 `code` 명령 보존 |
-| 4 | [Ghostty](https://ghostty.org/docs/install/binary) | 셸 명령을 입력하고 실행하는 터미널 | Homebrew의 `ghostty` cask가 제공하는 버전 설치 |
-| 5 | [Node.js + npm](https://formulae.brew.sh/formula/node@24) | JavaScript 실행과 패키지 관리 | `node@24`로 Node.js 24.x와 함께 제공되는 npm 설치 |
-| 6 | [Python + uv](https://docs.astral.sh/uv/guides/install-python/) | Python 실행, 패키지와 가상환경 관리 | Homebrew의 `uv`, uv로 Python 3.14.x 설치 |
-| 7 | [GitHub CLI (`gh`)](https://formulae.brew.sh/formula/gh) | GitHub 저장소와 Pull Request 작업 | Homebrew의 `gh`, 로그인은 별도 진행 |
-
-고정 스펙은 **설치할 도구 묶음**을 뜻합니다. 정상 실행되는 기존 버전은 유지하며, 새 Node.js와 Python에만 위 버전 계열을 적용합니다. 패치 버전까지 고정하지 않으며 실제 버전과 경로는 `--check` 결과로 확인합니다. GitHub Desktop은 포함하지 않습니다.
-
-macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니다. 새 Python은 uv가 관리하는 `python3.14`로 제공하고 시스템 Python이나 기존 버전 관리자의 기본 명령을 바꾸지 않습니다. VS Code는 앱 경로로 확인하므로 Cursor의 `code` 명령을 VS Code로 판단하지 않습니다.
-
-실행 여부 확인은 보안 취약점 검사나 최신 버전 판정이 아닙니다. 세부 설치와 재실행 정책은 [CONTRIBUTING](./CONTRIBUTING.md#라이트-실행)에 정리합니다.
-
-## 기술 방향
-
-**현재 구현된 설치기의 대상 운영체제는 macOS입니다.** Windows는 [준비 문서](../../docs/plans/windows-lite.md)에 범위와 검토 항목만 정리합니다. Windows 설치, 설정, 패키징과 릴리스 작업은 아직 구현하지 않았습니다.
-라이트는 macOS 기본 Bash로 실행하며, 실행 전에 Node.js나 Python을 따로 설치할 필요가 없습니다. 정식 CLI와 웹사이트의 기술은 아직 검토 단계입니다.
-
-| 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                   |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
-| 초기 대상 운영체제   | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel, Rosetta, Windows 제외 |
-| Windows 준비 | Windows 11, 기본 PowerShell, WinGet (후보) | Windows 초기 설정과 배포 방식 검토 | 준비 문서 단계, 설치기와 배포 파일 없음 |
-| 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
-| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                   |
-| CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                        |
-| Shelter Lite      | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 고정 스펙의 최초 설치와 실행 환경 준비 | 구현됨, Bash 3.2.57로 검사 |
-| macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                              |
-
-지원 조건과 설치 정책의 근거 파일은 [install.sh](../../installers/macos/install.sh), [tools.sh](../../installers/macos/tools.sh)입니다. 최소 운영체제는 [Homebrew 설치 요구사항](https://docs.brew.sh/Installation)을 기준으로 제한합니다. 현재 실기기 확인은 macOS 26.6.2의 미리보기까지이며, 지원 범위 전체의 실제 설치를 검증한 것은 아닙니다.
-
-## 개발 계획
-
-1. **Shelter Lite 검증:** 환경 확인, 고정 스펙 설치와 결과 확인을 구현했습니다. 새 Mac에서 실제 설치, 터미널 재시작과 재실행을 검증한 뒤 배포합니다.
-2. **CLI 연결:** PC의 설치 상태와 별도 웹사이트의 보안 정보를 연결하고, 해당 환경에 필요한 업데이트를 알립니다.
-3. **업데이트와 확장:** 적용 결과 확인과 실패 대응을 구현하고, 도구 통합 설치를 확장합니다.
-
-라이트는 최초 설치부터 시작하고, 정식 CLI는 이후 확장합니다. 세부 기능 범위와 자동 업데이트 정책은 미정입니다.
-두 버전은 이 저장소에서 관리합니다. 웹사이트 코드는 이 저장소에 포함하지 않습니다.
-
-## 저장소 구조
-
-### 현재 구조
-
-현재 생성한 디렉터리, 실행 코드와 문서입니다.
-
-```text
-shelter/
-├── .github/
-│   └── workflows/
-│       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
-├── docs/
-│   └── plans/
-│       ├── readme-usage.md # README 사용법 중심 정리 계획
-│       └── windows-lite.md # Windows 지원 준비 문서
-├── dist/             # 생성 결과, Git 관리 제외
-│   ├── shelter-lite-macos.sh
-│   ├── shelter-lite-macos.sh.sha256
-│   ├── shelter-lite-macos.zip
-│   ├── shelter-lite-macos.zip.sha256
-│   └── VERSION
-├── installers/
-│   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
-│       ├── build.sh   # 셸 파일과 더블클릭용 ZIP 생성
-│       ├── install.sh # 진입점, 고정 스펙과 설치 순서
-│       ├── messages.sh # 영문 메시지, 오류 문구, 색상과 출력 형식
-│       ├── tools.sh   # 도구 확인, 설치, 셸 설정
-│       └── tests/
-│           └── test.sh # 임시 환경에서 실행하는 설치기 테스트
-├── scripts/
-│   └── version.sh    # 제품 버전 형식 검증과 파일 읽기
-├── language/
-│   ├── ko/
-│   │   ├── README.md       # 한국어 제품 소개, 구성과 개발 방향
-│   │   └── CONTRIBUTING.md # 한국어 개발 준비, 검증과 기여 절차
-│   └── jp/
-│       ├── README.md       # 일본어 제품 소개, 구성과 개발 방향
-│       └── CONTRIBUTING.md # 일본어 개발 준비, 검증과 기여 절차
-├── README.md         # 영문 제품 소개, 구성과 개발 방향
-├── CONTRIBUTING.md   # 영문 개발 준비, 검증과 기여 절차
-├── VERSION           # 제품 버전의 단일 관리 지점
-└── LICENSE           # MIT 라이선스
+```bash
+gh auth login
 ```
 
-### 구성 요소의 역할
+</details>
 
-[messages.sh](../../installers/macos/messages.sh)는 설치기와 테스트가 공유하는 영문 안내, 경고, 오류, 도움말과 터미널 출력 형식의 단일 관리 지점(SSOT)입니다. 실패 판단, 설치 중단과 종료 코드는 `install.sh`와 `tools.sh`에서 담당합니다.
+### 미리보기와 상태 확인
 
-[build.sh](../../installers/macos/build.sh)는 실행 소스와 MIT 라이선스를 `dist/shelter-lite-macos.sh` 하나로 묶습니다. 생성 파일에도 같은 메시지와 설치 로직을 포함하며, 수정은 원본에서 하고 다시 생성합니다. 같은 실행 파일을 `Shelter Lite.command`라는 이름으로 `dist/shelter-lite-macos.zip`에 담아 터미널에서 열 수 있게 제공합니다.
+압축을 푼 `Shelter Lite.command`를 보관하세요. 새 터미널에서 해당 파일이 있는 폴더로 이동합니다. 아래 예시는 다운로드 폴더 바로 아래에 파일이 있다고 가정합니다. 다른 곳에 풀었다면 경로를 바꾸세요. 각 명령은 독립적이며, 도구 설치나 설정 변경을 하지 않습니다.
 
-라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
+```bash
+cd ~/Downloads
+/bin/bash "Shelter Lite.command" --dry-run
+/bin/bash "Shelter Lite.command" --check
+echo $?
+/bin/bash "Shelter Lite.command" --version
+/bin/bash "Shelter Lite.command" --help
+```
 
-정식 CLI 본체의 예정 위치인 `src/shelter/`는 Python 구현을 시작할 때 추가합니다. 웹사이트와 수집 서비스, 공통 데이터 규격의 구조는 연동 범위가 정해지면 검토하며, 현재 설치기 구조에 포함하지 않습니다.
-공통 코드나 도구별 처리가 실제로 커질 때 파일을 분리합니다. 릴리스 workflow는 해당 버전을 검증하고 패키징하며, 추가 검사와 상세 문서는 기능에 맞춰 확장합니다.
-디렉터리를 만드는 시점과 문서 갱신 절차는 [CONTRIBUTING의 디렉터리 추가와 변경](./CONTRIBUTING.md#디렉터리-추가와-변경)을 따릅니다.
+`--dry-run`은 없는 도구와 변경 예정 내용을 미리 보여줍니다. `--check`의 모든 항목이 `Installed`(설치됨)이고 바로 뒤의 `echo $?`가 `0`이면 전체 도구를 실행할 수 있습니다. 보안 취약점이나 최신 버전 여부를 검사하는 기능은 아닙니다.
 
-## 관리자
+전체 옵션은 `--help`로 확인할 수 있습니다.
 
-[@4BFC](https://github.com/4BFC)
+단일 파일을 내려받았다면 해당 폴더에서 `/bin/bash shelter-lite-macos.sh`에 같은 옵션을 붙여 실행합니다. 두 파일 모두 옵션 없이 실행하면 설치를 시작합니다.
 
-## 기여
+## 문서
 
-문서 개선, 기능 제안과 Pull Request를 환영합니다.
-질문과 제안은 [Issues](https://github.com/4BFC/shelter/issues)에 남겨 주세요. 큰 기능이나 기술 선택은 구현 전에 논의해 주세요.
-
-작업 준비, 검증과 변경 제출 기준은 [CONTRIBUTING](./CONTRIBUTING.md)을 참고하세요.
+- [기술 사양과 개발 계획](../../docs/specification.ko.md)
+- [빌드·테스트·기여 안내](./CONTRIBUTING.md)
+- [질문과 문제 제보](https://github.com/4BFC/shelter/issues)
 
 ## 라이선스
 
-[MIT](../../LICENSE) © 2026 poby
+[MIT](../../LICENSE) © 2026 poby · [@4BFC](https://github.com/4BFC)

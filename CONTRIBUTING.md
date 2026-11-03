@@ -66,16 +66,10 @@ Run all commands below from the repository root. You can inspect the plan withou
 /bin/bash installers/macos/install.sh --dry-run
 ```
 
-Start initial setup with the following command. It prepares the entire [Lite installation specification](./README.md#lite-installation-specification), with no options to select or exclude tools.
+Start initial setup with the following command. It prepares the entire [Lite installation specification](docs/specification.md#lite-installation-specification), with no options to select or exclude tools.
 
 ```bash
 /bin/bash installers/macos/install.sh
-```
-
-After setup, open Ghostty from the Applications folder or run:
-
-```bash
-open -a Ghostty
 ```
 
 An ASCII Shelter Lite logo appears once at the start of installation and `--dry-run`. The default output announces the start of initial setup and summarizes the final result as **installation complete or installation failed**, followed by a short explanation and next steps. On a Mac without Homebrew, the official initial installer's confirmation and administrator authentication prompts are shown directly in the terminal.
@@ -107,30 +101,9 @@ Both the installer and test commands still accept `--color` without a value as s
 /bin/bash installers/macos/install.sh --dry-run
 ```
 
-Version tables, individual installation results, package installer output, and shell configuration changes are recorded in `${XDG_CONFIG_HOME:-$HOME/.config}/shelter/logs/install.*`. Each run creates a new log that only its owner can read and write, without color codes. Logs are kept after successful runs as well. In the log, `Not run` means a step was skipped because an earlier step failed. Use `--check` for details about current versions and executable paths.
+See [README Usage](./README.md#usage) for results and post-installation steps. See the [command reference](docs/specification.md#command-reference) for all options and exit codes. For repository checks, use `/bin/bash installers/macos/install.sh --check`.
 
-After installation, open a new terminal, enter the repository root, and check the results.
-
-```bash
-/bin/bash installers/macos/install.sh --check
-echo $?
-```
-
-If every item is marked `Installed` and the exit code is `0`, all tools can run. `--dry-run` states at the beginning and end that it makes no actual changes; it does not display actual installation results.
-
-| Option | Behavior |
-| --- | --- |
-| No options | Run the complete Lite initial setup |
-| `--dry-run` | Show the installation plan only; no downloads or configuration changes |
-| `--check` | Check whether all tools run; no downloads or configuration changes |
-| `--version`, `-V` | Show the Shelter Lite product version without changing the environment |
-| `--mode lite` | Same as the default |
-| `--mode full` | Exit with a message that it is not yet available; do not install |
-| `--color auto\|always\|never` | Automatic colors, always-on colors (default), or plain output |
-| `--color` | Force colors for this run; same as `--color always` |
-| `--help` | Show help |
-
-Exit codes are `0` for success, `1` for missing tools or execution/installation errors, `2` for invalid options or unsupported environments, and `130` for interruption with Ctrl+C. `--check` and `--dry-run` cannot be combined. A preview that successfully produces an installation plan exits with `0`, even if some tools are missing.
+Each installation log is readable and writable only by its owner and contains no color codes.
 
 ### Existing Environments and Reruns
 
@@ -140,7 +113,7 @@ Exit codes are `0` for success, `1` for missing tools or execution/installation 
 - VS Code is detected in `/Applications` or the user's `~/Applications` folder. The app is installed using [Homebrew's `--no-binaries`](https://docs.brew.sh/Manpage), preserving an existing `code` command if it belongs to Cursor or another editor. In that case, launch VS Code from the Applications folder.
 - Ghostty is detected at `/Applications/Ghostty.app` or `~/Applications/Ghostty.app`, even if the `ghostty` command is not on `PATH`. A working app is preserved; a missing app is installed with `brew install --cask ghostty`. A damaged app or a failed version check stops setup. Shelter does not change Ghostty settings, fonts, or the default terminal.
 
-Git identity and `gh auth login` are not configured automatically. An installation error stops subsequent steps; tools installed earlier remain. After resolving the error, rerun the same command to skip tools that are already ready. There is no rollback for the entire package installation. Homebrew handles dependency changes needed by newly installed packages.
+For user setup and retry steps, see [README Usage](./README.md#usage). An error stops subsequent installation; completed changes remain. Homebrew handles dependency changes needed by newly installed packages.
 
 Each `brew install` runs with environment variables that disable automatic updates, post-install cleanup, and automatic upgrades of an already installed target package. Dependency compatibility is left to Homebrew. See the [Homebrew command documentation](https://docs.brew.sh/Manpage) for the relevant behavior.
 
@@ -162,7 +135,7 @@ If you need to restore a backup, compare the original and backup paths recorded 
 
 ## Adding and Changing Directories
 
-Use [Repository Structure in the README](./README.md#repository-structure) as the reference for the overall layout and each path's responsibility.
+Use [Repository Structure in the technical specification](docs/specification.md#repository-structure) as the reference for the overall layout and each path's responsibility.
 The runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `tools.sh`, with the product version in the root `VERSION` file; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
 
 1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
@@ -174,7 +147,7 @@ The website is managed outside this repository. The layout of the collection ser
 
 When adding or changing structure, include the following documentation updates in the same change:
 
-- Reflect actual paths in the README's **Current Structure** and remaining work in **Component Responsibilities**.
+- Reflect actual paths in the technical specification's **Current Structure** and remaining work in **Component Responsibilities**.
 - Document installation, execution, and validation commands for the component in CONTRIBUTING, including the working directory.
 - Add detailed designs or separate plans to `docs/` when needed, and link them from related documents. Do not create subdirectories merely to classify future documents.
 
@@ -182,7 +155,7 @@ Installers for Lite and the full version share the same location, while the inst
 
 ## Workflow
 
-1. Read the README to understand the product direction and current implementation scope.
+1. Read the README for usage and the technical specification in `docs/` for implementation scope.
 2. Define the change and create a working branch.
 3. Update the related documentation and code together.
 4. Complete the checks below and review the diff.
@@ -198,8 +171,8 @@ Preserve work already in progress, and do not mix unrelated changes into the sam
 
 ## Writing Documentation
 
-The **README** explains the project: its introduction, purpose, product components, technical specifications, and repository structure.
-**CONTRIBUTING** explains how to change the project: installation, development, checks, commits, and distribution.
+The **README** covers the product, specifications, installation, and usage. Detailed specifications, technology choices, plans, and repository structure belong in `docs/`.
+**CONTRIBUTING** explains how to change the project: source setup, development, checks, commits, and distribution.
 
 Maintain the English README and CONTRIBUTING at the repository root, the Korean versions in `language/ko/`, and the Japanese versions in `language/jp/`, with the same content and structure. The language table at the top of each document links to the corresponding document in another language. Commands in this document are relative to the repository root.
 
@@ -337,13 +310,9 @@ Link a related issue if one exists. Do not automatically create unrelated issues
 
 ### Double-click installation
 
-1. Download `shelter-lite-macos.zip` and double-click the ZIP to extract it.
-2. Double-click the extracted `Shelter Lite.command`. Terminal opens and starts setup; Homebrew does not need to be installed beforehand.
-3. Respond to Homebrew confirmations or administrator authentication if requested. After reading the final result, press Return to finish.
+User installation steps and macOS security guidance are in [README Install](./README.md#install).
 
 The `.command` file contains the complete installer. ZIP preserves its executable permission so users do not need to type `chmod`. When launched interactively without arguments, it waits for Return before exiting, including after an installation failure. Command-line options such as `--dry-run` still work.
-
-The ZIP contains an unsigned script. Downloaded files may require macOS security confirmation; see [Apple's guidance](https://support.apple.com/en-us/102445). Browser-download, Gatekeeper, and Finder launch behavior still need real-device validation.
 
 ### Build and validate distribution files
 
@@ -375,18 +344,7 @@ Verify the checksum and run the isolated test suite against the bundled code:
 SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/macos/tests/test.sh
 ```
 
-Share the `.sh` and checksum files together. Users who save them in Downloads can verify the file and inspect the plan as follows:
-
-```bash
-cd ~/Downloads
-shasum -a 256 -c shelter-lite-macos.sh.sha256 && /bin/bash shelter-lite-macos.sh --dry-run
-```
-
-After reviewing the plan, start installation:
-
-```bash
-/bin/bash shelter-lite-macos.sh
-```
+User installation steps and macOS security guidance are in [README Install](./README.md#install).
 
 The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Homebrew distribution and a remote one-command installer remain planned.
 
