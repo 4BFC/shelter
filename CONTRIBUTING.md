@@ -346,7 +346,7 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 User installation steps and macOS security guidance are in [README Install](./README.md#install).
 
-The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check remains required before a public release. Homebrew distribution and a remote one-command installer remain planned.
+The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirements apply. The installer displays the Shelter Lite ASCII logo at the start of installation and `--dry-run`. Packaging and isolated tests do not validate a complete installation on a new Mac; that check has not been performed yet. Homebrew distribution and a remote one-command installer remain planned.
 
 ### Versioning
 
@@ -356,7 +356,7 @@ The root [VERSION](./VERSION) is the single source of truth for Shelter Lite's p
 
 During `0.x` development, this project increments PATCH for compatible fixes and MINOR for features or compatibility changes. Declare the first stable command and installation contract with `1.0.0`. After that, incompatible changes increment MAJOR, compatible features increment MINOR, and compatible fixes increment PATCH. A major or minor increment resets the lower components to zero. Release candidates use suffixes such as `0.2.0-rc.1`.
 
-1. Edit `VERSION` for the next release and record the changes in the release notes. Commit the version and implementation together; published version tags must not be moved to changed code.
+1. Edit `VERSION` for the next release. Commit the version and implementation together; published version tags must not be moved to changed code.
 2. Rebuild with `build.sh`. The `.sh` and `.command` installers embed the version, and the ZIP and `dist/VERSION` record the same value. Changing the source `VERSION` does not change already-built files.
 3. Publish a GitHub Release whose tag is exactly `v` plus `VERSION`: for `0.1.0`, use `v0.1.0`. Mark release candidates as pre-releases in GitHub. The workflow stops before building or uploading if the tag differs. It validates and packages the chosen version; it does not increment the number.
 
@@ -380,4 +380,31 @@ cat dist/VERSION
 The workflow uses the repository's built-in `GITHUB_TOKEN` with `contents: write`; no separate release token is needed. Test or build failures stop the upload. After resolving a failure, rerun the job in Actions; uploads replace assets with the same names. This workflow attaches files to an existing release and runs isolated tests, so it does not verify a full installation on a new Mac.
 
 Distinguish updating Shelter itself from Shelter updating software on the user's computer.
-Release notes should include changes, the support scope, and known constraints. Publish only after verifying installation and updates.
+### Release notes
+
+Write release notes only in the GitHub Release body; the repository keeps no separate notes file. Write them in English, like the installer messages. Start with a centered heading and a one-sentence summary. Under **New**, list only added features, grouped by platform; add a **Windows** section when Windows support ships. End with a **Download** table listing each installer file with its platform, requirements, and checksum link. File links work after the workflow finishes uploading.
+
+```markdown
+<div align="center">
+
+# `shelter-lite@v<version>` is here!
+
+<one sentence about this release>
+
+</div>
+
+## New
+
+### macOS
+
+- <added feature>
+
+## Download Shelter Lite v<version>
+
+| File | Platform | Requirements | Checksum |
+| --- | --- | --- | --- |
+| [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
+| [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+
+Installation steps: [README](https://github.com/4BFC/shelter#install)
+```

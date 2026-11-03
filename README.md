@@ -10,6 +10,7 @@
 
 Shelter sets up development tools on your Mac and checks that they run. Working tools are preserved; missing components are installed.
 
+[![Release](https://img.shields.io/github/v/release/4BFC/shelter?include_prereleases&style=flat-square)](https://github.com/4BFC/shelter/releases)
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white)
 ![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-M_series-000000?style=flat-square&logo=apple&logoColor=white)
 ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white)

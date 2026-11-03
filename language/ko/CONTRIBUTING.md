@@ -346,7 +346,7 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 사용자용 설치 단계와 macOS 보안 확인 안내는 [README 설치](./README.md#설치)를 참고하세요.
 
-지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트가 새 Mac의 전체 설치 검증을 대신하지는 않으므로 공개 릴리스 전에 해당 검증이 필요합니다. Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
+지원 조건은 기존과 같은 macOS 15 이상, 기본 Apple Silicon 환경, zsh/bash이며 실제 설치에는 인터넷 연결이 필요합니다. 설치와 `--dry-run` 시작 시 Shelter Lite ASCII 로고가 표시됩니다. 패키징과 격리 테스트는 새 Mac의 전체 설치를 검증하지 않으며, 해당 검증은 아직 진행하지 않았습니다. Homebrew 배포와 원격 단일 설치 명령은 추후 작업입니다.
 
 ### 버전 관리
 
@@ -356,7 +356,7 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 현재 `0.x` 개발 단계에서는 호환되는 수정에 PATCH를, 기능 추가나 호환성 변경에 MINOR를 올립니다. 명령과 설치 동작의 안정적인 규약을 처음 제공할 때 `1.0.0`으로 전환합니다. 이후 호환되지 않는 변경은 MAJOR, 호환되는 기능 추가는 MINOR, 호환되는 수정은 PATCH를 올립니다. MAJOR나 MINOR를 올리면 하위 숫자는 0으로 초기화합니다. 릴리스 후보는 `0.2.0-rc.1`처럼 표기합니다.
 
-1. 다음 릴리스의 `VERSION`을 수정하고 변경 내용을 릴리스 노트에 작성합니다. 버전과 구현을 함께 커밋하며, 공개한 버전의 태그를 다른 코드로 옮기지 않습니다.
+1. 다음 릴리스의 `VERSION`을 수정합니다. 버전과 구현을 함께 커밋하며, 공개한 버전의 태그를 다른 코드로 옮기지 않습니다.
 2. `build.sh`로 다시 생성합니다. `.sh`와 `.command` 내부에 버전을 고정하고, ZIP 내부와 `dist/VERSION`에도 같은 값을 기록합니다. 원본 `VERSION`을 바꿔도 이미 만든 배포 파일은 바뀌지 않습니다.
 3. `VERSION` 앞에 `v`를 붙인 태그로 GitHub 릴리스를 게시합니다. 값이 `0.1.0`이면 태그는 `v0.1.0`입니다. 릴리스 후보는 GitHub에서 사전 릴리스로 표시합니다. 태그가 다르면 workflow는 빌드와 업로드 전에 중단합니다. workflow는 지정한 버전을 검증하고 패키징하며, 버전 숫자를 자동으로 올리지는 않습니다.
 
@@ -380,4 +380,31 @@ cat dist/VERSION
 저장소 기본 `GITHUB_TOKEN`에 `contents: write` 권한을 사용하므로 별도 릴리스 토큰은 필요하지 않습니다. 테스트나 빌드에 실패하면 업로드를 중단합니다. 문제를 해결한 뒤 Actions에서 작업을 재실행할 수 있으며, 같은 이름의 첨부 파일은 교체합니다. 기존 릴리스에 파일을 첨부하고 격리된 테스트를 실행하는 방식이므로, 새 Mac의 전체 설치 검증을 대신하지는 않습니다.
 
 Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프트웨어를 업데이트하는 동작을 구분합니다.
-릴리스 안내에는 변경 내용, 지원 범위와 확인된 제약을 함께 기록하고, 설치와 업데이트를 검증한 후 공개합니다.
+### 릴리스 노트
+
+릴리스 노트는 GitHub 릴리스 본문에만 작성하고, 저장소에는 별도 노트 파일을 두지 않습니다. 설치 프로그램 메시지와 같이 영어로 작성합니다. 맨 위에는 가운데 정렬한 제목과 한 문장 소개를 둡니다. **New** 아래에는 추가된 기능만 플랫폼별로 적고, Windows 지원이 추가되면 **Windows** 섹션을 더합니다. 마지막에는 설치 파일마다 플랫폼, 요구 사항과 체크섬 링크를 적은 **Download** 표를 둡니다. 파일 링크는 workflow가 업로드를 마친 뒤 동작합니다.
+
+```markdown
+<div align="center">
+
+# `shelter-lite@v<version>` is here!
+
+<one sentence about this release>
+
+</div>
+
+## New
+
+### macOS
+
+- <added feature>
+
+## Download Shelter Lite v<version>
+
+| File | Platform | Requirements | Checksum |
+| --- | --- | --- | --- |
+| [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
+| [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+
+Installation steps: [README](https://github.com/4BFC/shelter#install)
+```

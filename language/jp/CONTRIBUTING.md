@@ -346,7 +346,7 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 ユーザー向けのインストール手順とmacOSのセキュリティ確認は[READMEのインストール](./README.md#インストール)を参照してください。
 
-対応条件は従来と同じmacOS 15以降、ネイティブApple Silicon環境、zsh/bashで、実際のインストールにはインターネット接続が必要です。インストールと`--dry-run`の開始時にShelter LiteのASCIIロゴを表示します。パッケージングと隔離テストは新しいMacでの全体のインストール検証に代わるものではなく、公開リリース前にその検証が必要です。Homebrewでの配布とリモートから1つのコマンドでインストールする方法は今後の作業です。
+対応条件は従来と同じmacOS 15以降、ネイティブApple Silicon環境、zsh/bashで、実際のインストールにはインターネット接続が必要です。インストールと`--dry-run`の開始時にShelter LiteのASCIIロゴを表示します。パッケージングと隔離テストは新しいMacでの全体のインストールを検証せず、その検証はまだ行っていません。Homebrewでの配布とリモートから1つのコマンドでインストールする方法は今後の作業です。
 
 ### バージョン管理
 
@@ -356,7 +356,7 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 `0.x`の開発段階では、互換性を保つ修正でPATCHを、機能追加や互換性の変更でMINORを上げます。コマンドとインストール動作の安定した規約を初めて提供するときに`1.0.0`へ移行します。その後は非互換の変更でMAJOR、互換性のある機能追加でMINOR、互換性のある修正でPATCHを上げます。MAJORまたはMINORを上げると下位の数値を0に戻します。リリース候補は`0.2.0-rc.1`のように表記します。
 
-1. 次のリリース用に`VERSION`を編集し、リリースノートに変更内容を記載します。バージョンと実装を一緒にコミットし、公開済みバージョンのタグを変更後のコードへ移動しないでください。
+1. 次のリリース用に`VERSION`を編集します。バージョンと実装を一緒にコミットし、公開済みバージョンのタグを変更後のコードへ移動しないでください。
 2. `build.sh`で再生成します。`.sh`と`.command`内にバージョンを固定し、ZIP内と`dist/VERSION`にも同じ値を記録します。元の`VERSION`を編集しても生成済みの配布ファイルは変わりません。
 3. `VERSION`の前に`v`を付けたタグでGitHubリリースを公開します。`0.1.0`なら`v0.1.0`です。リリース候補はGitHubでプレリリースに設定します。タグが異なる場合はビルドとアップロードの前にworkflowを停止します。workflowは指定したバージョンを検証してパッケージングし、バージョン番号は自動で上げません。
 
@@ -380,4 +380,31 @@ cat dist/VERSION
 リポジトリの標準`GITHUB_TOKEN`に`contents: write`権限を使用するため、別のリリース用トークンは不要です。テストやビルドが失敗した場合はアップロードを中断します。問題を解決した後、Actionsでジョブを再実行できます。同名の添付ファイルは置き換えます。既存のリリースにファイルを添付し、隔離されたテストを実行する方式のため、新しいMacでの全体のインストール検証に代わるものではありません。
 
 Shelter自体を更新する手順と、ShelterがユーザーのPCのソフトウェアを更新する動作を区別します。
-リリース案内には変更内容、サポート範囲、確認済みの制約を記載し、インストールと更新を検証してから公開します。
+### リリースノート
+
+リリースノートはGitHubリリースの本文にのみ記載し、リポジトリには別のノートファイルを置きません。インストーラーのメッセージと同じく英語で記載します。冒頭には中央揃えの見出しと1文の紹介を置きます。**New**の下には追加された機能のみをプラットフォーム別に記載し、Windows対応が追加されたら**Windows**セクションを加えます。最後に、インストールファイルごとにプラットフォーム、要件、チェックサムへのリンクを記載した**Download**表を置きます。ファイルへのリンクはworkflowのアップロード完了後に有効になります。
+
+```markdown
+<div align="center">
+
+# `shelter-lite@v<version>` is here!
+
+<one sentence about this release>
+
+</div>
+
+## New
+
+### macOS
+
+- <added feature>
+
+## Download Shelter Lite v<version>
+
+| File | Platform | Requirements | Checksum |
+| --- | --- | --- | --- |
+| [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
+| [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+
+Installation steps: [README](https://github.com/4BFC/shelter#install)
+```
