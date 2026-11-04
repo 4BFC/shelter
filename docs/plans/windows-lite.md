@@ -43,9 +43,11 @@ Logs and user PATH JSON backups live under `%LOCALAPPDATA%\Shelter\logs` with in
 
 Local checks on the macOS development machine use a checksum-verified temporary PowerShell 7 runtime. They validate logic and packaging but do not establish Windows PowerShell 5.1 or Windows device behavior. No actual tool installation has been performed by these tests.
 
+On 2026-11-04, [CI run 41794242682](https://github.com/4BFC/shelter/actions/runs/41794242682) passed for implementation commit `39831051c61e6b041ea8dd5f93c5206ecb9e298f`: macOS passed 34 tests against both source and extracted ZIP, and Windows PowerShell 5.1 passed 35 tests against each. Both builds passed checksum and embedded-version checks; Windows also verified the `.cmd` launcher's version output and failure exit code. These remain mocked installation tests on hosted runners, not clean Windows 11 setup acceptance.
+
 ## Clean-device acceptance before publishing v0.2.0
 
-- [ ] Run the Windows PowerShell 5.1 CI source and extracted-ZIP suites successfully.
+- [x] Run the Windows PowerShell 5.1 CI source and extracted-ZIP suites successfully (35 tests each; CI run linked above).
 - [ ] Download and extract the ZIP on Windows 11 x64, test unsigned-file warnings, double-click from a path with spaces, and confirm completion/failure remains visible.
 - [ ] Test a new account with and without App Installer/WinGet. Exercise PowerShell Gallery bootstrap, network failure, restricted policy, canceled UAC, and retry behavior.
 - [ ] Install the full tool set, reopen terminal/editor, and run every version check. Verify that existing Node/version-manager, Python, VS Code/Cursor, and Git setups retain their priority.
