@@ -119,12 +119,12 @@ shelter/
 ├── language/
 │   ├── ko/
 │   │   ├── README.md       # 韓国語のインストールと使い方
-│   │   └── CONTRIBUTING.md # 韓国語の開発準備、検証、貢献手順
+│   │   └── CONTRIBUTING.md # 韓国語のメンテナー向け開発、リリースガイド
 │   └── jp/
 │       ├── README.md       # 日本語のインストールと使い方
-│       └── CONTRIBUTING.md # 日本語の開発準備、検証、貢献手順
+│       └── CONTRIBUTING.md # 日本語のメンテナー向け開発、リリースガイド
 ├── README.md         # 英語のインストールと使い方
-├── CONTRIBUTING.md   # 英語の開発準備、検証、貢献手順
+├── CONTRIBUTING.md   # 英語のメンテナー向け開発、リリースガイド
 ├── VERSION           # 製品バージョンの単一管理元
 └── LICENSE           # MITライセンス
 ```

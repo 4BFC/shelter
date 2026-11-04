@@ -119,12 +119,12 @@ shelter/
 ├── language/
 │   ├── ko/
 │   │   ├── README.md       # Korean installation and usage
-│   │   └── CONTRIBUTING.md # Korean setup, validation, and contribution guide
+│   │   └── CONTRIBUTING.md # Korean maintainer guide for development and releases
 │   └── jp/
 │       ├── README.md       # Japanese installation and usage
-│       └── CONTRIBUTING.md # Japanese setup, validation, and contribution guide
+│       └── CONTRIBUTING.md # Japanese maintainer guide for development and releases
 ├── README.md         # English installation and usage
-├── CONTRIBUTING.md   # English setup, validation, and contribution guide
+├── CONTRIBUTING.md   # English maintainer guide for development and releases
 ├── VERSION           # Product version, source of truth
 └── LICENSE           # MIT license
 ```

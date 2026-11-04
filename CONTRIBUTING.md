@@ -1,32 +1,33 @@
-# Contributing
+# Development and Maintenance
 
 | English | 한국어 | 日本語 |
 | --- | --- | --- |
 | **Current** | [한국어](./language/ko/CONTRIBUTING.md) | [日本語](./language/jp/CONTRIBUTING.md) |
 
-This guide explains how to improve Shelter's documentation and contribute to its development.
+This guide covers development, documentation, validation, and releases for Shelter's maintainer.
 See the [README](./README.md) for the project's purpose, components, and technical direction.
 
 Shelter Lite for macOS, isolated tests, script and double-click ZIP packaging, and automated release builds are available. The full CLI is not yet ready.
 
 ## Table of Contents
 
-- [Questions and Suggestions](#questions-and-suggestions)
+- [Contribution Policy](#contribution-policy)
 - [Development Setup](#development-setup)
 - [Running Lite](#running-lite)
 - [Adding and Changing Directories](#adding-and-changing-directories)
 - [Workflow](#workflow)
 - [Writing Documentation](#writing-documentation)
 - [Implementation and Validation](#implementation-and-validation)
-- [Commits and Pull Requests](#commits-and-pull-requests)
+- [Commits and Publishing](#commits-and-publishing)
 - [Distribution](#distribution)
 
-## Questions and Suggestions
+## Contribution Policy
 
-Use [Issues](https://github.com/4BFC/shelter/issues) for questions, bug reports, and feature suggestions.
-Documentation changes and pull requests are welcome. Before implementation, agree on the scope with the maintainer for technology choices, additional operating systems, and major features.
+Shelter currently does not accept external pull requests or issues; both features are disabled. Development decisions and releases are managed by the maintainer, who holds write access to the repository.
 
-Include the following in a proposal:
+The software remains available under the [MIT license](./LICENSE). This contribution policy does not restrict the use, modification, or redistribution permitted by that license.
+
+Before implementation, the maintainer defines the scope of technology choices, additional operating systems, and major features, and records:
 
 - Which users encounter the problem and in what situation
 - The expected behavior and how it differs from the current behavior
@@ -159,7 +160,7 @@ Installers for Lite and the full version share the same location, while the inst
 2. Define the change and create a working branch.
 3. Update the related documentation and code together.
 4. Complete the checks below and review the diff.
-5. Submit a pull request explaining the purpose of the change and validation results.
+5. Record the purpose of the change and validation results, then commit and push with the maintainer's approval.
 
 The following is an example branch name. If it already exists, use another name appropriate for the work.
 
@@ -172,7 +173,7 @@ Preserve work already in progress, and do not mix unrelated changes into the sam
 ## Writing Documentation
 
 The **README** covers the product, specifications, installation, and usage. Detailed specifications, technology choices, plans, and repository structure belong in `docs/`.
-**CONTRIBUTING** explains how to change the project: source setup, development, checks, commits, and distribution.
+**CONTRIBUTING** is the maintainer guide for source setup, development, checks, commits, and distribution, including the current contribution policy.
 
 Maintain the English README and CONTRIBUTING at the repository root, the Korean versions in `language/ko/`, and the Japanese versions in `language/jp/`, with the same content and structure. The language table at the top of each document links to the corresponding document in another language. Commands in this document are relative to the repository root.
 
@@ -288,23 +289,23 @@ The release workflow runs Bash syntax checks and isolated installer tests. Add f
 Run tests that change computer settings in temporary directories or isolated environments. Do not assume automatic updates are the default before the update policy is defined.
 Distinguish installing a new version from switching a running program to it. Do not report a state that still requires a restart as complete.
 
-## Commits and Pull Requests
+## Commits and Publishing
 
 Before committing, inspect the changed files and diff, and include only the files needed for the change.
-Keep commit messages short and specific. For example: `docs: add Shelter introduction and contribution guide`.
+Keep commit messages short and specific. For example: `docs: clarify Shelter maintenance policy`.
 
 When working with AI tools, review the diff first. Do not stage or commit without an explicit instruction from the user, and do not add `Co-Authored-By` to commits.
 
 Personal Claude/Codex directories (`.claude/`, `.codex/`, `.agents/`), Claude state files (`.claude.json*`), local instruction overrides (`CLAUDE.local.md`, `AGENTS.local.md`, `AGENTS.override.md`), and `.mcp.local.json` are excluded by `.gitignore`. Keep personal paths and credentials in those local files. Shared project instructions in `CLAUDE.md` and `AGENTS.md` can be tracked.
 
-Include the following in a pull request:
+Before publishing, record the following in the change summary:
 
 - The problem being solved and the resulting behavior
 - Commands checked, their results, and validation that could not be performed
 - Constraints or follow-up work that users should know about
 
 For documentation changes, report link and preview checks. For functional changes, provide reproducible validation results.
-Link a related issue if one exists. Do not automatically create unrelated issues or separate pull requests outside the contribution's scope.
+Publish only the changes approved by the maintainer. External pull requests and issues are not part of this workflow.
 
 ## Distribution
 
