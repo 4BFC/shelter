@@ -26,7 +26,6 @@ Shelter sets up development tools on your Mac and checks that they run. Working 
 - [Install](#install)
 - [Usage](#usage)
 - [Contribution policy](#contribution-policy)
-- [Documentation](#documentation)
 - [License](#license)
 
 ## Specifications
@@ -126,11 +125,6 @@ For the standalone download, use `/bin/bash shelter-lite-macos.sh` in its folder
 ## Contribution policy
 
 Shelter currently does not accept external pull requests or issues; both features are disabled. Development and releases are managed by the maintainer. Use, modification, and redistribution of the software are governed by the [MIT license](./LICENSE).
-
-## Documentation
-
-- [Technical specification and development plans](docs/specification.md)
-- [Maintainer guide: development, testing, and releases](./CONTRIBUTING.md)
 
 ## License
 
