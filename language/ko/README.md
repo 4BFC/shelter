@@ -33,10 +33,13 @@ Shelter는 macOS와 Windows에 개발 도구를 설치하고 실행 상태를 �
 
 | 구성 | 기술 | 설명 |
 | --- | --- | --- |
-| 운영체제 | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
-| 설치기 | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS에 포함된 Bash로 실행 |
-| 패키지 관리 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 개발 도구 설치 |
-| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 기본 x64 환경, Windows PowerShell 5.1, WinGet |
+| 제품 버전 | [VERSION](../../VERSION) | 두 설치기가 공유하는 소스 버전, 릴리스 배지는 게시된 버전 표시 |
+| macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
+| macOS 설치기 | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS에 포함된 Bash로 실행 |
+| macOS 패키지 관리 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 개발 도구 설치 |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 기본 x64 환경 |
+| Windows 설치기 | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Windows에 포함된 Desktop 에디션으로 실행 |
+| Windows 패키지 관리 | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | 없는 경우 먼저 준비한 뒤 도구 설치 |
 | CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 검토 중, 버전 미정 |
 | CLI 개발 도구 | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 검토 중, 버전 미정 |
 
@@ -77,7 +80,7 @@ shasum -a 256 -c shelter-lite-macos.zip.sha256
 
 ### Windows 내려받기와 실행
 
-Windows는 `0.2.0`부터 지원합니다. 해당 파일을 포함한 릴리스에서 `shelter-lite-windows.zip`을 내려받으세요. 배포 파일은 릴리스 workflow가 성공한 뒤 제공됩니다.
+Windows 지원은 소스 버전 `0.2.0`에 구현되어 있습니다. 저장소 변경과 CI 빌드는 릴리스 게시보다 앞설 수 있습니다. **Assets**에 `shelter-lite-windows.zip`이 있는 릴리스에서만 내려받으세요. 배포 파일은 릴리스 게시와 workflow 성공 후 제공됩니다.
 
 - Windows 11 x64, 기본 64비트 Windows PowerShell 5.1을 사용합니다. Windows 10, Windows Server, ARM64와 32비트 프로세스는 지원하지 않습니다.
 - **관리자 권한으로 실행**하지 말고 일반 계정으로 시작합니다. 인터넷 연결이 필요하며, 개별 패키지의 UAC 인증 요청에 응답합니다. 조직 정책에 따라 설치가 제한될 수 있습니다.

@@ -33,10 +33,13 @@ ShelterはmacOSとWindowsに開発ツールをインストールし、実行状�
 
 | 構成 | 技術 | 説明 |
 | --- | --- | --- |
-| OS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon、zsh/bash |
-| インストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS標準のBashで実行 |
-| パッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 開発ツールのインストール |
-| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | ネイティブx64、Windows PowerShell 5.1、WinGet |
+| 製品バージョン | [VERSION](../../VERSION) | 両インストーラーで共有するソースバージョン。リリースバッジは公開済みバージョンを表示 |
+| macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon、zsh/bash |
+| macOSインストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS標準のBashで実行 |
+| macOSパッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 開発ツールのインストール |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | ネイティブx64 |
+| Windowsインストーラー | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Windows標準のDesktopエディションで実行 |
+| Windowsパッケージ管理 | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | 未導入の場合は先に準備してからツールを導入 |
 | CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 検討中。バージョン未定 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 検討中。バージョン未定 |
 
@@ -77,7 +80,7 @@ shasum -a 256 -c shelter-lite-macos.zip.sha256
 
 ### Windowsでのダウンロードと実行
 
-Windowsは`0.2.0`から対応します。該当ファイルを含むリリースから`shelter-lite-windows.zip`をダウンロードしてください。配布ファイルはリリースworkflowの成功後に利用できます。
+Windows対応はソースバージョン`0.2.0`に実装しています。リポジトリの変更とCIビルドはリリース公開より先になる場合があります。**Assets**に`shelter-lite-windows.zip`があるリリースからダウンロードしてください。配布ファイルはリリース公開とworkflowの成功後に利用できます。
 
 - Windows 11 x64、ネイティブ64ビットのWindows PowerShell 5.1を使用します。Windows 10、Windows Server、ARM64、32ビットプロセスは対象外です。
 - **管理者として実行**せず、通常のアカウントで起動します。インターネット接続が必要です。個別パッケージのUAC認証要求に応答してください。組織のポリシーでインストールが制限される場合があります。

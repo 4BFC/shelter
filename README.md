@@ -33,10 +33,13 @@ Shelter sets up development tools on macOS and Windows and checks that they run.
 
 | Component | Technology | Details |
 | --- | --- | --- |
-| Operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
-| Installer | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Runs with the Bash included in macOS |
-| Package management | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Installs development tools |
-| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Native x64, Windows PowerShell 5.1, WinGet |
+| Product version | [VERSION](./VERSION) | Shared by both installers; the release badge shows published releases |
+| macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
+| macOS installer | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Runs with the Bash included in macOS |
+| macOS package manager | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Installs development tools |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Native x64 |
+| Windows installer | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Uses the Windows built-in Desktop edition |
+| Windows package manager | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | Prepares missing WinGet before installing tools |
 | CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Under consideration; version undecided |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Under consideration; versions undecided |
 
@@ -77,7 +80,7 @@ Continue only if the result is `shelter-lite-macos.zip: OK`. On a mismatch, down
 
 ### Windows download and run
 
-Windows support starts with `0.2.0`. Download `shelter-lite-windows.zip` from a release that contains it; assets become available after the release workflow succeeds.
+Windows support is implemented in the `0.2.0` source version. Repository changes and CI builds can precede a published release. Download `shelter-lite-windows.zip` only from a release that lists it under **Assets**; files become available after publication and a successful release workflow.
 
 - Windows 11 x64 with native Windows PowerShell 5.1. Windows 10, Windows Server, ARM64, and 32-bit processes are not supported.
 - Use your regular account, without **Run as administrator**. Internet access is required; approve individual package UAC prompts when requested. Organization policies may prevent installation.

@@ -48,9 +48,9 @@ cd shelter
 git status --short
 ```
 
-Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고, 터미널에서 해당 폴더로 이동합니다. `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION` 파일을 포함한 저장소 구조를 유지해야 합니다.
+macOS나 Windows에 Git이 없다면 GitHub의 **Code → Download ZIP**으로 전체 소스를 받아 압축을 풀고 루트 디렉터리로 이동합니다. 루트 `VERSION`, `scripts/`와 해당 플랫폼의 `installers/macos/` 또는 `installers/windows/`를 함께 유지하세요.
 
-단일 배포 파일은 이 네 스크립트와 제품 버전을 내부에 포함합니다. 생성과 실행 방법은 [배포](#배포)를 참고하세요.
+각 단일 설치 파일은 필요한 실행 모듈과 제품 버전을 내부에 포함합니다. 패키징은 [배포](#배포), Windows 명령은 [Windows 라이트](#windows-라이트)를 참고하세요.
 
 ### 실행 환경
 
@@ -161,10 +161,26 @@ WinGet이 없으면 PowerShell Gallery를 통한 공식 현재 사용자용 `Mic
 
 실행기는 프로필 없이 기본 64비트 Windows PowerShell을 시작하고, 현재 프로세스에만 실행 정책을 지정합니다. 종료 코드를 유지하고 인자 없이 실행했을 때만 창을 대기시킵니다. 조직 정책은 우회하지 않습니다. 스크립트는 서명되지 않았습니다. 격리 테스트만으로 SmartScreen, App Installer 복구, UAC와 깨끗한 Windows 11 PC의 전체 설치가 검증되지는 않습니다. `v0.2.0`을 게시하기 전에 실기기 검증 항목을 완료하세요.
 
+### Mac에서 Windows 동작 테스트
+
+[Microsoft의 설치 또는 바이너리 압축 안내](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-macos)에 따라 macOS용 PowerShell 7을 준비합니다. 저장소 루트에서 다음 명령을 실행합니다. `pwsh`가 PATH에 있어야 하며, 압축만 풀었다면 `pwsh` 대신 실행 파일의 전체 경로를 따옴표로 감싸 사용하세요. 이전 세션의 임시 경로는 영구 실행 환경이 아닙니다.
+
+```bash
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Color never
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Preview warning
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install success
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install failure
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install dry-run
+```
+
+Windows 환경, 패키지 설치, 레지스트리 접근과 로그 권한을 모의 처리하고 임시 파일만 사용하므로 도구 설치나 사용자 설정 변경을 하지 않습니다. `-Install failure`는 예상한 설치 실패를 확인하면 테스트 종료 코드 `0`을 반환합니다. 메시지 미리보기는 해당 상태의 표현만 표시합니다.
+
+여기서는 Mac의 PowerShell 7로 로직을 확인합니다. 실제 Windows 설치 대상은 Windows PowerShell 5.1입니다. WinGet 준비, UAC, Windows 권한과 `.cmd` 실행은 Windows 검증이 필요하며, macOS에서 `install.ps1`을 직접 실행하면 미지원 환경으로 종료합니다.
+
 ## 디렉터리 추가와 변경
 
 전체 배치와 각 경로의 책임은 [기술 사양의 저장소 구조](../../docs/specification.ko.md#저장소-구조)를 기준으로 합니다.
-실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION`으로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
+macOS 실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`와 루트 `VERSION`으로 구성하며, `build.sh`로 패키징하고 `tests/test.sh`로 원본과 단일 배포 파일을 검증합니다. `dist/`는 생성 결과를 담으며 Git 관리에서 제외합니다. 이후 경로는 해당 기능을 구현할 때 필요한 만큼 추가합니다.
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
 2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
@@ -284,7 +300,18 @@ done
 /bin/bash installers/macos/install.sh --check
 ```
 
-새 Mac에서 실제 다운로드와 설치가 끝나는지, Ghostty, 새 터미널과 VS Code에서 도구를 실행할 수 있는지, 재실행 때 설치와 설정이 중복되지 않는지 별도로 검증합니다. **현재 검증은 임시 환경 테스트와 macOS 26.6.2의 읽기 전용 실행까지입니다. 실제 초기 설치 전체를 검증하지는 않았습니다.**
+새 Mac에서 실제 다운로드와 설치가 끝나는지, Ghostty, 새 터미널과 VS Code에서 도구를 실행할 수 있는지, 재실행 때 설치와 설정이 중복되지 않는지 별도로 검증합니다. **실기기 확인은 macOS 26.6.2의 읽기 전용 실행까지입니다. CI 검증 범위는 아래에 정리하며, 깨끗한 환경의 전체 설치는 아직 검증하지 않았습니다.**
+
+### 확인된 CI 검증 범위
+
+`0.2.0` 구현은 2026-11-04의 [CI 실행 41794242682](https://github.com/4BFC/shelter/actions/runs/41794242682)를 통과했습니다. 각 행은 플랫폼과 테스트 실행 환경을 구분하며, 원본과 압축 해제한 ZIP에 같은 테스트를 각각 실행한 결과입니다.
+
+| 플랫폼 | 원본 테스트 | ZIP 테스트 | 실행 환경 |
+| --- | --- | --- | --- |
+| macOS | 34개 통과 | 34개 통과 | macOS 15 runner, 기본 Bash |
+| Windows | 35개 통과 | 35개 통과 | Windows 2025 runner, Windows PowerShell 5.1 |
+
+체크섬, 포함된 버전과 Windows `.cmd` 실행기의 버전 출력, 실패 종료 코드도 확인했습니다. 패키지 설치와 사용자 설정 변경은 모의 처리했습니다. Windows Server runner 사용이 Windows Server 설치 지원을 뜻하지는 않습니다. 깨끗한 Windows 11의 설치, WinGet 복구, UAC와 내려받은 파일의 보안 경고는 [실기기 검증 목록](../../docs/plans/windows-lite.md#clean-device-acceptance-before-publishing-v020)에 남아 있습니다.
 
 ### 문서와 diff 검증
 
@@ -378,7 +405,9 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 ### 버전 관리
 
-공통 함수인 [scripts/version.sh](../../scripts/version.sh)는 설치기에 의존하지 않고 버전 데이터를 읽고 검증합니다. 오류 표시 방식은 이를 호출하는 쪽에서 결정합니다.
+플랫폼별 공통 함수인 [scripts/version.sh](../../scripts/version.sh)와 [scripts/version.ps1](../../scripts/version.ps1)은 설치기에 의존하지 않고 같은 제품 버전 데이터를 읽고 검증합니다. 오류 표시 방식은 이를 호출하는 쪽에서 결정합니다.
+
+`VERSION` 수정, 파일 빌드와 소스 push만으로 릴리스가 게시되거나 태그가 생성되지는 않습니다. 먼저 소스와 파일을 준비하고 검증합니다. 태그 선택과 GitHub 릴리스 게시는 관리자가 별도로 진행하며, 준비 단계에서 로컬 태그 생성 명령은 필요하지 않습니다.
 
 루트 [VERSION](../../VERSION)을 Shelter Lite 제품 버전의 단일 관리 지점으로 사용합니다. [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) 형식으로 앞의 `v` 없이 기록합니다. 예시는 `0.1.0`, `0.2.0-rc.1`이며, 사전 버전 식별자와 선택적인 `+build.metadata`도 SemVer 문법을 따릅니다.
 

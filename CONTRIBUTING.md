@@ -48,9 +48,9 @@ cd shelter
 git status --short
 ```
 
-On a new Mac without Git, use **Code → Download ZIP** on GitHub to download the full source, extract it, and enter the extracted folder in your terminal. Keep the repository layout, including `install.sh`, `messages.sh`, `scripts/version.sh`, `tools.sh`, and the root `VERSION` file.
+Without Git on macOS or Windows, use **Code → Download ZIP** on GitHub, extract the full source, and enter its root directory. Keep the root `VERSION`, `scripts/`, and the relevant `installers/macos/` or `installers/windows/` directory together.
 
-The standalone distribution file embeds these four scripts and the product version; see [Distribution](#distribution) for how to build and use it.
+Each standalone installer embeds its runtime modules and product version; see [Distribution](#distribution) for packaging and [Windows Lite](#windows-lite) for Windows commands.
 
 ### Runtime Environment
 
@@ -161,10 +161,26 @@ The build produces `shelter-lite-windows.ps1`, `shelter-lite-windows.zip`, their
 
 The launcher starts native Windows PowerShell without profiles and with a process-only execution-policy override. It preserves exit codes and pauses only when no arguments are supplied. It does not bypass managed policies. Scripts are unsigned. Tests do not establish that SmartScreen, App Installer repair, UAC, or a clean Windows 11 installation work on every device; complete the acceptance checks before publishing `v0.2.0`.
 
+### Test Windows behavior on macOS
+
+Prepare PowerShell 7 for macOS using [Microsoft's installation or binary-archive instructions](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-macos). Run the commands below from the repository root. `pwsh` must be on your PATH; if you extracted a portable archive, replace `pwsh` with the quoted full path to its executable. Temporary paths from an earlier session are not a permanent setup.
+
+```bash
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Color never
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Preview warning
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install success
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install failure
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install dry-run
+```
+
+These tests mock Windows, package installation, registry access, and log permissions; they use temporary files and do not install tools or modify user settings. `-Install failure` returns test exit code `0` when the expected installer failure is observed. A message preview displays only that message state.
+
+PowerShell 7 is used here to test logic on the Mac. The actual Windows installer still requires Windows PowerShell 5.1. WinGet bootstrap, UAC, Windows permissions, and `.cmd` execution need Windows validation; direct execution of `install.ps1` on macOS is rejected.
+
 ## Adding and Changing Directories
 
 Use [Repository Structure in the technical specification](docs/specification.md#repository-structure) as the reference for the overall layout and each path's responsibility.
-The runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `tools.sh`, with the product version in the root `VERSION` file; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
+The macOS runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `tools.sh`, with the product version in the root `VERSION` file; `build.sh` packages them, and `tests/test.sh` validates the source and standalone installer. `dist/` contains generated output and is excluded from Git. Add further paths only as their functionality is implemented.
 
 1. **Manage the Lite installation workflow.** Keep environment checks, the fixed specification, and installation order in `installers/macos/install.sh`. Keep tool-specific checks, installation, and shell configuration functions in `tools.sh`. Consider separate `lib/`, `tools/`, or `profiles/` directories only when a real need to split them arises.
 2. **Connect installation of the full version.** When the full CLI and its distribution artifacts are ready, add its workflow to the same `install.sh` under `full` mode and reuse the tool installation functions. Currently, that mode exits after a message that it is not yet available.
@@ -284,7 +300,18 @@ On a supported Mac, also check these read-only commands:
 /bin/bash installers/macos/install.sh --check
 ```
 
-Separately verify that actual downloads and installation finish on a new Mac, that tools run in Ghostty, a new terminal, and VS Code, and that reruns do not duplicate installations or configuration. **Validation currently covers tests in temporary environments and read-only execution on macOS 26.6.2. The complete real initial installation has not been verified.**
+Separately verify that actual downloads and installation finish on a new Mac, that tools run in Ghostty, a new terminal, and VS Code, and that reruns do not duplicate installations or configuration. **Real-device checks cover read-only execution on macOS 26.6.2. Hosted-runner CI coverage is listed below; a complete fresh installation has not been verified.**
+
+### Verified CI coverage
+
+The `0.2.0` implementation passed [CI run 41794242682](https://github.com/4BFC/shelter/actions/runs/41794242682) on 2026-11-04. The rows distinguish the two platforms and their test runtimes; each count is a separate successful suite.
+
+| Platform | Source tests | Extracted ZIP tests | Runtime |
+| --- | --- | --- | --- |
+| macOS | 34 passed | 34 passed | macOS 15 runner, system Bash |
+| Windows | 35 passed | 35 passed | Windows 2025 runner, Windows PowerShell 5.1 |
+
+CI also checked checksums, embedded versions, and the Windows `.cmd` launcher's version output and failure exit code. Package installation and user-setting changes were mocked. The Windows Server runner does not make Windows Server an installation target. Clean Windows 11 setup, WinGet repair, UAC, and downloaded-file security prompts remain on the [acceptance checklist](./docs/plans/windows-lite.md#clean-device-acceptance-before-publishing-v020).
 
 ### Documentation and Diff Checks
 
@@ -378,7 +405,9 @@ The same macOS 15+, native Apple Silicon, zsh/bash support and internet requirem
 
 ### Versioning
 
-The shared functions in [scripts/version.sh](./scripts/version.sh) read and validate product metadata without depending on the installer. Callers choose how to display errors.
+The native helpers [scripts/version.sh](./scripts/version.sh) and [scripts/version.ps1](./scripts/version.ps1) read and validate the same product metadata without depending on the installer. Callers choose how to display errors.
+
+Editing `VERSION`, building files, or pushing source changes does not publish a release or create a tag. Prepare and validate the sources and files first; tag selection and GitHub Release publication are separate maintainer actions. No local tag command is required during preparation.
 
 The root [VERSION](./VERSION) is the single source of truth for Shelter Lite's product version. Use [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) without the leading `v`, for example `0.1.0` or `0.2.0-rc.1`. Supported prerelease identifiers and optional `+build.metadata` follow SemVer syntax.
 

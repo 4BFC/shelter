@@ -48,9 +48,9 @@ cd shelter
 git status --short
 ```
 
-Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP**からソース全体を取得して展開し、ターミナルでそのフォルダーに移動してください。`install.sh`、`messages.sh`、`scripts/version.sh`、`tools.sh`とルートの`VERSION`を含むリポジトリの構造を維持してください。
+macOSまたはWindowsにGitがない場合は、GitHubの**Code → Download ZIP**でソース全体を取得して展開し、ルートディレクトリへ移動します。ルートの`VERSION`、`scripts/`、対象OSの`installers/macos/`または`installers/windows/`を一緒に保持してください。
 
-単一配布ファイルには、この4つのスクリプトと製品バージョンが内部に含まれます。生成と実行の方法は[配布](#配布)を参照してください。
+各単一インストーラーは必要な実行モジュールと製品バージョンを内部に含みます。パッケージングは[配布](#配布)、Windowsコマンドは[Windowsライト版](#windowsライト版)を参照してください。
 
 ### 実行環境
 
@@ -161,10 +161,26 @@ WinGetがない場合はPowerShell Gallery経由の公式の現在のユーザ�
 
 ランチャーはプロファイルを読み込まず標準64ビットWindows PowerShellを起動し、実行ポリシーを当該プロセスだけに指定します。終了コードを保持し、引数なしの場合だけ終了時に待機します。組織のポリシーは回避しません。スクリプトは未署名です。隔離テストはSmartScreen、App Installer修復、UAC、クリーンなWindows 11 PCでの全体のインストール検証に代わるものではありません。`v0.2.0`の公開前に実機検証項目を完了してください。
 
+### MacでWindowsの動作をテスト
+
+[Microsoftのインストールまたはバイナリアーカイブ手順](https://learn.microsoft.com/en-us/powershell/scripting/install/install-powershell-on-macos)に従い、macOS用PowerShell 7を準備します。リポジトリのルートで次を実行してください。`pwsh`がPATHに必要です。アーカイブを展開した場合は、`pwsh`を引用符で囲んだ実行ファイルの絶対パスに置き換えます。以前のセッションの一時パスは永続的な実行環境ではありません。
+
+```bash
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Color never
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Preview warning
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install success
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install failure
+pwsh -NoProfile -File installers/windows/tests/test.ps1 -Install dry-run
+```
+
+Windows環境、パッケージの導入、レジストリ操作、ログ権限はモック化し、一時ファイルのみを使うため、実際のツールやユーザー設定は変更しません。`-Install failure`は想定したインストール失敗を確認するとテスト終了コード`0`を返します。メッセージのプレビューは指定した状態の表示だけを確認します。
+
+ここではMacのPowerShell 7でロジックを確認します。実際のWindowsインストーラーの対象はWindows PowerShell 5.1です。WinGetの準備、UAC、Windows権限、`.cmd`実行はWindowsでの検証が必要です。macOSで`install.ps1`を直接実行すると非対応環境として終了します。
+
 ## ディレクトリの追加と変更
 
 全体の配置と各パスの役割は、[技術仕様のリポジトリ構成](../../docs/specification.jp.md#リポジトリ構成)を基準とします。
-実行コードは`install.sh`、`messages.sh`、`scripts/version.sh`、`tools.sh`とルートの`VERSION`で構成し、`build.sh`でパッケージングします。`tests/test.sh`で元のソースと単一配布ファイルを検証します。`dist/`は生成結果を格納し、Git管理対象から除外します。以降のパスは、機能を実装する際に必要な分だけ追加します。
+macOSの実行コードは`install.sh`、`messages.sh`、`scripts/version.sh`、`tools.sh`とルートの`VERSION`で構成し、`build.sh`でパッケージングします。`tests/test.sh`で元のソースと単一配布ファイルを検証します。`dist/`は生成結果を格納し、Git管理対象から除外します。以降のパスは、機能を実装する際に必要な分だけ追加します。
 
 1. **ライト版のインストール処理を管理します。** `installers/macos/install.sh`に環境確認、固定仕様、インストール順序を置き、`tools.sh`にツールごとの状態確認、インストール、シェル設定の関数を置きます。`lib/`、`tools/`、`profiles/`などの別ディレクトリは、実際に分割が必要になったときに検討します。
 2. **正式版のインストールを接続します。** 正式版CLIと配布物が用意できたら、同じ`install.sh`の`full`モードに処理を追加し、ツールのインストール関数を再利用します。現在は準備中の案内を表示して終了します。
@@ -284,7 +300,18 @@ done
 /bin/bash installers/macos/install.sh --check
 ```
 
-新しいMacで実際のダウンロードとインストールが完了するか、Ghostty、新しいターミナル、VS Codeでツールを実行できるか、再実行時にインストールや設定が重複しないかを別途検証します。**現在の検証は、一時環境でのテストとmacOS 26.6.2での読み取り専用実行までです。実際の初期インストール全体は検証していません。**
+新しいMacで実際のダウンロードとインストールが完了するか、Ghostty、新しいターミナル、VS Codeでツールを実行できるか、再実行時にインストールや設定が重複しないかを別途検証します。**実機での確認はmacOS 26.6.2の読み取り専用実行までです。CIの検証範囲は以下に記載します。クリーン環境での全体のインストールは未検証です。**
+
+### 確認済みのCI検証範囲
+
+`0.2.0`の実装は2026-11-04の[CI実行41794242682](https://github.com/4BFC/shelter/actions/runs/41794242682)を通過しました。各行はプラットフォームとテスト環境を示し、ソースと展開したZIPに対して同じスイートを個別に実行した結果です。
+
+| プラットフォーム | ソーステスト | ZIPテスト | 実行環境 |
+| --- | --- | --- | --- |
+| macOS | 34件成功 | 34件成功 | macOS 15 runner、標準Bash |
+| Windows | 35件成功 | 35件成功 | Windows 2025 runner、Windows PowerShell 5.1 |
+
+チェックサム、埋め込みバージョン、Windowsの`.cmd`ランチャーのバージョン表示と失敗終了コードも確認しました。パッケージ導入とユーザー設定変更はモック化しています。Windows Server runnerの利用はWindows Serverへのインストール対応を意味しません。クリーンなWindows 11での導入、WinGet修復、UAC、ダウンロードファイルの警告は[実機検証一覧](../../docs/plans/windows-lite.md#clean-device-acceptance-before-publishing-v020)に残っています。
 
 ### ドキュメントとdiffの検証
 
@@ -378,7 +405,9 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 
 ### バージョン管理
 
-共通関数の[scripts/version.sh](../../scripts/version.sh)はインストーラーに依存せず、製品バージョンを読み込んで検証します。エラーの表示方法は呼び出し側で決めます。
+各環境の共通関数[scripts/version.sh](../../scripts/version.sh)と[scripts/version.ps1](../../scripts/version.ps1)はインストーラーに依存せず、同じ製品バージョンを読み込んで検証します。エラーの表示方法は呼び出し側で決めます。
+
+`VERSION`の変更、ファイルのビルド、ソースのpushだけではリリース公開やタグ作成は行われません。まずソースとファイルを準備して検証します。タグの選択とGitHubリリース公開はメンテナーが別途行います。準備段階でローカルタグ作成コマンドは不要です。
 
 ルートの[VERSION](../../VERSION)をShelter Liteの製品バージョンの単一管理元とします。[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html)の形式で、先頭の`v`を付けずに記録します。例は`0.1.0`と`0.2.0-rc.1`です。プレリリース識別子と任意の`+build.metadata`もSemVer構文に従います。
 
