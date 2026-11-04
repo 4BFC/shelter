@@ -1,0 +1,172 @@
+name: Validate Shelter Lite
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+      - scripts/**
+      - installers/**
+      - .github/workflows/**
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release-tag:
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: Build and test macOS installers
+    runs-on: macos-15
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: /bin/bash --noprofile --norc -eo pipefail {0}
+    steps:
+      - name: Check out the selected revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.release-tag || github.sha }}
+          persist-credentials: false
+
+      - name: Validate the release version
+        env:
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: |
+          source installers/macos/messages.sh
+          source scripts/version.sh
+          release_version=$(shelter_read_version VERSION) || {
+            shelter_error version_invalid VERSION; exit 1;
+          }
+          if [[ -n "$RELEASE_TAG" && "$RELEASE_TAG" != "v$release_version" ]]; then
+            shelter_error release_version_mismatch "$RELEASE_TAG" "v$release_version"
+            exit 1
+          fi
+
+      - name: Check Bash syntax
+        run: |
+          for script in scripts/*.sh installers/macos/*.sh installers/macos/tests/test.sh; do
+            /bin/bash -n "$script"
+          done
+
+      - name: Test the source installer
+        run: /bin/bash installers/macos/tests/test.sh
+
+      - name: Build distribution files
+        run: /bin/bash installers/macos/build.sh
+
+      - name: Verify checksums and test the ZIP installer
+        run: |
+          (cd dist && shasum -a 256 -c shelter-lite-macos.sh.sha256)
+          (cd dist && shasum -a 256 -c shelter-lite-macos.zip.sha256)
+          unpacked_dir=$(mktemp -d "$RUNNER_TEMP/shelter-lite.XXXXXX")
+          trap 'rm -rf "$unpacked_dir"' EXIT
+          /usr/bin/ditto -x -k dist/shelter-lite-macos.zip "$unpacked_dir"
+          test -x "$unpacked_dir/Shelter Lite.command"
+          cmp dist/shelter-lite-macos.sh "$unpacked_dir/Shelter Lite.command"
+          cmp VERSION dist/VERSION
+          cmp VERSION "$unpacked_dir/VERSION"
+          release_version=$(cat VERSION)
+          test "$(/bin/bash dist/shelter-lite-macos.sh --version)" = "Shelter Lite $release_version"
+          test "$("$unpacked_dir/Shelter Lite.command" --version)" = "Shelter Lite $release_version"
+          SHELTER_TEST_INSTALLER="$unpacked_dir/Shelter Lite.command" \
+            /bin/bash installers/macos/tests/test.sh
+
+      - name: Stage verified macOS assets
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shelter-lite-macos
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            dist/shelter-lite-macos.sh
+            dist/shelter-lite-macos.sh.sha256
+            dist/shelter-lite-macos.zip
+            dist/shelter-lite-macos.zip.sha256
+            dist/VERSION
+
+  windows:
+    name: Build and test Windows installers with PowerShell 5.1
+    runs-on: windows-2025
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: Check out the selected revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.release-tag || github.sha }}
+          persist-credentials: false
+
+      - name: Validate the release version and PowerShell syntax
+        env:
+          RELEASE_TAG: ${{ inputs.release-tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          . ./scripts/version.ps1
+          . ./installers/windows/messages.ps1
+          $version = Read-ShelterVersion ./VERSION
+          if ($env:RELEASE_TAG -and $env:RELEASE_TAG -cne "v$version") {
+            throw (Get-ShelterText release_mismatch @($env:RELEASE_TAG,"v$version"))
+          }
+          $scripts = @(Get-Item scripts/version.ps1) + @(Get-ChildItem installers/windows -Filter *.ps1 -Recurse)
+          foreach ($script in $scripts) {
+            $tokens=$null; $errors=$null
+            [void][Management.Automation.Language.Parser]::ParseFile($script.FullName,[ref]$tokens,[ref]$errors)
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          }
+
+      - name: Test the source installer without actual installation
+        run: ./installers/windows/tests/test.ps1 -Color never
+
+      - name: Build Windows distribution files
+        run: ./installers/windows/build.ps1
+
+      - name: Verify checksums, versions and extracted ZIP tests
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($name in @('shelter-lite-windows.ps1','shelter-lite-windows.zip')) {
+            $expected = ((Get-Content "dist/$name.sha256" -Raw) -split ' ')[0]
+            if ((Get-FileHash "dist/$name" -Algorithm SHA256).Hash.ToLowerInvariant() -cne $expected) {
+              throw "Checksum mismatch: $name"
+            }
+          }
+          $unpacked = Join-Path $env:RUNNER_TEMP ('shelter-zip-' + [guid]::NewGuid().ToString('N'))
+          try {
+            Expand-Archive dist/shelter-lite-windows.zip -DestinationPath $unpacked
+            $version = (Get-Content VERSION -Raw).Trim()
+            if ((Get-Content dist/VERSION -Raw).Trim() -cne $version -or
+                (Get-Content (Join-Path $unpacked VERSION) -Raw).Trim() -cne $version) { throw 'VERSION mismatch' }
+            $standalone = & powershell.exe -NoProfile -File dist/shelter-lite-windows.ps1 --version
+            if ($LASTEXITCODE -ne 0 -or $standalone -cne "Shelter Lite $version") { throw 'Standalone version mismatch' }
+            $launcher = Join-Path $unpacked 'Shelter Lite.cmd'
+            $reported = & $launcher --version
+            if ($LASTEXITCODE -ne 0 -or $reported -cne "Shelter Lite $version") { throw 'Launcher version mismatch' }
+            & $launcher --unknown
+            if ($LASTEXITCODE -ne 2) { throw 'Launcher did not preserve failure exit code' }
+            $env:SHELTER_TEST_INSTALLER = Join-Path $unpacked 'shelter-lite-windows.ps1'
+            & ./installers/windows/tests/test.ps1 -Color never
+            if ($LASTEXITCODE -ne 0) { throw 'ZIP installer tests failed' }
+          } finally {
+            Remove-Item Env:SHELTER_TEST_INSTALLER -ErrorAction SilentlyContinue
+            if (Test-Path $unpacked) { Remove-Item $unpacked -Recurse -Force }
+          }
+
+      - name: Stage verified Windows assets
+        if: github.event_name == 'release'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: shelter-lite-windows
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            dist/shelter-lite-windows.ps1
+            dist/shelter-lite-windows.ps1.sha256
+            dist/shelter-lite-windows.zip
+            dist/shelter-lite-windows.zip.sha256

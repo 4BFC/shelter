@@ -21,7 +21,7 @@ CodexやClaude Codeなどのツールをまとめてインストール、管理�
 
 **Shelter Lite**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初期設定です。個別のツールを選択または除外する機能は提供しません。
 **正式版**は、インストール後も状態確認、セキュリティ通知、更新を継続して提供するCLIです。
-両バージョンのインストールスクリプトは`installers/macos/`でまとめて管理します。正式版CLI本体はインストーラーと分け、Pythonを採用した場合は`src/shelter/`に実装する予定です。
+インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLI本体はインストーラーと分け、Pythonを採用した場合は`src/shelter/`に実装する予定です。
 
 ## ライト版の固定インストール仕様
 
@@ -43,15 +43,31 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 
 実行できるかどうかの確認は、脆弱性検査や最新バージョンの判定ではありません。インストールと再実行の詳細な方針は[CONTRIBUTING](../language/jp/CONTRIBUTING.md#ライト版の実行)に記載しています。
 
+## Windowsの固定ツール構成
+
+パッケージIDは[Microsoft WinGetのmanifestリポジトリ](https://github.com/microsoft/winget-pkgs/tree/master/manifests)を基準とし、パッチバージョンはインストール時のソースに従います。
+
+| 順番 | ツール | 役割 | 新規インストール方針 |
+| --- | --- | --- | --- |
+| 1 | WinGet | パッケージ管理 | 未導入時は現在のユーザー向けMicrosoft.WinGet.Clientで修復 |
+| 2 | Git | バージョン管理 | WinGet Git.Git |
+| 3 | VS Code | エディター | WinGet Microsoft.VisualStudioCode、ユーザースコープ |
+| 4 | Windows Terminal | ターミナル | WinGet Microsoft.WindowsTerminal |
+| 5 | Node.js + npm | JavaScript実行 | OpenJS.NodeJS.LTSの24.xから最新を選び正確なバージョンで導入 |
+| 6 | Python + uv | Python実行と環境管理 | WinGet astral-sh.uv、その後uv python install 3.14 |
+| 7 | GitHub CLI | GitHub連携 | WinGet GitHub.cli、ログインは手動 |
+
+動作する既存バージョンは保持します。LTSパッケージの最新メジャーが上がっても新規Node.jsは24.xに限定します。StoreのPythonエイリアスはインストール済みと判定しません。Node/npmの部分インストールや実行エラーでは停止し、Python/uvは不足分のみ補います。ユーザーPATHをバックアップして不足する実行パスだけを末尾に追加します。システムPATH、プロファイル、ターミナル設定、Gitユーザー情報、認証は保持します。両OSとも英語メッセージと共通のオプション名を使います。Windowsの処理は[install.ps1](../installers/windows/install.ps1)と[tools.ps1](../installers/windows/tools.ps1)に実装しています。
+
 ## 技術方針
 
-**現在実装しているインストーラーの対象OSはmacOSです。** Windowsは[準備文書](plans/windows-lite.md)で範囲と検討事項を整理する段階です。Windows向けのインストール、設定、パッケージング、リリースジョブはまだ実装していません。
-ライト版はmacOS標準のBashで実行し、Node.jsやPythonを事前にインストールする必要はありません。正式版CLIとWebサイトの技術はまだ検討段階です。
+**Shelter Lite 0.2.0はmacOSとWindowsのインストーラーを個別に提供します。** macOSはmacOS 15以降とネイティブApple Silicon、WindowsはWindows 11 x64と標準64ビットWindows PowerShell 5.1が対象です。[Windowsの実装と実機検証項目](plans/windows-lite.md)を参照してください。Windows 10、Windows Server、ARM64、32ビットプロセスは今回のWindows版の対象外です。
+ライト版はmacOS標準のBashまたはWindows標準のPowerShellを使い、Node.jsやPythonの事前インストールは不要です。正式版CLIとWebサイトの技術は引き続き検討中です。
 
 | 領域 | 検討している技術 | 役割 | 状態 |
 | --- | --- | --- | --- |
-| 対応OS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | ライト版のインストールとシェル設定 | Apple Silicon、zsh/bash。Intel、Rosetta、Windowsは対象外 |
-| Windowsの準備 | Windows 11、標準PowerShell、WinGet（候補） | Windowsの初期設定と配布方法を検討 | 準備文書のみ。インストーラーと配布ファイルは未提供 |
+| macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | ライト版のインストールとシェル設定 | Apple Silicon、zsh/bash。Intel、Rosettaは対象外 |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 固定ライト版の設定、WinGet、ユーザーPATH | x64とWindows PowerShell 5.1を実装、クリーンPCでの実機検証は未完了 |
 | Webサイトと情報収集 | 未定 | セキュリティ情報の収集、参照、ユーザー画面 | 技術選定前 |
 | CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | 優先候補。バージョンは未定 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | 候補。バージョンは未定 |
@@ -92,6 +108,7 @@ Webサイトでセキュリティ問題と更新情報を確認
 shelter/
 ├── .github/
 │   └── workflows/
+│       ├── validate.yml # macOS / Windows
 │       └── release.yml # リリースの検査、パッケージング、ファイル添付
 ├── docs/
 │   ├── specification.md
@@ -99,22 +116,35 @@ shelter/
 │   ├── specification.jp.md
 │   └── plans/
 │       ├── readme-usage.md # README使い方中心の整理計画
-│       └── windows-lite.md # Windows対応の準備文書
+│       └── windows-lite.md # Windowsの実装と実機検証項目
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
 │   ├── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-windows.ps1
+│   ├── shelter-lite-windows.ps1.sha256
+│   ├── shelter-lite-windows.zip
+│   ├── shelter-lite-windows.zip.sha256
 │   └── VERSION
 ├── installers/
-│   └── macos/        # ライト版と将来の正式版のmacOSインストーラー
-│       ├── build.sh   # シェルファイルとダブルクリック用ZIPを生成
-│       ├── install.sh # エントリーポイント、固定仕様、インストール順序
-│       ├── messages.sh # 英語メッセージ、エラー文言、色と出力形式
-│       ├── tools.sh   # ツールの確認、インストール、シェル設定
+│   ├── macos/        # ライト版と将来の正式版のmacOSインストーラー
+│   │   ├── build.sh   # シェルファイルとダブルクリック用ZIPを生成
+│   │   ├── install.sh # エントリーポイント、固定仕様、インストール順序
+│   │   ├── messages.sh # 英語メッセージ、エラー文言、色と出力形式
+│   │   ├── tools.sh   # ツールの確認、インストール、シェル設定
+│   │   └── tests/
+│   │       └── test.sh # 一時環境で実行するインストーラーテスト
+│   └── windows/
+│       ├── build.ps1
+│       ├── install.ps1
+│       ├── launch.cmd
+│       ├── messages.ps1
+│       ├── tools.ps1
 │       └── tests/
-│           └── test.sh # 一時環境で実行するインストーラーテスト
+│           └── test.ps1
 ├── scripts/
+│   ├── version.ps1
 │   └── version.sh    # 製品バージョンの形式検証とファイル読み込み
 ├── language/
 │   ├── ko/
@@ -131,7 +161,11 @@ shelter/
 
 ### 各構成要素の役割
 
-[messages.sh](../installers/macos/messages.sh)は、インストーラーとテストが共有する英語の案内、警告、エラー、ヘルプとターミナルの出力形式を一元管理するファイル（SSOT）です。失敗の判定、インストールの中断と終了コードは`install.sh`と`tools.sh`で管理します。
+Windowsは[messages.ps1](../installers/windows/messages.ps1)をインストーラー、ビルド、テスト共通のメッセージSSOTにします。[build.ps1](../installers/windows/build.ps1)は実行ソース、MITライセンス、ルートの`VERSION`を単一の`.ps1`に含め、ZIPには`.cmd`ランチャーと`VERSION`を追加します。[version.ps1](../scripts/version.ps1)と`version.sh`はインストーラーから独立して同じ製品バージョン規約を実装します。
+
+Windowsのロジックとパッケージングは隔離テストで確認します。実際のWindows 11へのインストール、WinGet修復、UAC、ダウンロードしたファイルの実行はクリーンな実機での追加検証が必要です。CIはWindows標準のPowerShell 5.1で検査します。Windows Server runnerはモックテスト用であり、インストール対象ではありません。
+
+[messages.sh](../installers/macos/messages.sh)は、macOSのインストーラーとテストが共有する英語の案内、警告、エラー、ヘルプとターミナルの出力形式を一元管理するファイル（SSOT）です。失敗の判定、インストールの中断と終了コードは`install.sh`と`tools.sh`で管理します。
 
 [build.sh](../installers/macos/build.sh)は、実行用ソースとMITライセンスを`dist/shelter-lite-macos.sh`にまとめます。生成ファイルにも同じメッセージとインストール処理を含めます。変更は元のソースに加え、再生成してください。 同じ実行ファイルを`Shelter Lite.command`という名前で`dist/shelter-lite-macos.zip`に格納し、Terminalで開ける形式でも提供します。
 
@@ -156,3 +190,5 @@ shelter/
 | `--help` | ヘルプを表示 |
 
 終了コードは成功が`0`、未インストールまたは実行・インストールエラーが`1`、不正なオプションや未対応環境が`2`、Ctrl+Cによる中断が`130`です。`--check`と`--dry-run`は同時に使えません。正常に計画を作成できれば、不足するツールがあってもプレビューは`0`で終了します。
+
+Ctrl+Cの`130`はmacOSに適用され、Windowsの中断はPowerShell/CMDホストに従います。`0`、`1`、`2`は両OSで共通です。

@@ -7,13 +7,14 @@
 Shelter 관리자를 위한 개발, 문서 작성, 검증과 배포 절차를 안내합니다.
 제품 목적, 구성과 기술 방향은 [한국어 README](./README.md)를 기준으로 합니다.
 
-현재 macOS용 Shelter Lite, 격리된 테스트, 셸 파일과 더블클릭용 ZIP 패키징, 릴리스 자동 빌드를 제공합니다. 정식 CLI는 아직 준비 전입니다.
+현재 macOS와 Windows용 Shelter Lite, 격리된 테스트, 스크립트와 더블클릭용 ZIP 패키징, 릴리스 자동 빌드를 제공합니다. 정식 CLI는 아직 준비 전입니다.
 
 ## 목차
 
 - [기여 정책](#기여-정책)
 - [개발 준비](#개발-준비)
 - [라이트 실행](#라이트-실행)
+- [Windows 라이트](#windows-라이트)
 - [디렉터리 추가와 변경](#디렉터리-추가와-변경)
 - [작업 절차](#작업-절차)
 - [문서 작성](#문서-작성)
@@ -53,7 +54,7 @@ Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으�
 
 ### 실행 환경
 
-실제 설치 대상은 **macOS 15 이상, Apple Silicon, zsh 또는 bash**입니다. Intel, Rosetta와 Windows에서는 설치하지 않고 종료합니다. macOS 기본 `/bin/bash`로 실행하며 Bash 3.2.57에서 검사했습니다. Python이나 Node.js를 미리 준비할 필요는 없습니다.
+macOS 설치기의 대상은 **macOS 15 이상, Apple Silicon, zsh 또는 bash**입니다. Intel, Rosetta와 Windows에서는 설치하지 않고 종료합니다. macOS 기본 `/bin/bash`로 실행하며 Bash 3.2.57에서 검사했습니다. Python이나 Node.js를 미리 준비할 필요는 없습니다.
 
 설치에는 인터넷 연결과 Homebrew 설치 권한이 필요합니다. 공식 Homebrew 설치기가 관리자 인증과 Xcode Command Line Tools 설치를 요청할 수 있습니다. **전체 스크립트를 `sudo`로 실행하지 마세요.** [Homebrew 설치 요구사항](https://docs.brew.sh/Installation)을 참고하세요.
 
@@ -134,6 +135,32 @@ Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으�
 
 백업 복구가 필요하면 로그에 기록된 원본 경로와 백업을 비교한 뒤 복원합니다. 다른 셸 설정을 유지하려면 `# Shelter Lite`가 붙은 로드 구문만 제거할 수도 있습니다. 이 작업은 설치된 프로그램을 삭제하지 않습니다.
 
+## Windows 라이트
+
+저장소 루트에서 PowerShell로 다음 명령을 실행합니다. Windows 11 x64와 기본 64비트 Windows PowerShell 5.1을 대상으로 합니다. 관리자 권한으로 시작하지 않으며, 개별 패키지가 UAC 인증을 요청할 수 있습니다. Node.js와 Python 사전 설치는 필요 없습니다.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --dry-run
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --check
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --version
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Color never
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Preview warning
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Install failure
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/build.ps1
+```
+
+옵션 없는 `install.ps1`은 Windows 고정 스펙 전체를 설치합니다. `--dry-run`, `--check`, `--version`, `--mode lite`, `--color`와 종료 코드는 macOS와 같습니다. Ctrl+C는 호스트의 기본 중단 동작을 따릅니다. `-Preview`는 `notification`, `warning`, `failure`, `success`를, `-Install`은 `success`, `failure`, `dry-run`을 받습니다. 실행 흐름 테스트는 임시 파일과 모의 명령만 사용하며 실제 도구를 설치하지 않습니다.
+
+`messages.ps1`은 설치, 빌드와 테스트가 공유하는 Windows 메시지 SSOT입니다. macOS와 같은 영문 접두사, 상태 점의 색상, 결과 제목, PUA 아이콘과 기본 `always` 색상 정책을 사용하며 Bash를 요구하지 않습니다. `scripts/version.ps1`은 `scripts/version.sh`와 같은 SemVer 규약으로 루트 `VERSION`을 읽습니다.
+
+WinGet이 없으면 PowerShell Gallery를 통한 공식 현재 사용자용 `Microsoft.WinGet.Client` 복구 경로를 사용합니다. 패키지 ID와 Windows별 정책은 기술 사양에 정리합니다. 소스와 패키지 약관에 동의하고, 정확한 ID, `winget` 소스와 `--no-upgrade`를 사용합니다. Node.js는 최신 주 버전을 그대로 설치하지 않고 제공되는 24.x 중 선택합니다. 기존 정상 버전은 유지하며 Node/npm 부분 설치나 실행 오류는 사전 검사에서 중단합니다. Store의 Python 별칭은 제외합니다. Python과 uv는 없는 구성 요소만 보완하며, uv 조회는 오프라인으로 실행하고 새 Python은 `3.14`를 설치합니다.
+
+원본 사용자 PATH를 ACL로 보호한 JSON에 백업한 뒤 필요한 실행 경로만 끝에 추가합니다. 기존 환경 변수 참조와 레지스트리 값 형식을 유지합니다. 시스템 PATH와 PowerShell 프로필은 수정하지 않습니다. `%LOCALAPPDATA%\Shelter\logs`의 로그와 PATH 백업은 현재 사용자와 SYSTEM만 접근하도록 제한합니다. 설치 후 터미널과 편집기를 다시 시작하고, Git 사용자 정보와 GitHub 로그인은 직접 설정합니다.
+
+빌드는 `dist/`에 `shelter-lite-windows.ps1`, `shelter-lite-windows.zip`, 각각의 `.sha256`과 `VERSION`을 생성합니다. ZIP에는 `Shelter Lite.cmd`, 단일 `.ps1`과 `VERSION`이 들어갑니다. 두 실행 파일은 같은 폴더에 유지합니다. `.ps1`에는 제품 버전과 MIT 라이선스가 포함됩니다. 같은 도구 환경에서 재현 가능하도록 ZIP 시간을 고정합니다. 다른 출력 경로는 `build.ps1 -OutputDirectory "C:\path with spaces"`로 지정합니다.
+
+실행기는 프로필 없이 기본 64비트 Windows PowerShell을 시작하고, 현재 프로세스에만 실행 정책을 지정합니다. 종료 코드를 유지하고 인자 없이 실행했을 때만 창을 대기시킵니다. 조직 정책은 우회하지 않습니다. 스크립트는 서명되지 않았습니다. 격리 테스트만으로 SmartScreen, App Installer 복구, UAC와 깨끗한 Windows 11 PC의 전체 설치가 검증되지는 않습니다. `v0.2.0`을 게시하기 전에 실기기 검증 항목을 완료하세요.
+
 ## 디렉터리 추가와 변경
 
 전체 배치와 각 경로의 책임은 [기술 사양의 저장소 구조](../../docs/specification.ko.md#저장소-구조)를 기준으로 합니다.
@@ -144,7 +171,7 @@ Git이 없는 새 Mac에서는 GitHub 저장소의 **Code → Download ZIP**으�
 3. **정식 CLI 본체는 별도로 구현합니다.** Python을 채택하면 본체는 `src/shelter/`, Python 테스트는 루트 `tests/`, 패키지 설정은 루트 `pyproject.toml`에 둡니다. 이 경로들은 아직 생성하지 않았습니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
 
 Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. 버전별 동작을 추가할 때 공통 설치 흐름과 각 버전의 동작을 함께 확인하고, 실제 실행 위치와 명령을 이 문서에 기록합니다.
-웹사이트는 이 저장소 밖에서 관리합니다. 수집 서비스와 데이터 규격의 배치는 연동 범위를 정한 뒤 결정하며, Windows는 [준비 문서](../../docs/plans/windows-lite.md) 범위로만 진행하며, 지원 조건을 정한 뒤 실행 스크립트, 실행 파일과 릴리스 작업을 추가합니다.
+웹사이트는 이 저장소 밖에서 관리합니다. 정보 수집 서비스와 데이터 형식은 연동 범위를 정한 뒤 구조를 정합니다. Windows 스크립트, 실행기, 테스트와 패키징은 `installers/windows/`에서 관리합니다. [Windows 구현과 실기기 검증 항목](../../docs/plans/windows-lite.md)을 참고하세요.
 
 구조를 적용하거나 바꿀 때는 다음 내용을 같은 변경에 반영합니다.
 
@@ -358,8 +385,8 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 현재 `0.x` 개발 단계에서는 호환되는 수정에 PATCH를, 기능 추가나 호환성 변경에 MINOR를 올립니다. 명령과 설치 동작의 안정적인 규약을 처음 제공할 때 `1.0.0`으로 전환합니다. 이후 호환되지 않는 변경은 MAJOR, 호환되는 기능 추가는 MINOR, 호환되는 수정은 PATCH를 올립니다. MAJOR나 MINOR를 올리면 하위 숫자는 0으로 초기화합니다. 릴리스 후보는 `0.2.0-rc.1`처럼 표기합니다.
 
 1. 다음 릴리스의 `VERSION`을 수정합니다. 버전과 구현을 함께 커밋하며, 공개한 버전의 태그를 다른 코드로 옮기지 않습니다.
-2. `build.sh`로 다시 생성합니다. `.sh`와 `.command` 내부에 버전을 고정하고, ZIP 내부와 `dist/VERSION`에도 같은 값을 기록합니다. 원본 `VERSION`을 바꿔도 이미 만든 배포 파일은 바뀌지 않습니다.
-3. `VERSION` 앞에 `v`를 붙인 태그로 GitHub 릴리스를 게시합니다. 값이 `0.1.0`이면 태그는 `v0.1.0`입니다. 릴리스 후보는 GitHub에서 사전 릴리스로 표시합니다. 태그가 다르면 workflow는 빌드와 업로드 전에 중단합니다. workflow는 지정한 버전을 검증하고 패키징하며, 버전 숫자를 자동으로 올리지는 않습니다.
+2. 플랫폼에 맞는 `build.sh` 또는 `build.ps1`으로 다시 생성합니다. `.sh`, `.command`와 `.ps1` 내부에 버전을 고정하고, 각 ZIP과 `dist/VERSION`에도 같은 값을 기록합니다. 원본 `VERSION`을 바꿔도 이미 만든 배포 파일은 바뀌지 않습니다.
+3. `VERSION` 앞에 `v`를 붙인 태그로 GitHub 릴리스를 게시합니다. 값이 `0.2.0`이면 태그는 `v0.2.0`입니다. 릴리스 후보는 GitHub에서 사전 릴리스로 표시합니다. 태그가 다르면 workflow는 빌드와 업로드 전에 중단합니다. workflow는 지정한 버전을 검증하고 패키징하며, 버전 숫자를 자동으로 올리지는 않습니다.
 
 ```bash
 /bin/bash installers/macos/install.sh --version
@@ -372,18 +399,20 @@ cat dist/VERSION
 
 ### 릴리스 파일 자동 첨부
 
-[release.yml](../../.github/workflows/release.yml)은 사전 릴리스를 포함하여 GitHub 릴리스를 게시할 때 실행됩니다. 릴리스 태그의 소스를 내려받아 Bash 구문 검사, 원본 테스트와 배포 파일 빌드를 수행하고 두 체크섬을 검증합니다. macOS 15 runner에서 ZIP을 풀고 `Shelter Lite.command`에도 같은 테스트를 실행합니다. 모든 검사가 성공해야 생성한 파일 5개를 릴리스 페이지의 **Assets**에 첨부합니다.
+[release.yml](../../.github/workflows/release.yml)은 사전 릴리스를 포함한 GitHub 릴리스 게시 시 실행됩니다. [validate.yml](../../.github/workflows/validate.yml)을 호출해 릴리스 태그와 `VERSION` 일치 여부, 원본과 ZIP 설치기 테스트, 두 플랫폼 빌드, 체크섬과 포함된 버전을 확인합니다. macOS는 macOS 15 runner에서, Windows는 Windows 2025 runner의 기본 PowerShell 5.1에서 모의 테스트를 실행합니다. 두 작업이 모두 성공해야 플랫폼별 설치기 2개와 체크섬 2개, 공통 `VERSION`을 합한 파일 9개를 게시 작업이 업로드합니다.
+
+검증 workflow는 `main`에 구현 변경을 push할 때도 실행되며 수동 실행도 가능합니다. 이 경우 릴리스 파일을 게시하지 않습니다.
 
 1. workflow와 설치기 소스를 커밋하고 GitHub에 push합니다. 릴리스 태그는 이 workflow와 배포할 소스를 포함한 커밋으로 지정합니다.
 2. GitHub **Releases**에서 해당 태그로 릴리스를 만들고 **Publish release**를 누릅니다. 초안 저장이나 태그 push만으로는 이 workflow가 실행되지 않습니다.
-3. Actions의 **Release Shelter Lite**가 성공한 뒤 릴리스 페이지 **Assets**에서 `shelter-lite-macos.zip`을 내려받습니다. 단일 `.sh`, 두 `.sha256` 파일과 `VERSION`도 함께 첨부됩니다.
+3. Actions의 **Release Shelter Lite**가 성공한 뒤 **Assets**에서 운영체제에 맞는 ZIP을 내려받습니다. 단일 `.sh`와 `.ps1`, 체크섬 4개와 공통 `VERSION`도 함께 첨부됩니다.
 
-저장소 기본 `GITHUB_TOKEN`에 `contents: write` 권한을 사용하므로 별도 릴리스 토큰은 필요하지 않습니다. 테스트나 빌드에 실패하면 업로드를 중단합니다. 문제를 해결한 뒤 Actions에서 작업을 재실행할 수 있으며, 같은 이름의 첨부 파일은 교체합니다. 기존 릴리스에 파일을 첨부하고 격리된 테스트를 실행하는 방식이므로, 새 Mac의 전체 설치 검증을 대신하지는 않습니다.
+저장소 기본 `GITHUB_TOKEN`에 `contents: write` 권한을 사용하므로 별도 릴리스 토큰은 필요하지 않습니다. 테스트나 빌드에 실패하면 업로드를 중단합니다. 문제를 해결한 뒤 Actions에서 작업을 재실행할 수 있으며, 같은 이름의 첨부 파일은 교체합니다. 기존 릴리스에 파일을 첨부하고 격리된 테스트를 실행하는 방식이므로, 새 Mac이나 Windows PC의 전체 설치 검증을 대신하지는 않습니다.
 
 Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프트웨어를 업데이트하는 동작을 구분합니다.
 ### 릴리스 노트
 
-릴리스 노트는 GitHub 릴리스 본문에만 작성하고, 저장소에는 별도 노트 파일을 두지 않습니다. 설치 프로그램 메시지와 같이 영어로 작성합니다. 맨 위에는 가운데 정렬한 제목과 한 문장 소개를 둡니다. **New** 아래에는 추가된 기능만 플랫폼별로 적고, Windows 지원이 추가되면 **Windows** 섹션을 더합니다. 마지막에는 설치 파일마다 플랫폼, 요구 사항과 체크섬 링크를 적은 **Download** 표를 둡니다. 파일 링크는 workflow가 업로드를 마친 뒤 동작합니다.
+릴리스 노트는 GitHub 릴리스 본문에만 작성하고, 저장소에는 별도 노트 파일을 두지 않습니다. 설치 프로그램 메시지와 같이 영어로 작성합니다. 맨 위에는 가운데 정렬한 제목과 한 문장 소개를 둡니다. **New** 아래에는 추가된 기능만 플랫폼별로 적고, 해당 릴리스에서 변경한 플랫폼에 맞춰 **macOS**와 **Windows** 섹션을 둡니다. 마지막에는 설치 파일마다 플랫폼, 요구 사항과 체크섬 링크를 적은 **Download** 표를 둡니다. 파일 링크는 workflow가 업로드를 마친 뒤 동작합니다.
 
 ```markdown
 <div align="center">
@@ -400,12 +429,18 @@ Shelter 자체를 업데이트하는 절차와 Shelter가 사용자 PC의 소프
 
 - <added feature>
 
+### Windows
+
+- <added feature>
+
 ## Download Shelter Lite v<version>
 
 | File | Platform | Requirements | Checksum |
 | --- | --- | --- | --- |
 | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
 | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+| [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip) | Windows, double-click | Windows 11 x64 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip.sha256) |
+| [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1) | Windows, PowerShell | Windows 11 x64, Windows PowerShell 5.1 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1.sha256) |
 
 Installation steps: [README](https://github.com/4BFC/shelter#install)
 ```

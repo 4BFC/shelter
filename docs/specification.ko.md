@@ -21,7 +21,7 @@ Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대
 
 **Shelter Lite**는 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
 **정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
-두 버전의 설치 스크립트는 `installers/macos/`에서 함께 관리합니다. 정식 CLI 본체는 설치기와 구분하며, Python을 채택하면 `src/shelter/`에 구현할 예정입니다.
+설치 스크립트는 운영체제별 `installers/macos/`와 `installers/windows/`에서 관리합니다. 정식 CLI 본체는 설치기와 구분하며, Python을 채택하면 `src/shelter/`에 구현할 예정입니다.
 
 ## 라이트 고정 설치 스펙
 
@@ -43,15 +43,31 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 
 실행 여부 확인은 보안 취약점 검사나 최신 버전 판정이 아닙니다. 세부 설치와 재실행 정책은 [CONTRIBUTING](../language/ko/CONTRIBUTING.md#라이트-실행)에 정리합니다.
 
+## Windows 고정 도구 구성
+
+패키지 ID는 [Microsoft WinGet manifest 저장소](https://github.com/microsoft/winget-pkgs/tree/master/manifests)를 기준으로 합니다. 패치 버전은 설치 시 소스에서 제공하는 값을 따릅니다.
+
+| 순서 | 도구 | 역할 | 새 설치 정책 |
+| --- | --- | --- | --- |
+| 1 | WinGet | 패키지 관리 | 없는 경우 현재 사용자용 Microsoft.WinGet.Client 복구 |
+| 2 | Git | 버전 관리 | WinGet Git.Git |
+| 3 | VS Code | 편집기 | WinGet Microsoft.VisualStudioCode, 사용자 범위 |
+| 4 | Windows Terminal | 터미널 | WinGet Microsoft.WindowsTerminal |
+| 5 | Node.js + npm | JavaScript 실행 | OpenJS.NodeJS.LTS의 24.x 중 최신 값을 정확한 버전으로 설치 |
+| 6 | Python + uv | Python 실행과 환경 관리 | WinGet astral-sh.uv, 이후 uv python install 3.14 |
+| 7 | GitHub CLI | GitHub 연동 | WinGet GitHub.cli, 로그인은 직접 설정 |
+
+정상 실행되는 기존 버전은 유지합니다. LTS 패키지가 더 높은 주 버전을 가리켜도 새 Node.js는 24.x로 제한합니다. Store의 Python 별칭은 설치로 인정하지 않습니다. Node/npm 부분 설치와 실행 오류는 중단하고, Python/uv는 없는 구성 요소만 보완합니다. 사용자 PATH를 백업한 뒤 필요한 실행 경로만 뒤에 추가합니다. 시스템 PATH, 프로필, 터미널 설정, Git 사용자 정보와 인증은 유지합니다. 두 플랫폼은 영문 메시지와 같은 옵션 이름을 사용합니다. Windows 동작은 [install.ps1](../installers/windows/install.ps1)과 [tools.ps1](../installers/windows/tools.ps1)에 구현합니다.
+
 ## 기술 방향
 
-**현재 구현된 설치기의 대상 운영체제는 macOS입니다.** Windows는 [준비 문서](plans/windows-lite.md)에 범위와 검토 항목만 정리합니다. Windows 설치, 설정, 패키징과 릴리스 작업은 아직 구현하지 않았습니다.
-라이트는 macOS 기본 Bash로 실행하며, 실행 전에 Node.js나 Python을 따로 설치할 필요가 없습니다. 정식 CLI와 웹사이트의 기술은 아직 검토 단계입니다.
+**Shelter Lite 0.2.0은 macOS와 Windows 설치기를 각각 제공합니다.** macOS는 macOS 15 이상과 기본 Apple Silicon 환경, Windows는 Windows 11 x64와 기본 64비트 Windows PowerShell 5.1이 대상입니다. [Windows 구현과 실기기 검증 항목](plans/windows-lite.md)을 참고하세요. 이번 Windows 버전은 Windows 10, Windows Server, ARM64와 32비트 프로세스를 지원하지 않습니다.
+라이트는 macOS 기본 Bash 또는 Windows 기본 PowerShell을 사용하며 Node.js와 Python 사전 설치가 필요 없습니다. 정식 CLI와 웹사이트 기술은 아직 검토 중입니다.
 
 | 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
-| 지원 운영체제   | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel, Rosetta, Windows 제외 |
-| Windows 준비 | Windows 11, 기본 PowerShell, WinGet (후보) | Windows 초기 설정과 배포 방식 검토 | 준비 문서 단계, 설치기와 배포 파일 없음 |
+| macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel과 Rosetta 제외 |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 고정 라이트 설치, WinGet, 사용자 PATH | x64와 Windows PowerShell 5.1 구현, 깨끗한 PC의 전체 설치 검증 필요 |
 | 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
 | CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | 우선 검토, 버전 미정                   |
 | CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | 후보, 버전 미정                        |
@@ -92,6 +108,7 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 shelter/
 ├── .github/
 │   └── workflows/
+│       ├── validate.yml # macOS / Windows
 │       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
 ├── docs/
 │   ├── specification.md
@@ -99,22 +116,35 @@ shelter/
 │   ├── specification.jp.md
 │   └── plans/
 │       ├── readme-usage.md # README 사용법 중심 정리 계획
-│       └── windows-lite.md # Windows 지원 준비 문서
+│       └── windows-lite.md # Windows 구현과 실기기 검증 항목
 ├── dist/             # 생성 결과, Git 관리 제외
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
 │   ├── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-windows.ps1
+│   ├── shelter-lite-windows.ps1.sha256
+│   ├── shelter-lite-windows.zip
+│   ├── shelter-lite-windows.zip.sha256
 │   └── VERSION
 ├── installers/
-│   └── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
-│       ├── build.sh   # 셸 파일과 더블클릭용 ZIP 생성
-│       ├── install.sh # 진입점, 고정 스펙과 설치 순서
-│       ├── messages.sh # 영문 메시지, 오류 문구, 색상과 출력 형식
-│       ├── tools.sh   # 도구 확인, 설치, 셸 설정
+│   ├── macos/        # 라이트와 향후 정식 버전의 macOS 설치기
+│   │   ├── build.sh   # 셸 파일과 더블클릭용 ZIP 생성
+│   │   ├── install.sh # 진입점, 고정 스펙과 설치 순서
+│   │   ├── messages.sh # 영문 메시지, 오류 문구, 색상과 출력 형식
+│   │   ├── tools.sh   # 도구 확인, 설치, 셸 설정
+│   │   └── tests/
+│   │       └── test.sh # 임시 환경에서 실행하는 설치기 테스트
+│   └── windows/
+│       ├── build.ps1
+│       ├── install.ps1
+│       ├── launch.cmd
+│       ├── messages.ps1
+│       ├── tools.ps1
 │       └── tests/
-│           └── test.sh # 임시 환경에서 실행하는 설치기 테스트
+│           └── test.ps1
 ├── scripts/
+│   ├── version.ps1
 │   └── version.sh    # 제품 버전 형식 검증과 파일 읽기
 ├── language/
 │   ├── ko/
@@ -131,7 +161,11 @@ shelter/
 
 ### 구성 요소의 역할
 
-[messages.sh](../installers/macos/messages.sh)는 설치기와 테스트가 공유하는 영문 안내, 경고, 오류, 도움말과 터미널 출력 형식의 단일 관리 지점(SSOT)입니다. 실패 판단, 설치 중단과 종료 코드는 `install.sh`와 `tools.sh`에서 담당합니다.
+Windows는 [messages.ps1](../installers/windows/messages.ps1)을 설치기, 빌드와 테스트의 메시지 SSOT로 사용합니다. [build.ps1](../installers/windows/build.ps1)은 실행 소스, MIT 라이선스와 루트 `VERSION`을 단일 `.ps1`에 포함하고, ZIP에는 `.cmd` 실행기와 `VERSION`을 추가합니다. [version.ps1](../scripts/version.ps1)과 `version.sh`는 설치기와 독립적으로 같은 제품 버전 규약을 구현합니다.
+
+Windows 로직과 패키징은 격리 테스트로 확인하며 실제 Windows 11 설치, WinGet 복구, UAC와 내려받은 파일의 실행은 깨끗한 실기기에서 추가 검증해야 합니다. CI는 Windows의 기본 PowerShell 5.1을 검사합니다. Windows Server runner는 모의 테스트용이며 설치 지원 대상이 아닙니다.
+
+[messages.sh](../installers/macos/messages.sh)는 macOS 설치기와 테스트가 공유하는 영문 안내, 경고, 오류, 도움말과 터미널 출력 형식의 단일 관리 지점(SSOT)입니다. 실패 판단, 설치 중단과 종료 코드는 `install.sh`와 `tools.sh`에서 담당합니다.
 
 [build.sh](../installers/macos/build.sh)는 실행 소스와 MIT 라이선스를 `dist/shelter-lite-macos.sh` 하나로 묶습니다. 생성 파일에도 같은 메시지와 설치 로직을 포함하며, 수정은 원본에서 하고 다시 생성합니다. 같은 실행 파일을 `Shelter Lite.command`라는 이름으로 `dist/shelter-lite-macos.zip`에 담아 터미널에서 열 수 있게 제공합니다.
 
@@ -156,3 +190,5 @@ shelter/
 | `--help` | 도움말 |
 
 종료 코드는 성공 `0`, 미설치 상태 또는 실행/설치 오류 `1`, 잘못된 옵션이나 미지원 환경 `2`, Ctrl+C 중단 `130`입니다. `--check`와 `--dry-run`은 함께 사용하지 않습니다. 미리보기에서 정상적으로 계획을 만들면 미설치 도구가 있어도 `0`으로 종료합니다.
+
+Ctrl+C의 `130`은 macOS 기준이며 Windows 중단은 PowerShell/CMD 호스트 동작을 따릅니다. `0`, `1`, `2`는 두 플랫폼에서 공통입니다.

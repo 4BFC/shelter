@@ -7,13 +7,14 @@
 Shelterのメンテナー向けに、開発、ドキュメント作成、検証、リリースの手順を説明します。
 製品の目的、構成、技術方針は[日本語README](./README.md)を参照してください。
 
-現在はmacOS向けShelter Lite、隔離されたテスト、シェルファイルとダブルクリック用ZIPのパッケージング、リリースの自動ビルドを提供しています。正式版CLIはまだ準備前です。
+現在はmacOSとWindows向けShelter Lite、隔離されたテスト、スクリプトとダブルクリック用ZIPのパッケージング、リリースの自動ビルドを提供しています。正式版CLIはまだ準備前です。
 
 ## 目次
 
 - [コントリビューション方針](#コントリビューション方針)
 - [開発準備](#開発準備)
 - [ライト版の実行](#ライト版の実行)
+- [Windowsライト版](#windowsライト版)
 - [ディレクトリの追加と変更](#ディレクトリの追加と変更)
 - [作業手順](#作業手順)
 - [ドキュメントの作成](#ドキュメントの作成)
@@ -53,7 +54,7 @@ Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP
 
 ### 実行環境
 
-実際のインストール対象は**macOS 15以降、Apple Silicon、zshまたはbash**です。Intel、Rosetta、Windowsではインストールせずに終了します。macOS標準の`/bin/bash`で実行し、Bash 3.2.57で検査しています。PythonやNode.jsを事前に準備する必要はありません。
+macOSインストーラーの対象は**macOS 15以降、Apple Silicon、zshまたはbash**です。Intel、Rosetta、Windowsではインストールせずに終了します。macOS標準の`/bin/bash`で実行し、Bash 3.2.57で検査しています。PythonやNode.jsを事前に準備する必要はありません。
 
 インストールにはインターネット接続とHomebrewのインストール権限が必要です。公式のHomebrewインストーラーが、管理者認証とXcode Command Line Toolsのインストールを要求する場合があります。**スクリプト全体を`sudo`で実行しないでください。** [Homebrewのインストール要件](https://docs.brew.sh/Installation)を参照してください。
 
@@ -134,6 +135,32 @@ Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP
 
 バックアップからの復元が必要な場合は、ログに記録された元のパスとバックアップを比較してから復元してください。他のシェル設定を保持したい場合は、`# Shelter Lite`が付いた読み込み処理だけを削除することもできます。この操作でインストール済みのプログラムが削除されることはありません。
 
+## Windowsライト版
+
+リポジトリのルートでPowerShellから次を実行します。Windows 11 x64、ネイティブ64ビットのWindows PowerShell 5.1が対象です。管理者として起動せず、個別パッケージのUAC認証に応答します。Node.jsやPythonの事前インストールは不要です。
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --dry-run
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --check
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --version
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Color never
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Preview warning
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Install failure
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/build.ps1
+```
+
+オプションなしの`install.ps1`はWindowsの固定仕様全体をインストールします。`--dry-run`、`--check`、`--version`、`--mode lite`、`--color`と終了コードはmacOSと共通です。Ctrl+Cはホスト標準の中断動作に従います。`-Preview`は`notification`、`warning`、`failure`、`success`を、`-Install`は`success`、`failure`、`dry-run`を受け付けます。実行フローのテストは一時ファイルとモックのみを使い、ツールを実際にはインストールしません。
+
+`messages.ps1`はインストール、ビルド、テストが共有するWindowsメッセージのSSOTです。macOSと同じ英語の接頭辞、状態ドットの色、結果の見出し、PUAアイコン、既定の`always`カラーポリシーを使い、Bashを必要としません。`scripts/version.ps1`は`version.sh`と同じSemVer規約でルートの`VERSION`を読みます。
+
+WinGetがない場合はPowerShell Gallery経由の公式の現在のユーザー向け`Microsoft.WinGet.Client`修復手順を使います。パッケージIDとWindows固有の方針は技術仕様に記載します。ソースとパッケージの利用規約に同意し、正確なID、`winget`ソース、`--no-upgrade`を使用します。Node.jsは最新のメジャーをそのまま使わず、提供される24.xから選びます。動作する既存バージョンは保持し、Node/npmの部分インストールや実行エラーは事前検査で停止します。StoreのPythonエイリアスは除外します。Pythonとuvは不足分だけを補い、uvの探索はオフライン、新規Pythonは`3.14`を使います。
+
+元のユーザーPATHをACLで保護したJSONにバックアップしてから、不足パスだけを末尾へ追加します。既存の変数参照とレジストリ値の型を保持します。システムPATHとPowerShellプロファイルは編集しません。`%LOCALAPPDATA%\Shelter\logs`のログとPATHバックアップは現在のユーザーとSYSTEMだけがアクセスできます。セットアップ後にターミナルとエディターを再起動し、Gitユーザー情報とGitHub認証は手動で設定します。
+
+ビルドは`dist/`に`shelter-lite-windows.ps1`、`shelter-lite-windows.zip`、各`.sha256`、`VERSION`を生成します。ZIPには`Shelter Lite.cmd`、単一の`.ps1`、`VERSION`が入ります。実行ファイル2つを同じフォルダーに置いてください。`.ps1`には製品バージョンとMITライセンスを埋め込みます。同じツール環境で再現できるようZIPの時刻を固定します。出力先は`build.ps1 -OutputDirectory "C:\path with spaces"`で変更できます。
+
+ランチャーはプロファイルを読み込まず標準64ビットWindows PowerShellを起動し、実行ポリシーを当該プロセスだけに指定します。終了コードを保持し、引数なしの場合だけ終了時に待機します。組織のポリシーは回避しません。スクリプトは未署名です。隔離テストはSmartScreen、App Installer修復、UAC、クリーンなWindows 11 PCでの全体のインストール検証に代わるものではありません。`v0.2.0`の公開前に実機検証項目を完了してください。
+
 ## ディレクトリの追加と変更
 
 全体の配置と各パスの役割は、[技術仕様のリポジトリ構成](../../docs/specification.jp.md#リポジトリ構成)を基準とします。
@@ -144,7 +171,7 @@ Gitのない新しいMacでは、GitHubリポジトリの**Code → Download ZIP
 3. **正式版CLI本体は別に実装します。** Pythonを採用する場合、本体は`src/shelter/`、Pythonのテストはルートの`tests/`、パッケージ設定はルートの`pyproject.toml`に置きます。これらのパスはまだ作成していません。継続的なセキュリティ通知と更新管理機能をインストーラーに重複実装しないでください。
 
 シェルインストーラーのテストは`installers/macos/tests/`で管理します。バージョン別の動作を追加するときは、共通のインストール処理と各バージョンの動作を確認し、実際の実行場所とコマンドをこの文書に記録します。
-Webサイトはこのリポジトリの外で管理します。情報収集サービスとデータ形式の配置は連携範囲が決まってから決定し、Windowsは[準備文書](../../docs/plans/windows-lite.md)の範囲で進め、サポート条件を決めてから実行スクリプト、ランチャー、リリースジョブを追加します。
+Webサイトはこのリポジトリの外で管理します。情報収集サービスとデータ形式は、連携範囲を決めた後に構成を検討します。Windowsのスクリプト、ランチャー、テスト、パッケージングは`installers/windows/`で管理します。[Windowsの実装と実機検証項目](../../docs/plans/windows-lite.md)を参照してください。
 
 構成を追加または変更するときは、次の内容を同じ変更に含めてください。
 
@@ -358,8 +385,8 @@ SHELTER_TEST_INSTALLER="$PWD/dist/shelter-lite-macos.sh" /bin/bash installers/ma
 `0.x`の開発段階では、互換性を保つ修正でPATCHを、機能追加や互換性の変更でMINORを上げます。コマンドとインストール動作の安定した規約を初めて提供するときに`1.0.0`へ移行します。その後は非互換の変更でMAJOR、互換性のある機能追加でMINOR、互換性のある修正でPATCHを上げます。MAJORまたはMINORを上げると下位の数値を0に戻します。リリース候補は`0.2.0-rc.1`のように表記します。
 
 1. 次のリリース用に`VERSION`を編集します。バージョンと実装を一緒にコミットし、公開済みバージョンのタグを変更後のコードへ移動しないでください。
-2. `build.sh`で再生成します。`.sh`と`.command`内にバージョンを固定し、ZIP内と`dist/VERSION`にも同じ値を記録します。元の`VERSION`を編集しても生成済みの配布ファイルは変わりません。
-3. `VERSION`の前に`v`を付けたタグでGitHubリリースを公開します。`0.1.0`なら`v0.1.0`です。リリース候補はGitHubでプレリリースに設定します。タグが異なる場合はビルドとアップロードの前にworkflowを停止します。workflowは指定したバージョンを検証してパッケージングし、バージョン番号は自動で上げません。
+2. プラットフォームに応じて`build.sh`または`build.ps1`で再生成します。`.sh`、`.command`、`.ps1`内にバージョンを固定し、各ZIPと`dist/VERSION`にも同じ値を記録します。元の`VERSION`を編集しても生成済みの配布ファイルは変わりません。
+3. `VERSION`の前に`v`を付けたタグでGitHubリリースを公開します。`0.2.0`なら`v0.2.0`です。リリース候補はGitHubでプレリリースに設定します。タグが異なる場合はビルドとアップロードの前にworkflowを停止します。workflowは指定したバージョンを検証してパッケージングし、バージョン番号は自動で上げません。
 
 ```bash
 /bin/bash installers/macos/install.sh --version
@@ -372,18 +399,20 @@ cat dist/VERSION
 
 ### リリースファイルの自動添付
 
-[release.yml](../../.github/workflows/release.yml)は、プレリリースを含むGitHubリリースの公開時に実行します。リリースタグのソースを取得し、Bashの構文検査、ソースのテスト、配布ファイルのビルド、両方のチェックサム検証を行います。macOS 15 runnerでZIPを展開し、`Shelter Lite.command`にも同じテストを実行します。すべての検査が成功した場合に、生成した5つのファイルをリリースページの**Assets**に添付します。
+[release.yml](../../.github/workflows/release.yml)はプレリリースを含むGitHubリリースの公開時に実行します。[validate.yml](../../.github/workflows/validate.yml)を呼び出し、タグと`VERSION`の一致、ソースとZIPのテスト、両プラットフォームのビルド、チェックサム、埋め込みバージョンを確認します。macOSはmacOS 15 runner、WindowsはWindows 2025 runnerの標準PowerShell 5.1でモックテストを実行します。両ジョブの成功後に、各プラットフォームのインストーラー2つとチェックサム2つ、共通の`VERSION`を合わせた9ファイルを公開ジョブがアップロードします。
+
+検証workflowは`main`への実装変更のpush時と手動でも実行できます。この場合はリリースファイルを公開しません。
 
 1. workflowとインストーラーのソースをコミットしてGitHubにpushします。このworkflowと配布するソースを含むコミットをリリースタグの対象にします。
 2. GitHubの**Releases**で対象のタグからリリースを作成し、**Publish release**をクリックします。下書きの保存やタグのpushだけではworkflowは実行しません。
-3. Actionsの**Release Shelter Lite**が成功した後、リリースページの**Assets**から`shelter-lite-macos.zip`をダウンロードします。単一の`.sh`、2つの`.sha256`と`VERSION`も添付します。
+3. Actionsの**Release Shelter Lite**が成功した後、**Assets**からOSに合ったZIPをダウンロードします。単一の`.sh`と`.ps1`、チェックサム4つ、共通の`VERSION`も添付されます。
 
-リポジトリの標準`GITHUB_TOKEN`に`contents: write`権限を使用するため、別のリリース用トークンは不要です。テストやビルドが失敗した場合はアップロードを中断します。問題を解決した後、Actionsでジョブを再実行できます。同名の添付ファイルは置き換えます。既存のリリースにファイルを添付し、隔離されたテストを実行する方式のため、新しいMacでの全体のインストール検証に代わるものではありません。
+リポジトリの標準`GITHUB_TOKEN`に`contents: write`権限を使用するため、別のリリース用トークンは不要です。テストやビルドが失敗した場合はアップロードを中断します。問題を解決した後、Actionsでジョブを再実行できます。同名の添付ファイルは置き換えます。既存のリリースにファイルを添付し、隔離されたテストを実行する方式のため、新しいMacやWindows PCでの全体のインストール検証に代わるものではありません。
 
 Shelter自体を更新する手順と、ShelterがユーザーのPCのソフトウェアを更新する動作を区別します。
 ### リリースノート
 
-リリースノートはGitHubリリースの本文にのみ記載し、リポジトリには別のノートファイルを置きません。インストーラーのメッセージと同じく英語で記載します。冒頭には中央揃えの見出しと1文の紹介を置きます。**New**の下には追加された機能のみをプラットフォーム別に記載し、Windows対応が追加されたら**Windows**セクションを加えます。最後に、インストールファイルごとにプラットフォーム、要件、チェックサムへのリンクを記載した**Download**表を置きます。ファイルへのリンクはworkflowのアップロード完了後に有効になります。
+リリースノートはGitHubリリースの本文にのみ記載し、リポジトリには別のノートファイルを置きません。インストーラーのメッセージと同じく英語で記載します。冒頭には中央揃えの見出しと1文の紹介を置きます。**New**の下には追加された機能のみをプラットフォーム別に記載し、そのリリースで変更したプラットフォームに合わせて**macOS**と**Windows**のセクションを設けます。最後に、インストールファイルごとにプラットフォーム、要件、チェックサムへのリンクを記載した**Download**表を置きます。ファイルへのリンクはworkflowのアップロード完了後に有効になります。
 
 ```markdown
 <div align="center">
@@ -400,12 +429,18 @@ Shelter自体を更新する手順と、ShelterがユーザーのPCのソフト�
 
 - <added feature>
 
+### Windows
+
+- <added feature>
+
 ## Download Shelter Lite v<version>
 
 | File | Platform | Requirements | Checksum |
 | --- | --- | --- | --- |
 | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
 | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+| [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip) | Windows, double-click | Windows 11 x64 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip.sha256) |
+| [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1) | Windows, PowerShell | Windows 11 x64, Windows PowerShell 5.1 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1.sha256) |
 
 Installation steps: [README](https://github.com/4BFC/shelter#install)
 ```

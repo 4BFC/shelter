@@ -21,7 +21,7 @@ Integrated installation and management of tools such as Codex and Claude Code ma
 
 **Shelter Lite** is an initial setup that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
 The **full version** will be a CLI that continues to provide status checks, security notifications, and updates after installation.
-Installation scripts for both versions are managed in `installers/macos/`. The full CLI implementation is separate from the installer; if Python is chosen, it will be implemented in `src/shelter/`.
+Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI implementation is separate from the installer; if Python is chosen, it will be implemented in `src/shelter/`.
 
 ## Lite Installation Specification
 
@@ -43,15 +43,31 @@ The macOS developer tools' `/usr/bin/python3` is treated separately from a user 
 
 Checking whether a tool runs is not a security vulnerability scan or a check for the latest version. Detailed installation and rerun policies are documented in [CONTRIBUTING](../CONTRIBUTING.md#running-lite).
 
+## Windows fixed tool set
+
+Windows uses the following fixed equivalents. Package IDs refer to the [Microsoft WinGet manifest repository](https://github.com/microsoft/winget-pkgs/tree/master/manifests); patch versions follow the source at installation time.
+
+| # | Tool | Role | New installation |
+| --- | --- | --- | --- |
+| 1 | WinGet | Package manager | Current-user Microsoft.WinGet.Client repair if missing |
+| 2 | Git | Version control | WinGet Git.Git |
+| 3 | VS Code | Editor | WinGet Microsoft.VisualStudioCode, user scope |
+| 4 | Windows Terminal | Terminal | WinGet Microsoft.WindowsTerminal |
+| 5 | Node.js + npm | JavaScript runtime | Highest available 24.x from OpenJS.NodeJS.LTS, exact version |
+| 6 | Python + uv | Python runtime and environment manager | WinGet astral-sh.uv, then uv python install 3.14 |
+| 7 | GitHub CLI | GitHub integration | WinGet GitHub.cli; login is manual |
+
+Working installations are retained. New Node.js is constrained to 24.x even if the LTS package points at a newer major. Python Store aliases do not count as installations. Partial Node/npm and broken tools block setup; Python/uv can be completed separately. Missing executable directories are appended to the backed-up user PATH. Machine PATH, profiles, terminal settings, Git identity, and authentication are preserved. Both platforms use English messages and the same option names. Windows-specific behavior is implemented in [install.ps1](../installers/windows/install.ps1) and [tools.ps1](../installers/windows/tools.ps1).
+
 ## Technical Direction
 
-**The implemented target operating system for the installer is macOS.** Windows support is in preparation only; see the [Windows plan](plans/windows-lite.md). Windows installation, configuration, packaging, and release jobs have not been implemented.
-Lite runs with the Bash included in macOS; Node.js and Python do not need to be installed beforehand. Technologies for the full CLI and website are still under consideration.
+**Shelter Lite 0.2.0 has separate macOS and Windows installers.** macOS targets macOS 15+ on native Apple Silicon; Windows targets Windows 11 x64 with native Windows PowerShell 5.1. See the [Windows implementation and acceptance checks](plans/windows-lite.md). Windows 10, Windows Server, ARM64, and 32-bit processes are excluded from this Windows release.
+Lite uses the Bash included in macOS or Windows PowerShell included in Windows. Node.js and Python are not prerequisites. Technologies for the full CLI and website remain under consideration.
 
 | Area | Technology under consideration | Role | Status |
 | --- | --- | --- | --- |
-| Supported operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Lite installation and shell configuration | Apple Silicon, zsh/bash. Intel, Rosetta, and Windows excluded |
-| Windows preparation | Windows 11, built-in PowerShell, WinGet (candidates) | Define Windows initial setup and distribution | Planning only; no Windows installer or release assets |
+| Supported operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Lite installation and shell configuration | Apple Silicon, zsh/bash. Intel and Rosetta excluded |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Fixed Lite setup, WinGet, user PATH | Implemented for x64 and Windows PowerShell 5.1; clean-PC acceptance pending |
 | Website and information collection | Undecided | Collect security information and provide access and user interfaces | Technology selection pending |
 | CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Primary candidate; version undecided |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | Candidates; versions undecided |
@@ -92,6 +108,7 @@ The directories, executable code, and documentation currently present are listed
 shelter/
 ├── .github/
 │   └── workflows/
+│       ├── validate.yml # Source and ZIP checks on macOS and Windows
 │       └── release.yml # Release tests, packaging, and asset upload
 ├── docs/
 │   ├── specification.md
@@ -99,22 +116,35 @@ shelter/
 │   ├── specification.jp.md
 │   └── plans/
 │       ├── readme-usage.md # Plan for a usage-first README
-│       └── windows-lite.md # Windows preparation notes
+│       └── windows-lite.md # Windows implementation and acceptance
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
 │   ├── shelter-lite-macos.sh.sha256
 │   ├── shelter-lite-macos.zip
 │   ├── shelter-lite-macos.zip.sha256
+│   ├── shelter-lite-windows.ps1
+│   ├── shelter-lite-windows.ps1.sha256
+│   ├── shelter-lite-windows.zip
+│   ├── shelter-lite-windows.zip.sha256
 │   └── VERSION
 ├── installers/
-│   └── macos/        # macOS installer for Lite and the future full version
-│       ├── build.sh   # Create the standalone script and double-click ZIP
-│       ├── install.sh # Entry point, fixed specification, and installation order
-│       ├── messages.sh # English messages, errors, colors, and output formatting
-│       ├── tools.sh   # Tool checks, installation, and shell configuration
+│   ├── macos/        # macOS installer for Lite and the future full version
+│   │   ├── build.sh   # Create the standalone script and double-click ZIP
+│   │   ├── install.sh # Entry point, fixed specification, and installation order
+│   │   ├── messages.sh # English messages, errors, colors, and output formatting
+│   │   ├── tools.sh   # Tool checks, installation, and shell configuration
+│   │   └── tests/
+│   │       └── test.sh # Installer tests using temporary environments
+│   └── windows/
+│       ├── build.ps1
+│       ├── install.ps1
+│       ├── launch.cmd
+│       ├── messages.ps1
+│       ├── tools.ps1
 │       └── tests/
-│           └── test.sh # Installer tests using temporary environments
+│           └── test.ps1
 ├── scripts/
+│   ├── version.ps1   # PowerShell SemVer reader
 │   └── version.sh    # Product version format, validation, and file reading
 ├── language/
 │   ├── ko/
@@ -130,6 +160,10 @@ shelter/
 ```
 
 ### Component Responsibilities
+
+Windows uses [messages.ps1](../installers/windows/messages.ps1) as the native message SSOT for its installer, build, and tests. [build.ps1](../installers/windows/build.ps1) bundles the runtime, MIT license, and root `VERSION` into a standalone `.ps1`; its ZIP adds the `.cmd` launcher and `VERSION`. [version.ps1](../scripts/version.ps1) and `version.sh` implement the same product metadata contract without depending on either installer.
+
+Windows logic and packaging have isolated tests; actual Windows 11 installation, WinGet repair, UAC, and downloaded-file launch behavior still require clean-device acceptance. The CI workflow checks PowerShell 5.1 on Windows; a Windows Server runner is used only for mocked tests, not as a supported installation target.
 
 [messages.sh](../installers/macos/messages.sh) is the single source of truth for English guidance, warnings, errors, help, and terminal formatting shared by the installer and tests. Failure detection, stopping installation, and exit codes remain in `install.sh` and `tools.sh`.
 
@@ -156,3 +190,5 @@ Follow [Adding and Changing Directories in CONTRIBUTING](../CONTRIBUTING.md#addi
 | `--help` | Show help |
 
 Exit codes are `0` for success, `1` for missing tools or execution/installation errors, `2` for invalid options or unsupported environments, and `130` for Ctrl+C. Do not combine `--check` and `--dry-run`. A successful preview returns `0` even when tools are missing.
+
+The `130` Ctrl+C code applies to macOS; Windows interruption follows the PowerShell/CMD host. Both platforms use `0`, `1`, and `2` for the cases above.

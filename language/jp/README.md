@@ -8,10 +8,11 @@
 
 # Shelter
 
-ShelterはMacに開発ツールをインストールし、実行状態を確認します。正常に動作するツールは保持し、不足する構成要素を準備します。
+ShelterはmacOSとWindowsに開発ツールをインストールし、実行状態を確認します。正常に動作するツールは保持し、不足する構成要素を準備します。
 
 [![Release](https://img.shields.io/github/v/release/4BFC/shelter?include_prereleases&style=flat-square)](https://github.com/4BFC/shelter/releases)
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white)
+![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square)
 ![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-M_series-000000?style=flat-square&logo=apple&logoColor=white)
 ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
 ![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)
@@ -35,6 +36,7 @@ ShelterはMacに開発ツールをインストールし、実行状態を確認�
 | OS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon、zsh/bash |
 | インストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS標準のBashで実行 |
 | パッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 開発ツールのインストール |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | ネイティブx64、Windows PowerShell 5.1、WinGet |
 | CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 検討中。バージョン未定 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 検討中。バージョン未定 |
 
@@ -42,13 +44,13 @@ ShelterはMacに開発ツールをインストールし、実行状態を確認�
 
 ## インストール
 
-### 動作条件
+### macOSの動作条件
 
-- macOS 15以降、Apple Silicon（Mシリーズチップ）のネイティブなターミナル環境。Intel Mac、Rosetta、Windowsは非対応です。
+- macOS 15以降、Apple Silicon（Mシリーズチップ）のネイティブなターミナル環境。macOS用インストーラーはIntel Mac、Rosetta、Windowsに対応していません。
 - インターネット接続と、Homebrewの認証要求に使用するmacOS管理者アカウント。
 - シェル設定はzshとbashに対応します。Homebrew、Node.js、Pythonの事前インストールは不要です。Shelter自体は`sudo`なしで通常のユーザーとして実行してください。
 
-### ダウンロードと実行
+### macOSでのダウンロードと実行
 
 [GitHub Releases](https://github.com/4BFC/shelter/releases)からインストーラーをダウンロードします。以下は**Assets**に`shelter-lite-macos.zip`が公開されている場合の手順です。まだファイルがない場合は[ソースのビルド手順](./CONTRIBUTING.md#配布)を参照してください。
 
@@ -73,6 +75,29 @@ shasum -a 256 -c shelter-lite-macos.zip.sha256
 
 </details>
 
+### Windowsでのダウンロードと実行
+
+Windowsは`0.2.0`から対応します。該当ファイルを含むリリースから`shelter-lite-windows.zip`をダウンロードしてください。配布ファイルはリリースworkflowの成功後に利用できます。
+
+- Windows 11 x64、ネイティブ64ビットのWindows PowerShell 5.1を使用します。Windows 10、Windows Server、ARM64、32ビットプロセスは対象外です。
+- **管理者として実行**せず、通常のアカウントで起動します。インターネット接続が必要です。個別パッケージのUAC認証要求に応答してください。組織のポリシーでインストールが制限される場合があります。
+- 固定構成はWinGet、Git、VS Code、Windows Terminal、Node.js 24/npm、Python 3.14/uv、GitHub CLIです。動作する既存バージョンは保持します。WinGetがない場合はMicrosoftの現在のユーザー向け修復モジュールで準備します。
+
+ランチャーは標準のWindows PowerShell 5.1を使います。PowerShell 7はインストール対象ではありません。
+
+1. `shelter-lite-windows.zip`の**全ファイル**を同じフォルダーに展開します。
+2. `Shelter Lite.cmd`をダブルクリックします。`shelter-lite-windows.ps1`を同じフォルダーに置いてください。セットアップは固定ツールのWinGetソースとパッケージの利用規約に同意します。
+3. 結果を読み、何かキーを押して閉じます。その後、ターミナルとエディターを開き直してください。
+
+署名のないスクリプトです。ランチャーは当該プロセスだけの実行ポリシーを指定し、保存された設定や組織のポリシーを変更しません。Windowsのセキュリティ警告が表示される場合があります。クリーンなWindows 11 PCでの全体のインストールは未検証です。
+
+ZIPを確認するには、`.sha256`も同じフォルダーへダウンロードし、その場所のPowerShellで次を実行します。結果が`True`の場合のみ進んでください。
+
+```powershell
+$expected = ((Get-Content .\shelter-lite-windows.zip.sha256 -Raw) -split ' ')[0]
+(Get-FileHash .\shelter-lite-windows.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $expected
+```
+
 ## 使い方
 
 ### 結果を読む
@@ -86,7 +111,7 @@ shasum -a 256 -c shelter-lite-macos.zip.sha256
 <details>
 <summary>インストール後の作業</summary>
 
-アプリケーションフォルダーからGhosttyを開くか、ターミナルで`open -a Ghostty`を実行します。Ghosttyの設定、フォント、既定のターミナルは変更しません。
+macOSではアプリケーションフォルダーからGhosttyを開くか、ターミナルで`open -a Ghostty`を実行します。WindowsではスタートメニューからWindows Terminalを開きます。ターミナルの設定、フォント、既定のターミナルは変更しません。
 
 Gitを使う場合は、コミットに記録するユーザー情報を自分で設定してください。例の名前とメールアドレスを自分の情報に置き換えます。このグローバル設定は現在のユーザーアカウントに適用されます。すでに正しく設定済みなら保持してください。
 
@@ -103,7 +128,7 @@ gh auth login
 
 </details>
 
-### プレビューと状態確認
+### macOSのプレビューと状態確認
 
 展開した`Shelter Lite.command`を保管してください。新しいターミナルで、そのファイルのあるフォルダーへ移動します。以下はダウンロードフォルダーの直下にある場合の例です。別の場所に展開した場合はパスを変更してください。各コマンドは独立しており、ツールのインストールや設定変更は行いません。
 
@@ -121,6 +146,20 @@ echo $?
 全オプションは`--help`で確認できます。
 
 単一ファイルをダウンロードした場合は、そのフォルダーで`/bin/bash shelter-lite-macos.sh`に同じオプションを付けて実行します。どちらのファイルもオプションなしで実行するとインストールを開始します。
+
+### Windowsでのプレビューと確認
+
+ZIPを展開したフォルダーでPowerShellを開いてください。次のコマンドはインストールや設定変更を行いません。
+
+```powershell
+& '.\Shelter Lite.cmd' --dry-run
+& '.\Shelter Lite.cmd' --check
+$LASTEXITCODE
+& '.\Shelter Lite.cmd' --version
+& '.\Shelter Lite.cmd' --help
+```
+
+`--check`の直後に`$LASTEXITCODE`を確認します。`0`は全ツールの準備完了、`1`は確認が必要な状態です。セットアップはユーザーPATHをバックアップし、不足する実行パスだけを末尾に追加します。PowerShellプロファイル、システムPATH、Gitユーザー情報、GitHubログインは保持します。ログとPATHバックアップは`%LOCALAPPDATA%\Shelter\logs`に保存します。新規Pythonは`python3.14`で実行し、既存の`python`コマンドとStoreエイリアスの優先順位は保持します。
 
 ## コントリビューション方針
 

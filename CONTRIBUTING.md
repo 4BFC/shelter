@@ -7,13 +7,14 @@
 This guide covers development, documentation, validation, and releases for Shelter's maintainer.
 See the [README](./README.md) for the project's purpose, components, and technical direction.
 
-Shelter Lite for macOS, isolated tests, script and double-click ZIP packaging, and automated release builds are available. The full CLI is not yet ready.
+Shelter Lite for macOS and Windows, isolated tests, script and double-click ZIP packaging, and automated release builds are available. The full CLI is not yet ready.
 
 ## Table of Contents
 
 - [Contribution Policy](#contribution-policy)
 - [Development Setup](#development-setup)
 - [Running Lite](#running-lite)
+- [Windows Lite](#windows-lite)
 - [Adding and Changing Directories](#adding-and-changing-directories)
 - [Workflow](#workflow)
 - [Writing Documentation](#writing-documentation)
@@ -53,7 +54,7 @@ The standalone distribution file embeds these four scripts and the product versi
 
 ### Runtime Environment
 
-The installation target is **macOS 15 or later, Apple Silicon, and zsh or bash**. On Intel, Rosetta, and Windows, the installer exits without installing. It runs with macOS's `/bin/bash` and has been checked with Bash 3.2.57. Python and Node.js do not need to be installed beforehand.
+The macOS installation target is **macOS 15 or later, Apple Silicon, and zsh or bash**. On Intel, Rosetta, and Windows, the installer exits without installing. It runs with macOS's `/bin/bash` and has been checked with Bash 3.2.57. Python and Node.js do not need to be installed beforehand.
 
 Installation requires an internet connection and permission to install Homebrew. The official Homebrew installer may request administrator authentication and installation of Xcode Command Line Tools. **Do not run the entire script with `sudo`.** See the [Homebrew installation requirements](https://docs.brew.sh/Installation).
 
@@ -134,6 +135,32 @@ Open a new terminal to activate the paths. To apply them immediately in the curr
 
 If you need to restore a backup, compare the original and backup paths recorded in the log before restoring. To preserve other shell configuration, you can instead remove only the load statement marked `# Shelter Lite`. This does not uninstall any programs.
 
+## Windows Lite
+
+Run the following commands from the repository root in PowerShell. The Windows installer targets Windows 11 x64 and native Windows PowerShell 5.1. Run without elevation; individual packages may request UAC approval. Node.js and Python are not prerequisites.
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --dry-run
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --check
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/install.ps1 --version
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Color never
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Preview warning
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/tests/test.ps1 -Install failure
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File installers/windows/build.ps1
+```
+
+With no options, `install.ps1` installs the complete fixed Windows specification. Options and exit codes match macOS for `--dry-run`, `--check`, `--version`, `--mode lite`, and `--color`. Ctrl+C uses the host's native interruption behavior. `-Preview` accepts `notification`, `warning`, `failure`, or `success`; `-Install` accepts `success`, `failure`, or `dry-run`. Workflow tests use temporary files and mocks, never actual package installations.
+
+`messages.ps1` is the Windows message SSOT consumed by installation, builds, and tests. It preserves macOS's English prefixes, status-dot colors, result headings, PUA icons, and default `always` color policy. It does not require Bash to run. `scripts/version.ps1` reads the same root `VERSION` with the same SemVer contract as `scripts/version.sh`.
+
+Missing WinGet uses the official current-user `Microsoft.WinGet.Client` repair path through PowerShell Gallery. Package IDs and Windows-specific policies are in the technical specification. Installation accepts source and package agreements, uses exact IDs, the `winget` source, and `--no-upgrade`. Node.js is selected from available 24.x versions rather than the package's latest major. Existing working versions are retained; partial Node/npm or broken executables stop preflight. Store Python aliases are ignored. Python and uv can be completed independently; uv discovery is offline and new Python uses `3.14`.
+
+Only missing executable directories are appended to the raw user PATH after an ACL-protected JSON backup. Existing variable references and registry value type are preserved. Machine PATH and PowerShell profiles are not edited. Logs and PATH backups are readable by the current user and SYSTEM under `%LOCALAPPDATA%\Shelter\logs`. Restart terminals and editors after setup; Git identity and GitHub authentication are manual.
+
+The build produces `shelter-lite-windows.ps1`, `shelter-lite-windows.zip`, their `.sha256` sidecars, and `VERSION` in `dist/`. The ZIP contains `Shelter Lite.cmd`, the standalone `.ps1`, and `VERSION`; keep the two executable files together. The `.ps1` embeds its version and MIT license. ZIP timestamps are fixed for reproducibility on the same toolchain. Use `build.ps1 -OutputDirectory "C:\path with spaces"` for another output location.
+
+The launcher starts native Windows PowerShell without profiles and with a process-only execution-policy override. It preserves exit codes and pauses only when no arguments are supplied. It does not bypass managed policies. Scripts are unsigned. Tests do not establish that SmartScreen, App Installer repair, UAC, or a clean Windows 11 installation work on every device; complete the acceptance checks before publishing `v0.2.0`.
+
 ## Adding and Changing Directories
 
 Use [Repository Structure in the technical specification](docs/specification.md#repository-structure) as the reference for the overall layout and each path's responsibility.
@@ -144,7 +171,7 @@ The runtime consists of `install.sh`, `messages.sh`, `scripts/version.sh`, and `
 3. **Implement the full CLI separately.** If Python is chosen, place the implementation in `src/shelter/`, Python tests in the root `tests/` directory, and package configuration in the root `pyproject.toml`. These paths have not been created yet. Do not duplicate ongoing security notification and update management features in the installer.
 
 Manage shell installer tests in `installers/macos/tests/`. When adding behavior for a version, check both the shared installation workflow and the behavior of each version. Record the working directory and actual commands in this document.
-The website is managed outside this repository. The layout of the collection service and data formats will be decided after the integration scope is defined. Windows work is limited to the [preparation plan](./docs/plans/windows-lite.md); runtime scripts, launchers, and release jobs will be added after the support decisions are made.
+The website is managed outside this repository. The layout of the collection service and data formats will be decided after the integration scope is defined. Windows scripts, launcher, tests, and packaging live in `installers/windows/`; see the [Windows implementation and acceptance checks](./docs/plans/windows-lite.md).
 
 When adding or changing structure, include the following documentation updates in the same change:
 
@@ -358,8 +385,8 @@ The root [VERSION](./VERSION) is the single source of truth for Shelter Lite's p
 During `0.x` development, this project increments PATCH for compatible fixes and MINOR for features or compatibility changes. Declare the first stable command and installation contract with `1.0.0`. After that, incompatible changes increment MAJOR, compatible features increment MINOR, and compatible fixes increment PATCH. A major or minor increment resets the lower components to zero. Release candidates use suffixes such as `0.2.0-rc.1`.
 
 1. Edit `VERSION` for the next release. Commit the version and implementation together; published version tags must not be moved to changed code.
-2. Rebuild with `build.sh`. The `.sh` and `.command` installers embed the version, and the ZIP and `dist/VERSION` record the same value. Changing the source `VERSION` does not change already-built files.
-3. Publish a GitHub Release whose tag is exactly `v` plus `VERSION`: for `0.1.0`, use `v0.1.0`. Mark release candidates as pre-releases in GitHub. The workflow stops before building or uploading if the tag differs. It validates and packages the chosen version; it does not increment the number.
+2. Rebuild with the platform's `build.sh` or `build.ps1`. The `.sh`, `.command`, and `.ps1` installers embed the version, and each ZIP and `dist/VERSION` record the same value. Changing the source `VERSION` does not change already-built files.
+3. Publish a GitHub Release whose tag is exactly `v` plus `VERSION`: for `0.2.0`, use `v0.2.0`. Mark release candidates as pre-releases in GitHub. The workflow stops before building or uploading if the tag differs. It validates and packages the chosen version; it does not increment the number.
 
 ```bash
 /bin/bash installers/macos/install.sh --version
@@ -372,18 +399,20 @@ cat dist/VERSION
 
 ### Automated release assets
 
-[release.yml](./.github/workflows/release.yml) runs when a GitHub Release is published, including pre-releases. It checks out the released tag, validates Bash syntax, runs the source tests, builds the distribution files, and verifies both checksums. It extracts the ZIP on a macOS 15 runner and runs the same tests against `Shelter Lite.command`. Only after all checks pass does it upload the five generated files to the release's **Assets** section.
+[release.yml](./.github/workflows/release.yml) runs when a GitHub Release is published, including pre-releases. It calls [validate.yml](./.github/workflows/validate.yml), which validates the release tag against `VERSION`, tests source and extracted ZIP installers, builds both platforms, and checks checksums and embedded versions. macOS uses a macOS 15 runner; Windows uses Windows PowerShell 5.1 on a Windows 2025 runner for mocked tests. Both jobs must succeed before the publish job uploads all nine assets: two installers and two checksums per platform, plus the shared `VERSION`.
+
+The validation workflow also runs for implementation changes pushed to `main` and can be started manually. These runs do not publish release assets.
 
 1. Commit and push the workflow and installer sources to GitHub. Choose a release tag whose commit includes this workflow and the intended source version.
 2. In GitHub **Releases**, create a release with that tag and click **Publish release**. Saving a draft or pushing a tag alone does not trigger this workflow.
-3. Wait for **Release Shelter Lite** in Actions to finish successfully, then download `shelter-lite-macos.zip` from the release's **Assets** section. The standalone `.sh` file, both `.sha256` files, and `VERSION` are attached as well.
+3. Wait for **Release Shelter Lite** in Actions to succeed, then download the ZIP for your platform from **Assets**. The standalone `.sh` and `.ps1` files, four checksum files, and shared `VERSION` are attached as well.
 
-The workflow uses the repository's built-in `GITHUB_TOKEN` with `contents: write`; no separate release token is needed. Test or build failures stop the upload. After resolving a failure, rerun the job in Actions; uploads replace assets with the same names. This workflow attaches files to an existing release and runs isolated tests, so it does not verify a full installation on a new Mac.
+The workflow uses the repository's built-in `GITHUB_TOKEN` with `contents: write`; no separate release token is needed. Test or build failures stop the upload. After resolving a failure, rerun the job in Actions; uploads replace assets with the same names. This workflow attaches files to an existing release and runs isolated tests, so it does not verify a full installation on a new Mac or Windows PC.
 
 Distinguish updating Shelter itself from Shelter updating software on the user's computer.
 ### Release notes
 
-Write release notes only in the GitHub Release body; the repository keeps no separate notes file. Write them in English, like the installer messages. Start with a centered heading and a one-sentence summary. Under **New**, list only added features, grouped by platform; add a **Windows** section when Windows support ships. End with a **Download** table listing each installer file with its platform, requirements, and checksum link. File links work after the workflow finishes uploading.
+Write release notes only in the GitHub Release body; the repository keeps no separate notes file. Write them in English, like the installer messages. Start with a centered heading and a one-sentence summary. Under **New**, list only added features, grouped by platform; include **macOS** and **Windows** sections for the platforms changed in the release. End with a **Download** table listing each installer file with its platform, requirements, and checksum link. File links work after the workflow finishes uploading.
 
 ```markdown
 <div align="center">
@@ -400,12 +429,18 @@ Write release notes only in the GitHub Release body; the repository keeps no sep
 
 - <added feature>
 
+### Windows
+
+- <added feature>
+
 ## Download Shelter Lite v<version>
 
 | File | Platform | Requirements | Checksum |
 | --- | --- | --- | --- |
 | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip) | macOS, double-click | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.zip.sha256) |
 | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh) | macOS, Terminal | macOS 15 or later, Apple Silicon | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-macos.sh.sha256) |
+| [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip) | Windows, double-click | Windows 11 x64 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.zip.sha256) |
+| [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1) | Windows, PowerShell | Windows 11 x64, Windows PowerShell 5.1 | [sha256](https://github.com/4BFC/shelter/releases/download/v<version>/shelter-lite-windows.ps1.sha256) |
 
 Installation steps: [README](https://github.com/4BFC/shelter#install)
 ```

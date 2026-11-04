@@ -8,10 +8,11 @@
 
 # Shelter
 
-Shelter sets up development tools on your Mac and checks that they run. Working tools are preserved; missing components are installed.
+Shelter sets up development tools on macOS and Windows and checks that they run. Working tools are preserved; missing components are installed.
 
 [![Release](https://img.shields.io/github/v/release/4BFC/shelter?include_prereleases&style=flat-square)](https://github.com/4BFC/shelter/releases)
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white)
+![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square)
 ![Apple Silicon](https://img.shields.io/badge/Apple_Silicon-M_series-000000?style=flat-square&logo=apple&logoColor=white)
 ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
 ![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)
@@ -35,6 +36,7 @@ Shelter sets up development tools on your Mac and checks that they run. Working 
 | Operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
 | Installer | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Runs with the Bash included in macOS |
 | Package management | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Installs development tools |
+| Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Native x64, Windows PowerShell 5.1, WinGet |
 | CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Under consideration; version undecided |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Under consideration; versions undecided |
 
@@ -42,13 +44,13 @@ Installation policies and technical details: [technical specification](docs/spec
 
 ## Install
 
-### Requirements
+### macOS requirements
 
-- macOS 15 or later on Apple Silicon (M-series chips), using a native terminal environment. Intel Macs, Rosetta, and Windows are not supported.
+- macOS 15 or later on Apple Silicon (M-series chips), using a native terminal environment. The macOS installer does not support Intel Macs, Rosetta, or Windows.
 - An internet connection and a macOS administrator account for Homebrew authentication when requested.
 - zsh or bash for shell configuration. Homebrew, Node.js, and Python do not need to be installed beforehand. Run Shelter as your normal user, without `sudo`.
 
-### Download and run
+### macOS download and run
 
 Download the installer from [GitHub Releases](https://github.com/4BFC/shelter/releases). The steps below apply when `shelter-lite-macos.zip` is available under **Assets**. If it has not been published yet, use the [source build instructions](./CONTRIBUTING.md#distribution).
 
@@ -73,6 +75,29 @@ Continue only if the result is `shelter-lite-macos.zip: OK`. On a mismatch, down
 
 </details>
 
+### Windows download and run
+
+Windows support starts with `0.2.0`. Download `shelter-lite-windows.zip` from a release that contains it; assets become available after the release workflow succeeds.
+
+- Windows 11 x64 with native Windows PowerShell 5.1. Windows 10, Windows Server, ARM64, and 32-bit processes are not supported.
+- Use your regular account, without **Run as administrator**. Internet access is required; approve individual package UAC prompts when requested. Organization policies may prevent installation.
+- The fixed set includes WinGet, Git, VS Code, Windows Terminal, Node.js 24/npm, Python 3.14/uv, and GitHub CLI. Working existing versions are preserved. Missing WinGet is prepared through Microsoft's current-user repair module.
+
+The launcher selects built-in Windows PowerShell 5.1; PowerShell 7 is not an installation target.
+
+1. Extract **all** files from `shelter-lite-windows.zip` into one folder.
+2. Double-click `Shelter Lite.cmd`. Keep `shelter-lite-windows.ps1` beside it. Setup accepts the WinGet source and package agreements for the fixed tools.
+3. Read the result, then press a key to close the window. Reopen your terminal and editor afterward.
+
+These scripts are unsigned. The launcher uses a process-only execution-policy setting; it does not change the saved policy or override organization policies. Windows may display security warnings. Full installation on a clean Windows 11 computer has not yet been verified.
+
+To verify the ZIP, download its `.sha256` file into the same folder and run this in PowerShell there. Continue only if the result is `True`.
+
+```powershell
+$expected = ((Get-Content .\shelter-lite-windows.zip.sha256 -Raw) -split ' ')[0]
+(Get-FileHash .\shelter-lite-windows.zip -Algorithm SHA256).Hash.ToLowerInvariant() -ceq $expected
+```
+
 ## Usage
 
 ### Read the result
@@ -86,7 +111,7 @@ Messages and logs are in English.
 <details>
 <summary>After installation</summary>
 
-Open Ghostty from Applications, or run `open -a Ghostty` in Terminal. Shelter does not change Ghostty's settings, fonts, or the default terminal.
+On macOS, open Ghostty from Applications, or run `open -a Ghostty` in Terminal. On Windows, open Windows Terminal from the Start menu. Shelter does not change terminal settings, fonts, or the default terminal.
 
 If you will use Git, set your commit identity yourself. Replace the example name and email with your own; these global settings apply to your user account. If already configured correctly, keep them.
 
@@ -103,7 +128,7 @@ gh auth login
 
 </details>
 
-### Preview and check
+### macOS preview and check
 
 Keep the extracted `Shelter Lite.command`. In a new terminal, change to the folder containing it. The examples assume it is directly in Downloads; adjust the path if you extracted it elsewhere. Each command below is separate and does not install tools or change configuration.
 
@@ -121,6 +146,20 @@ echo $?
 See `--help` for all options.
 
 For the standalone download, use `/bin/bash shelter-lite-macos.sh` in its folder with the same options. With no options, either file starts installation.
+
+### Windows preview and check
+
+Open PowerShell in the extracted ZIP's folder. These commands perform no installations or configuration changes:
+
+```powershell
+& '.\Shelter Lite.cmd' --dry-run
+& '.\Shelter Lite.cmd' --check
+$LASTEXITCODE
+& '.\Shelter Lite.cmd' --version
+& '.\Shelter Lite.cmd' --help
+```
+
+Read `$LASTEXITCODE` immediately after `--check`: `0` means every tool is ready; `1` means something needs attention. Setup appends missing executable directories to your user PATH after saving a backup. PowerShell profiles, machine PATH, Git identity, and GitHub login are preserved. Logs and PATH backups are under `%LOCALAPPDATA%\Shelter\logs`. New Python installs provide `python3.14`; existing `python` commands and Store aliases retain their priority.
 
 ## Contribution policy
 
