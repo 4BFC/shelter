@@ -1,8 +1,14 @@
 # 開発とメンテナンス
 
-| English | 한국어 | 日本語 |
-| --- | --- | --- |
-| [English](../../CONTRIBUTING.md) | [한국어](../ko/CONTRIBUTING.md) | **現在の文書** |
+<div align="center">
+<table align="center">
+  <tr>
+    <td align="center"><a href="../../CONTRIBUTING.md"><img src="https://img.shields.io/badge/English-555555?style=flat-square" alt="English"></a></td>
+    <td align="center"><a href="../ko/CONTRIBUTING.md"><img src="https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-555555?style=flat-square" alt="한국어"></a></td>
+    <td align="center"><a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-0969DA?style=flat-square" alt="日本語"></a></td>
+  </tr>
+</table>
+</div>
 
 Shelterのメンテナー向けに、開発、ドキュメント作成、検証、リリースの手順を説明します。
 製品の目的、構成、技術方針は[日本語README](./README.md)を参照してください。

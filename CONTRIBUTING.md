@@ -1,8 +1,14 @@
 # Development and Maintenance
 
-| English | 한국어 | 日本語 |
-| --- | --- | --- |
-| **Current** | [한국어](./language/ko/CONTRIBUTING.md) | [日本語](./language/jp/CONTRIBUTING.md) |
+<div align="center">
+<table align="center">
+  <tr>
+    <td align="center"><a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/English-0969DA?style=flat-square" alt="English"></a></td>
+    <td align="center"><a href="language/ko/CONTRIBUTING.md"><img src="https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-555555?style=flat-square" alt="한국어"></a></td>
+    <td align="center"><a href="language/jp/CONTRIBUTING.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-555555?style=flat-square" alt="日本語"></a></td>
+  </tr>
+</table>
+</div>
 
 This guide covers development, documentation, validation, and releases for Shelter's maintainer.
 See the [README](./README.md) for the project's purpose, components, and technical direction.

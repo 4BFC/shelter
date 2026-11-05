@@ -1,7 +1,7 @@
 ```text
   ____  _          _ _
  / ___|| |__   ___| | |_ ___ _ __
- \___ \| '_ \ / _ \ | __/ _ \ '__|
+ \___ \| '_ \ / _ \ | __/ _ \ '__|    Hello, AI World
   ___) | | | |  __/ | ||  __/ |
  |____/|_| |_|\___|_|\__\___|_|
 ```
@@ -17,7 +17,15 @@ ShelterはmacOSとWindowsに開発ツールをインストールし、実行状�
 ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white)
 ![Status: prototype](https://img.shields.io/badge/status-prototype-D99A4E?style=flat-square)
 
-[English](../../README.md) · [한국어](../ko/README.md) · [日本語](README.md)
+<div align="center">
+<table align="center">
+  <tr>
+    <td align="center"><a href="../../README.md"><img src="https://img.shields.io/badge/English-555555?style=flat-square" alt="English"></a></td>
+    <td align="center"><a href="../ko/README.md"><img src="https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-555555?style=flat-square" alt="한국어"></a></td>
+    <td align="center"><a href="README.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-0969DA?style=flat-square" alt="日本語"></a></td>
+  </tr>
+</table>
+</div>
 
 <!-- 検証済みのターミナル画面を準備したら、ここに追加します。 -->
 

@@ -2,6 +2,7 @@
 # ASCII source remains readable by Windows PowerShell 5.1 without a BOM.
 $script:ShelterCopy = @{
     version = 'Shelter Lite {0}'
+    logo_greeting = 'Hello, AI World'
     detail = '{0}'
     version_invalid = 'Could not read a valid Semantic Version from: {0}'
     unknown_option = 'Unknown option: {0}'
@@ -152,6 +153,8 @@ function Write-ShelterLogo {
   ___) | | | |  __/ | ||  __/ |    | |___| | ||  __/
  |____/|_| |_|\___|_|\__\___|_|    |_____|_|\__\___|
 '@
+    Write-Host (Get-ShelterText logo_greeting)
+    Write-Host ''
 }
 
 $script:ShelterColor = 'always'

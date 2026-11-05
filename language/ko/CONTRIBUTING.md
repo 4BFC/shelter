@@ -1,8 +1,14 @@
 # 개발과 유지보수
 
-| English | 한국어 | 日本語 |
-| --- | --- | --- |
-| [English](../../CONTRIBUTING.md) | **현재 문서** | [日本語](../jp/CONTRIBUTING.md) |
+<div align="center">
+<table align="center">
+  <tr>
+    <td align="center"><a href="../../CONTRIBUTING.md"><img src="https://img.shields.io/badge/English-555555?style=flat-square" alt="English"></a></td>
+    <td align="center"><a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-0969DA?style=flat-square" alt="한국어"></a></td>
+    <td align="center"><a href="../jp/CONTRIBUTING.md"><img src="https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-555555?style=flat-square" alt="日本語"></a></td>
+  </tr>
+</table>
+</div>
 
 Shelter 관리자를 위한 개발, 문서 작성, 검증과 배포 절차를 안내합니다.
 제품 목적, 구성과 기술 방향은 [한국어 README](./README.md)를 기준으로 합니다.

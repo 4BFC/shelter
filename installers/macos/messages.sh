@@ -16,6 +16,7 @@ shelter_copy() {
     build_complete) template='Created: %s' ;;
     build_checksum) template='SHA-256 checksum: %s' ;;
     product_version) template='Shelter Lite %s' ;;
+    logo_greeting) template='Hello, AI World' ;;
     version_invalid) template='Could not read a valid Semantic Version such as 0.1.0 or 0.2.0-rc.1 from: %s' ;;
     release_version_mismatch) template='Release tag %s does not match expected tag %s from VERSION.' ;;
     command_finish) template='Press Return to finish. You can then close this window.' ;;
@@ -341,8 +342,9 @@ shelter_logo() {
  \___ \| '_ \ / _ \ | __/ _ \ '__|  | |   | | __/ _ \
   ___) | | | |  __/ | ||  __/ |     | |___| | ||  __/
  |____/|_| |_|\___|_|\__\___|_|     |_____|_|\__\___|
-
 LOGO
+  shelter_print logo_greeting
+  printf '\n'
 }
 
 shelter_help() {

@@ -196,6 +196,7 @@ test_preview() {
   assert_contains "$SHELTER_CASE_DIR/output" ' Dry run complete' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" 'Actual installations: 0, configuration changes: 0' || return 1
   [[ $(grep -Fc ' / ___|| |__' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
+  [[ $(grep -Fxc 'Hello, AI World' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
   assert_absent "$SHELTER_CASE_DIR/output" ' Installation progress' && assert_absent "$SHELTER_CASE_DIR/output" ' Installation results'
 }
 
@@ -450,6 +451,7 @@ test_success_messages() {
   export SHELTER_FAKE_SHOW_LOG=1
   shelter_main --color never > "$SHELTER_CASE_DIR/output" || return 1
   [[ $(grep -Fc ' / ___|| |__' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
+  [[ $(grep -Fxc 'Hello, AI World' "$SHELTER_CASE_DIR/output") == 1 ]] || return 1
   assert_contains "$SHELTER_CASE_DIR/output" ' Installation complete' || return 1
   assert_absent "$SHELTER_CASE_DIR/output" '------------------------------------------------------------' || return 1
   assert_contains "$SHELTER_CASE_DIR/output" '● success: Your development tools are ready.' || return 1
@@ -463,8 +465,8 @@ test_success_messages() {
   assert_contains "$SHELTER_LOG_FILE" 'VS Code          | New installation complete | Not installed → code fixture-version' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Ghostty          | New installation complete | Not installed → Ghostty 1.0.0' || return 1
   assert_contains "$SHELTER_LOG_FILE" 'Homebrew test log:' || return 1
-  # Six logo lines precede the existing concise guidance.
-  [[ $(wc -l < "$SHELTER_CASE_DIR/output") -le 14 ]] && [[ $(LC_ALL=C ls -ld "$SHELTER_LOG_FILE") == -rw-------* ]]
+  # Logo, greeting, and a blank line precede the existing concise guidance.
+  [[ $(wc -l < "$SHELTER_CASE_DIR/output") -le 15 ]] && [[ $(LC_ALL=C ls -ld "$SHELTER_LOG_FILE") == -rw-------* ]]
 }
 
 test_failure_messages() {

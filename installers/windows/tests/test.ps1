@@ -51,6 +51,7 @@ $tests = [ordered]@{
         Assert-Equal (Get-ShelterText version @($script:ShelterReleaseVersion)) $output
         $output=Invoke-CapturedMain @('--help'); Assert-Equal 0 $script:LastCode
         Assert-True ($output.Contains('--dry-run'))
+        Assert-True (-not $output.Contains((Get-ShelterText logo_greeting)))
     }
     'invalid options return 2 without installation' = {
         foreach ($options in @(@('--unknown'),@('--mode','full'),@('--mode'),@('--color','invalid'),@('--check','--dry-run'))) {
@@ -120,10 +121,12 @@ $tests = [ordered]@{
         Assert-True ($output.Contains((Get-ShelterText bootstrap_warning)))
         Assert-True ($output.Contains((Get-ShelterText dry_run_summary)))
         Assert-Equal 1 ([regex]::Matches($output,[regex]::Escape('____  _')).Count)
+        Assert-Equal 1 ([regex]::Matches($output,[regex]::Escape((Get-ShelterText logo_greeting))).Count)
     }
     'ready check succeeds and missing check returns 1 without changes' = {
         Set-MockEnvironment
-        $null=Invoke-CapturedMain @('--check'); Assert-Equal 0 $script:LastCode
+        $output=Invoke-CapturedMain @('--check'); Assert-Equal 0 $script:LastCode
+        Assert-True (-not $output.Contains((Get-ShelterText logo_greeting)))
         $script:States.git='missing'
         $null=Invoke-CapturedMain @('--check'); Assert-Equal 1 $script:LastCode
         Assert-Equal 0 $script:Installed.Count; Assert-True (-not $script:Saved)
@@ -134,6 +137,7 @@ $tests = [ordered]@{
         $output=Invoke-CapturedMain @('--color','never'); Assert-Equal 0 $script:LastCode
         Assert-Equal 0 $script:Installed.Count; Assert-True $script:Saved
         Assert-True ($output.Contains((Get-ShelterText tools_ready)))
+        Assert-Equal 1 ([regex]::Matches($output,[regex]::Escape((Get-ShelterText logo_greeting))).Count)
         Assert-True (-not $output.Contains((Get-ShelterText no_rollback)))
     }
     'missing tools install in dependency order and a rerun preserves them' = {
