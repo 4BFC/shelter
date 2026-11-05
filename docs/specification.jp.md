@@ -21,7 +21,7 @@ CodexやClaude Codeなどのツールをまとめてインストール、管理�
 
 **Shelter Lite**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初期設定です。個別のツールを選択または除外する機能は提供しません。
 **正式版**は、インストール後も状態確認、セキュリティ通知、更新を継続して提供するCLIです。
-インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLI本体はインストーラーと分け、Pythonを採用した場合は`src/shelter/`に実装する予定です。
+インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLIは別のPythonパッケージとして`src/shelter/`にひな形を用意し、開発環境と依存関係はuvで管理する方針です。コマンドとパッケージ設定は未実装です。[CLIの検出と更新情報の計画](plans/shelter-cli.md)を参照してください。
 
 ## ライト版の固定インストール仕様
 
@@ -62,15 +62,15 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 ## 技術方針
 
 **Shelter Lite 0.2.0はmacOSとWindowsのインストーラーを個別に提供します。** macOSはmacOS 15以降とネイティブApple Silicon、WindowsはWindows 11 x64と標準64ビットWindows PowerShell 5.1が対象です。[Windowsの実装と実機検証項目](plans/windows-lite.md)を参照してください。Windows 10、Windows Server、ARM64、32ビットプロセスは今回のWindows版の対象外です。
-ライト版はmacOS標準のBashまたはWindows標準のPowerShellを使い、Node.jsやPythonの事前インストールは不要です。正式版CLIとWebサイトの技術は引き続き検討中です。
+ライト版はmacOS標準のBashまたはWindows標準のPowerShellを使い、Node.jsやPythonの事前インストールは不要です。Python CLIのひな形を用意しました。実行するPythonのバージョン、コマンドライブラリ、実行ファイルの作成ツールは未定です。Webサイトの技術は引き続き検討中です。
 
 | 領域 | 検討している技術 | 役割 | 状態 |
 | --- | --- | --- | --- |
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | ライト版のインストールとシェル設定 | Apple Silicon、zsh/bash。Intel、Rosettaは対象外 |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 固定ライト版の設定、WinGet、ユーザーPATH | x64とWindows PowerShell 5.1を実装、クリーンPCでの実機検証は未完了 |
 | Webサイトと情報収集 | 未定 | セキュリティ情報の収集、参照、ユーザー画面 | 技術選定前 |
-| CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | 優先候補。バージョンは未定 |
-| CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | 候補。バージョンは未定 |
+| CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | Pythonを採用。ひな形のみ、実行バージョンは未定 |
+| CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | uvは開発用に採用。Typerは候補、バージョンは未定 |
 | Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 固定仕様の初回インストールと実行環境の準備 | 実装済み。Bash 3.2.57で検査 |
 | macOSでの配布 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | CLIのインストールとCLI自体の更新 | 配布方法の候補 |
 
@@ -116,6 +116,7 @@ shelter/
 │   ├── specification.jp.md
 │   └── plans/
 │       ├── readme-usage.md # README使い方中心の整理計画
+│       ├── shelter-cli.md # CLIの検出、更新情報、配布の計画
 │       └── windows-lite.md # Windowsの実装と実機検証項目
 ├── dist/             # 生成結果、Git管理対象外
 │   ├── shelter-lite-macos.sh
@@ -143,6 +144,13 @@ shelter/
 │       ├── tools.ps1
 │       └── tests/
 │           └── test.ps1
+├── src/
+│   └── shelter/      # Python CLIのひな形、コマンド未実装
+│       ├── __init__.py
+│       └── providers/ # パッケージ管理ツール別の照会処理
+│           └── __init__.py
+├── tests/            # CLIテスト用、インストーラーテストとは分離
+│   └── .gitkeep
 ├── scripts/
 │   ├── version.ps1
 │   └── version.sh    # 製品バージョンの形式検証とファイル読み込み
@@ -171,7 +179,7 @@ Windowsのロジックとパッケージングは隔離テストで確認しま�
 
 ライト版は`install.sh`で固定仕様全体のインストールを開始し、`tools.sh`の関数を呼び出します。正式版を提供する際も、同じエントリーポイントに正式版CLIのインストール処理を接続する予定です。現在の`--mode full`は準備中の案内を表示して終了します。バージョン別やツール別のインストールディレクトリは事前に分割しません。
 
-正式版CLI本体の予定位置である`src/shelter/`は、Pythonでの実装を始める際に追加します。Webサイト、情報収集サービス、共通データ形式の構成は連携範囲が決まってから検討し、現在のインストーラー構成には含めません。
+正式版CLIのひな形は`src/shelter/`、管理ツール別の照会処理は`providers/`、CLIテストはルートの`tests/`に用意しました。現在はパッケージを示すファイルとテストディレクトリを保持するファイルのみです。`pyproject.toml`、`shelter`コマンド、ツール検出、更新情報の照会、Lite呼び出しは未実装です。モジュールの役割と事前インストールを不要にする配布方針は[CLI計画](plans/shelter-cli.md)を参照してください。Webサイト、情報収集サービス、共通データ形式の構成は連携範囲が決まってから検討し、現在のインストーラー構成には含めません。
 共通コードやツール固有の処理が実際に増えたときにファイルを分割します。リリースworkflowで対象バージョンを検証してパッケージングし、追加の検査と詳細ドキュメントは機能に応じて拡張します。
 ディレクトリを作成するタイミングと文書の更新手順は、[CONTRIBUTINGのディレクトリの追加と変更](../language/jp/CONTRIBUTING.md#ディレクトリの追加と変更)に従ってください。
 

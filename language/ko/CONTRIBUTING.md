@@ -190,7 +190,7 @@ macOS 실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
 2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
-3. **정식 CLI 본체는 별도로 구현합니다.** Python을 채택하면 본체는 `src/shelter/`, Python 테스트는 루트 `tests/`, 패키지 설정은 루트 `pyproject.toml`에 둡니다. 이 경로들은 아직 생성하지 않았습니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
+3. **정식 CLI 본체는 별도로 구현합니다.** Python 패키지 구조는 `src/shelter/`, 관리자별 조회 처리는 `src/shelter/providers/`, CLI 테스트는 루트 `tests/`에 둡니다. 개발 환경과 의존성은 uv로 관리할 계획입니다. 현재는 패키지 표시 파일과 테스트 디렉터리 유지 파일만 있으며, 루트 `pyproject.toml`, `uv.lock`, 실행 환경과 의존성 버전, 명령과 CLI 테스트는 미구현입니다. 아직 CLI 설치나 실행 명령은 없습니다. 저장소 루트에서 작업하며 구현과 검증 순서는 [CLI 탐색과 업데이트 조회 계획](../../docs/plans/shelter-cli.md)을 따릅니다. Lite 설치 로직은 기존 OS별 설치기에 유지하고 향후 CLI에서 호출합니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
 
 Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. 버전별 동작을 추가할 때 공통 설치 흐름과 각 버전의 동작을 함께 확인하고, 실제 실행 위치와 명령을 이 문서에 기록합니다.
 웹사이트는 이 저장소 밖에서 관리합니다. 정보 수집 서비스와 데이터 형식은 연동 범위를 정한 뒤 구조를 정합니다. Windows 스크립트, 실행기, 테스트와 패키징은 `installers/windows/`에서 관리합니다. [Windows 구현과 실기기 검증 항목](../../docs/plans/windows-lite.md)을 참고하세요.

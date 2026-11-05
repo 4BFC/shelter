@@ -21,7 +21,7 @@ Integrated installation and management of tools such as Codex and Claude Code ma
 
 **Shelter Lite** is an initial setup that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
 The **full version** will be a CLI that continues to provide status checks, security notifications, and updates after installation.
-Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI implementation is separate from the installer; if Python is chosen, it will be implemented in `src/shelter/`.
+Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI uses a separate Python package scaffold in `src/shelter/`, with development environments and dependencies to be managed by uv. Commands and package configuration are not implemented yet; see the [CLI discovery and update reporting plan](plans/shelter-cli.md).
 
 ## Lite Installation Specification
 
@@ -62,15 +62,15 @@ Working installations are retained. New Node.js is constrained to 24.x even if t
 ## Technical Direction
 
 **Shelter Lite 0.2.0 has separate macOS and Windows installers.** macOS targets macOS 15+ on native Apple Silicon; Windows targets Windows 11 x64 with native Windows PowerShell 5.1. See the [Windows implementation and acceptance checks](plans/windows-lite.md). Windows 10, Windows Server, ARM64, and 32-bit processes are excluded from this Windows release.
-Lite uses the Bash included in macOS or Windows PowerShell included in Windows. Node.js and Python are not prerequisites. Technologies for the full CLI and website remain under consideration.
+Lite uses the Bash included in macOS or Windows PowerShell included in Windows. Node.js and Python are not prerequisites. The Python CLI scaffold is prepared; its runtime version, command library, and bundling tool remain undecided. Website technologies remain under consideration.
 
 | Area | Technology under consideration | Role | Status |
 | --- | --- | --- | --- |
 | Supported operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Lite installation and shell configuration | Apple Silicon, zsh/bash. Intel and Rosetta excluded |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Fixed Lite setup, WinGet, user PATH | Implemented for x64 and Windows PowerShell 5.1; clean-PC acceptance pending |
 | Website and information collection | Undecided | Collect security information and provide access and user interfaces | Technology selection pending |
-| CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Primary candidate; version undecided |
-| CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | Candidates; versions undecided |
+| CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Python selected; directory scaffold only, runtime version undecided |
+| CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | uv selected for development; Typer remains a candidate, versions undecided |
 | Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Initial installation and environment setup for the fixed specification | Implemented and checked with Bash 3.2.57 |
 | macOS distribution | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Install and update the CLI itself | Distribution candidate |
 
@@ -116,6 +116,7 @@ shelter/
 │   ├── specification.jp.md
 │   └── plans/
 │       ├── readme-usage.md # Plan for a usage-first README
+│       ├── shelter-cli.md # CLI discovery, update reporting, and distribution plan
 │       └── windows-lite.md # Windows implementation and acceptance
 ├── dist/             # Generated output, excluded from Git
 │   ├── shelter-lite-macos.sh
@@ -143,6 +144,13 @@ shelter/
 │       ├── tools.ps1
 │       └── tests/
 │           └── test.ps1
+├── src/
+│   └── shelter/      # Python CLI scaffold, commands not implemented
+│       ├── __init__.py
+│       └── providers/ # Package-manager adapter scaffold
+│           └── __init__.py
+├── tests/            # Reserved for CLI tests, separate from installer tests
+│   └── .gitkeep
 ├── scripts/
 │   ├── version.ps1   # PowerShell SemVer reader
 │   └── version.sh    # Product version format, validation, and file reading
@@ -171,7 +179,7 @@ Windows logic and packaging have isolated tests; actual Windows 11 installation,
 
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 
-The planned location for the full CLI, `src/shelter/`, will be added when Python implementation begins. The structure of the website, collection service, and shared data formats will be considered after the integration scope is defined; they are not part of the current installer structure.
+The full CLI scaffold is in `src/shelter/`, with manager adapters reserved under `providers/` and CLI tests under the root `tests/`. Only package markers and a test-directory placeholder exist. `pyproject.toml`, a `shelter` entry point, discovery, update reporting, and Lite delegation are pending. Follow the [CLI plan](plans/shelter-cli.md) for module responsibilities and the no-prerequisites distribution contract. The structure of the website, collection service, and shared data formats will be considered after the integration scope is defined; they are not part of the current installer structure.
 Split files when shared code or tool-specific logic actually grows. The release workflow validates and packages released versions; add further checks and detailed documentation as features require them.
 Follow [Adding and Changing Directories in CONTRIBUTING](../CONTRIBUTING.md#adding-and-changing-directories) for when to create directories and update documentation.
 
