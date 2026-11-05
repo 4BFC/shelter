@@ -1,12 +1,14 @@
 ```text
   ____  _          _ _
  / ___|| |__   ___| | |_ ___ _ __
- \___ \| '_ \ / _ \ | __/ _ \ '__|    Hello, AI World
+ \___ \| '_ \ / _ \ | __/ _ \ '__|
   ___) | | | |  __/ | ||  __/ |
  |____/|_| |_|\___|_|\__\___|_|
 ```
 
 # Shelter
+
+Hello, AI World
 
 ShelterはmacOSとWindowsに開発ツールをインストールし、実行状態を確認します。正常に動作するツールは保持し、不足する構成要素を準備します。
 
@@ -39,17 +41,43 @@ ShelterはmacOSとWindowsに開発ツールをインストールし、実行状�
 
 ## 仕様
 
+### 提供するインストーラー
+
+Shelter Liteは次のスクリプトインストーラーを提供します。最新の公開リリースからOSに合ったファイルをダウンロードしてください。
+
+| OS | インストーラー | 実行方法 |
+| --- | --- | --- |
+| macOS | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.zip) | 展開して`Shelter Lite.command`をダブルクリック |
+| macOS | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.sh) | macOSのBashで実行 |
+| Windows | [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.zip) | 全ファイルを展開して`Shelter Lite.cmd`をダブルクリック |
+| Windows | [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.ps1) | Windows PowerShell 5.1で実行 |
+
+各インストーラーに対応する`.sha256`チェックサムと、両OS共通の`VERSION`も提供します。別途インストールする`shelter-lite`コマンドと正式版Shelter CLIは未提供です。
+
+### インストールするツール
+
+ライト版はツールを選択せず、次の固定構成全体を準備します。記載のバージョンは新規インストールの対象で、動作する既存バージョンは保持します。
+
+| 構成 | macOS | Windows |
+| --- | --- | --- |
+| パッケージ管理 | Homebrew | WinGet |
+| バージョン管理 | Git | Git |
+| エディター | VS Code | VS Code |
+| ターミナル | Ghostty | Windows Terminal |
+| JavaScript | Node.js 24.x + npm | Node.js 24.x + npm |
+| Python | Python 3.14.x + uv | Python 3.14.x + uv |
+| GitHub連携 | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
+
+### 動作環境
+
 | 構成 | 技術 | 説明 |
 | --- | --- | --- |
-| 製品バージョン | [VERSION](../../VERSION) | 両インストーラーで共有するソースバージョン。リリースバッジは公開済みバージョンを表示 |
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon、zsh/bash |
 | macOSインストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS標準のBashで実行 |
 | macOSパッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 開発ツールのインストール |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | ネイティブx64 |
 | Windowsインストーラー | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Windows標準のDesktopエディションで実行 |
 | Windowsパッケージ管理 | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | 未導入の場合は先に準備してからツールを導入 |
-| CLI | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 検討中。バージョン未定 |
-| CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 検討中。バージョン未定 |
 
 インストール方針と技術の詳細は[技術仕様](../../docs/specification.jp.md)を参照してください。
 
