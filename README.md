@@ -3,12 +3,10 @@
  / ___|| |__   ___| | |_ ___ _ __
  \___ \| '_ \ / _ \ | __/ _ \ '__|
   ___) | | | |  __/ | ||  __/ |
- |____/|_| |_|\___|_|\__\___|_|
+ |____/|_| |_|\___|_|\__\___|_|       Hello, AI World
 ```
 
 # Shelter
-
-Hello, AI World
 
 Shelter sets up development tools on macOS and Windows and checks that they run. Working tools are preserved; missing components are installed.
 
