@@ -39,43 +39,30 @@ Shelter sets up development tools on macOS and Windows and checks that they run.
 
 ## Specifications
 
-### Available installers
-
-Shelter Lite ships as the following script installers. Download the file for your platform from the latest published release.
-
-| Platform | Installer | How to run |
-| --- | --- | --- |
-| macOS | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.zip) | Extract and double-click `Shelter Lite.command` |
-| macOS | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.sh) | Run with macOS Bash |
-| Windows | [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.zip) | Extract all files and double-click `Shelter Lite.cmd` |
-| Windows | [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.ps1) | Run with Windows PowerShell 5.1 |
-
-Each installer has a matching `.sha256` checksum file, and both platforms share the `VERSION` asset. A separate `shelter-lite` command and the full Shelter CLI are not yet available.
-
-### Installed tools
+### Supported tools
 
 Lite prepares this entire fixed set without tool selection. The version targets below apply to new installations; working existing versions are preserved.
 
 | Component | macOS | Windows |
 | --- | --- | --- |
-| Package manager | Homebrew | WinGet |
-| Version control | Git | Git |
-| Editor | VS Code | VS Code |
-| Terminal | Ghostty | Windows Terminal |
-| JavaScript | Node.js 24.x + npm | Node.js 24.x + npm |
-| Python | Python 3.14.x + uv | Python 3.14.x + uv |
-| GitHub integration | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
+| Package manager | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) |
+| Version control | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) |
+| Editor | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) |
+| Terminal | ![Ghostty](https://img.shields.io/badge/Ghostty-3551F3?style=flat-square&logo=ghostty&logoColor=white) | ![Windows Terminal](https://img.shields.io/badge/Windows_Terminal-4D4D4D?style=flat-square) |
+| JavaScript | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) |
+| Python | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) |
+| GitHub integration | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) |
 
-### Supported environment
+### System requirements
+
+The installers run on the following platforms using their built-in shells.
 
 | Component | Technology | Details |
 | --- | --- | --- |
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
 | macOS installer | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Runs with the Bash included in macOS |
-| macOS package manager | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Installs development tools |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Native x64 |
 | Windows installer | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Uses the Windows built-in Desktop edition |
-| Windows package manager | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | Prepares missing WinGet before installing tools |
 
 Installation policies and technical details: [technical specification](docs/specification.md).
 

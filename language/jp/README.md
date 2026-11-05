@@ -39,43 +39,30 @@ ShelterはmacOSとWindowsに開発ツールをインストールし、実行状�
 
 ## 仕様
 
-### 提供するインストーラー
-
-Shelter Liteは次のスクリプトインストーラーを提供します。最新の公開リリースからOSに合ったファイルをダウンロードしてください。
-
-| OS | インストーラー | 実行方法 |
-| --- | --- | --- |
-| macOS | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.zip) | 展開して`Shelter Lite.command`をダブルクリック |
-| macOS | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.sh) | macOSのBashで実行 |
-| Windows | [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.zip) | 全ファイルを展開して`Shelter Lite.cmd`をダブルクリック |
-| Windows | [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.ps1) | Windows PowerShell 5.1で実行 |
-
-各インストーラーに対応する`.sha256`チェックサムと、両OS共通の`VERSION`も提供します。別途インストールする`shelter-lite`コマンドと正式版Shelter CLIは未提供です。
-
-### インストールするツール
+### 対応ツール
 
 ライト版はツールを選択せず、次の固定構成全体を準備します。記載のバージョンは新規インストールの対象で、動作する既存バージョンは保持します。
 
 | 構成 | macOS | Windows |
 | --- | --- | --- |
-| パッケージ管理 | Homebrew | WinGet |
-| バージョン管理 | Git | Git |
-| エディター | VS Code | VS Code |
-| ターミナル | Ghostty | Windows Terminal |
-| JavaScript | Node.js 24.x + npm | Node.js 24.x + npm |
-| Python | Python 3.14.x + uv | Python 3.14.x + uv |
-| GitHub連携 | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
+| パッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) |
+| バージョン管理 | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) |
+| エディター | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) |
+| ターミナル | ![Ghostty](https://img.shields.io/badge/Ghostty-3551F3?style=flat-square&logo=ghostty&logoColor=white) | ![Windows Terminal](https://img.shields.io/badge/Windows_Terminal-4D4D4D?style=flat-square) |
+| JavaScript | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) |
+| Python | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) |
+| GitHub連携 | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) |
 
-### 動作環境
+### システム要件
+
+インストーラーは、以下のOSに標準搭載されたシェルで実行します。
 
 | 構成 | 技術 | 説明 |
 | --- | --- | --- |
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon、zsh/bash |
 | macOSインストーラー | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS標準のBashで実行 |
-| macOSパッケージ管理 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 開発ツールのインストール |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | ネイティブx64 |
 | Windowsインストーラー | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Windows標準のDesktopエディションで実行 |
-| Windowsパッケージ管理 | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | 未導入の場合は先に準備してからツールを導入 |
 
 インストール方針と技術の詳細は[技術仕様](../../docs/specification.jp.md)を参照してください。
 

@@ -39,43 +39,30 @@ Shelter는 macOS와 Windows에 개발 도구를 설치하고 실행 상태를 �
 
 ## 스펙
 
-### 제공하는 설치 파일
-
-Shelter Lite는 다음 스크립트 설치 파일을 제공합니다. 최신 공개 릴리스에서 운영체제에 맞는 파일을 내려받으세요.
-
-| 운영체제 | 설치 파일 | 실행 방식 |
-| --- | --- | --- |
-| macOS | [shelter-lite-macos.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.zip) | 압축을 풀고 `Shelter Lite.command` 더블클릭 |
-| macOS | [shelter-lite-macos.sh](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-macos.sh) | macOS Bash에서 실행 |
-| Windows | [shelter-lite-windows.zip](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.zip) | 모든 파일의 압축을 풀고 `Shelter Lite.cmd` 더블클릭 |
-| Windows | [shelter-lite-windows.ps1](https://github.com/4BFC/shelter/releases/latest/download/shelter-lite-windows.ps1) | Windows PowerShell 5.1에서 실행 |
-
-각 설치 파일에 대응하는 `.sha256` 체크섬과 두 플랫폼이 공유하는 `VERSION` 파일도 제공합니다. 별도로 설치되는 `shelter-lite` 명령과 정식 Shelter CLI는 아직 제공하지 않습니다.
-
-### 설치되는 도구
+### 지원 도구
 
 라이트는 도구 선택 없이 아래 고정 구성을 모두 준비합니다. 버전 표기는 새 설치 기준이며, 정상 실행되는 기존 버전은 유지합니다.
 
 | 구성 | macOS | Windows |
 | --- | --- | --- |
-| 패키지 관리 | Homebrew | WinGet |
-| 버전 관리 | Git | Git |
-| 편집기 | VS Code | VS Code |
-| 터미널 | Ghostty | Windows Terminal |
-| JavaScript | Node.js 24.x + npm | Node.js 24.x + npm |
-| Python | Python 3.14.x + uv | Python 3.14.x + uv |
-| GitHub 연동 | GitHub CLI (`gh`) | GitHub CLI (`gh`) |
+| 패키지 관리 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) |
+| 버전 관리 | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) | ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white) |
+| 편집기 | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) | ![VS Code](https://img.shields.io/badge/VS_Code-007ACC?style=flat-square) |
+| 터미널 | ![Ghostty](https://img.shields.io/badge/Ghostty-3551F3?style=flat-square&logo=ghostty&logoColor=white) | ![Windows Terminal](https://img.shields.io/badge/Windows_Terminal-4D4D4D?style=flat-square) |
+| JavaScript | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) | ![Node.js 24.x](https://img.shields.io/badge/Node.js-24.x-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?style=flat-square&logo=npm&logoColor=white) |
+| Python | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | ![Python 3.14.x](https://img.shields.io/badge/Python-3.14.x-3776AB?style=flat-square&logo=python&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) |
+| GitHub 연동 | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) | ![GitHub CLI (gh)](https://img.shields.io/badge/GitHub_CLI-gh-181717?style=flat-square&logo=github&logoColor=white) |
 
-### 지원 환경
+### 실행 요구 사항
+
+설치기는 아래 운영체제에 기본으로 포함된 셸에서 실행합니다.
 
 | 구성 | 기술 | 설명 |
 | --- | --- | --- |
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Apple Silicon, zsh/bash |
 | macOS 설치기 | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | macOS에 포함된 Bash로 실행 |
-| macOS 패키지 관리 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | 개발 도구 설치 |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 기본 x64 환경 |
 | Windows 설치기 | ![Windows PowerShell 5.1](https://img.shields.io/badge/Windows_PowerShell-5.1-5391FE?style=flat-square) | Windows에 포함된 Desktop 에디션으로 실행 |
-| Windows 패키지 관리 | ![WinGet](https://img.shields.io/badge/WinGet-0078D4?style=flat-square) | 없는 경우 먼저 준비한 뒤 도구 설치 |
 
 설치 정책과 기술별 세부 내용은 [기술 사양](../../docs/specification.ko.md)에 정리합니다.
 
