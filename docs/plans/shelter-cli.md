@@ -42,7 +42,7 @@ The root `VERSION` remains the only manually maintained product version. Package
 
 ## Proposed command flow
 
-These names describe the intended interface and are not executable commands yet:
+These names describe the intended interface. Help, version, and `shelter lite` are implemented; `status` and `outdated` are not:
 
 ```text
 shelter                  Show help and available commands
@@ -78,13 +78,28 @@ The intended flow is the Shelter installer, then the installed `shelter` command
 
 ## Implementation order and verification
 
-1. Define the supported Python runtime and package metadata, derive the version from `VERSION`, and implement help/version with a verified local entry point.
-2. Implement `status` with fixtures for missing managers, duplicate installations, aliases, and broken executables; do not change the real computer during tests.
-3. Implement `outdated` with provider fixtures, policy decisions, timeouts, and source freshness reporting. Verify that report commands never call package installation or upgrade actions.
-4. Add Lite delegation tests for OS selection, argument forwarding, process I/O, interruption, and exit codes, using a stub installer. Do not install tools in automated CLI tests.
-5. Build self-contained artifacts, verify launch without external Python/uv/managers, and verify bundled Lite resources. Only then connect CLI installation and optional package-manager registration to release workflows.
+The end-user installation flow comes before discovery features, because the goal is that a non-developer can install Shelter and run `shelter lite` on a computer without developer tools. The order was revised on 2026-11-12.
 
-Step 1 is verified by `tests/test_cli.py`: help output without arguments, version output matching `VERSION`, and exit code 2 for an unknown option. Existing Lite implementations and release workflows are unchanged.
+1. Define the supported Python runtime and package metadata, derive the version from `VERSION`, and implement help/version with a verified local entry point. Done.
+2. Implement `shelter lite` delegation to the existing OS installer. Test OS selection, argument forwarding, exit codes, and interruption with a stub installer. Do not install tools in automated CLI tests. Done for running from a source checkout.
+3. Build self-contained artifacts with the Lite installer bundled inside, and verify `shelter --version` and `shelter lite --dry-run` without external Python, uv, or package managers.
+4. Provide a Shelter installer that copies the executable into a user directory and registers it on the user PATH, following Lite's existing PATH backup rules.
+5. Connect artifact builds and the Shelter installer to the release workflow while keeping the standalone Lite downloads.
+6. Implement `status` with fixtures for missing managers, duplicate installations, aliases, and broken executables; do not change the real computer during tests.
+7. Implement `outdated` with provider fixtures, policy decisions, timeouts, and source freshness reporting. Verify that report commands never call package installation or upgrade actions.
+
+Step 1 is verified by `tests/test_cli.py`: help output without arguments, version output matching `VERSION`, and exit code 2 for an unknown option. Step 2 is verified by `tests/test_lite.py`. Existing Lite implementations and release workflows are unchanged.
+
+### `shelter lite` delegation
+
+`shelter lite [options]` passes every following argument unchanged to the Lite installer, so Lite keeps its own option parsing, help text, messages, and exit codes. `shelter lite --help` shows Lite's help, not Shelter's. The child process shares the terminal, so prompts such as administrator authentication remain visible.
+
+| OS | Executed command |
+| --- | --- |
+| macOS | `/bin/bash installers/macos/install.sh [options]` |
+| Windows | `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File installers\windows\install.ps1 [options]`, using `Sysnative` from a 32-bit host like `launch.cmd` |
+
+The installer is currently located through the source checkout, because the source installers read `messages`, `tools`, `scripts/version`, and `VERSION` by relative path. Step 3 adds a bundled location for the generated standalone installers. Other operating systems, or a missing installer, exit with status 1 and a message on standard error. An interrupted run returns 130, and a child ended by a signal returns 128 plus the signal number.
 
 ## References
 

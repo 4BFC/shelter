@@ -21,7 +21,7 @@ Integrated installation and management of tools such as Codex and Claude Code ma
 
 **Shelter Lite** is an initial setup that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
 The **full version** will be a CLI that continues to provide status checks, security notifications, and updates after installation.
-Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI is a separate Python package in `src/shelter/`, with development environments and dependencies managed by uv. Package configuration and the `shelter` entry point (help and version only) exist; discovery, update reporting, and Lite delegation are not implemented yet. See the [CLI discovery and update reporting plan](plans/shelter-cli.md).
+Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI is a separate Python package in `src/shelter/`, with development environments and dependencies managed by uv. Package configuration, the `shelter` entry point with help and version, and `shelter lite`, which runs the existing OS installer from a source checkout, exist; discovery and update reporting are not implemented yet. See the [CLI discovery and update reporting plan](plans/shelter-cli.md).
 
 ## Lite Installation Specification
 
@@ -69,7 +69,7 @@ Lite uses the Bash included in macOS or Windows PowerShell included in Windows. 
 | Supported operating system | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | Lite installation and shell configuration | Apple Silicon, zsh/bash. Intel and Rosetta excluded |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | Fixed Lite setup, WinGet, user PATH | Implemented for x64 and Windows PowerShell 5.1; clean-PC acceptance pending |
 | Website and information collection | Undecided | Collect security information and provide access and user interfaces | Technology selection pending |
-| CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Python 3.14 or later; help and version entry point only |
+| CLI implementation | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | Status checks, notifications, and updates | Python 3.14 or later; help, version, and `shelter lite` implemented |
 | CLI development tools | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | Command definitions, Python environments, and dependency management | uv selected for development; commands use standard `argparse`, Typer remains a candidate |
 | Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | Initial installation and environment setup for the fixed specification | Implemented and checked with Bash 3.2.57 |
 | macOS distribution | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | Install and update the CLI itself | Distribution candidate |
@@ -109,6 +109,7 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       ├── validate.yml # Source and ZIP checks on macOS and Windows
+│       ├── test-cli.yml # Python CLI pytest on macOS and Windows
 │       └── release.yml # Release tests, packaging, and asset upload
 ├── docs/
 │   ├── specification.md
@@ -147,11 +148,13 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLI package
 │       ├── __init__.py
-│       ├── cli.py    # `shelter` entry point: help and version
+│       ├── cli.py    # `shelter` entry point: help, version, command dispatch
+│       ├── lite.py   # Runs the OS Lite installer for `shelter lite`
 │       └── providers/ # Package-manager adapter scaffold
 │           └── __init__.py
 ├── tests/            # CLI tests, separate from installer tests
-│   └── test_cli.py
+│   ├── test_cli.py
+│   └── test_lite.py
 ├── pyproject.toml    # Python package metadata and `shelter` entry point
 ├── uv.lock           # Resolved development dependencies
 ├── scripts/
@@ -182,7 +185,7 @@ Windows logic and packaging have isolated tests; actual Windows 11 installation,
 
 Lite starts installation of the full fixed specification in `install.sh`, which calls functions from `tools.sh`. The same entry point will also connect the full CLI's installation workflow when it becomes available. Currently, `--mode full` exits with a message that it is not yet available. Separate directories for each version or tool are not created in advance.
 
-The full CLI is in `src/shelter/`, with manager adapters reserved under `providers/` and CLI tests under the root `tests/`. `pyproject.toml` and a `shelter` entry point that prints help and version exist. Discovery, update reporting, and Lite delegation are pending. Follow the [CLI plan](plans/shelter-cli.md) for module responsibilities and the no-prerequisites distribution contract. The structure of the website, collection service, and shared data formats will be considered after the integration scope is defined; they are not part of the current installer structure.
+The full CLI is in `src/shelter/`, with manager adapters reserved under `providers/` and CLI tests under the root `tests/`. `pyproject.toml`, a `shelter` entry point that prints help and version, and `shelter lite` delegation exist. Discovery and update reporting are pending. Follow the [CLI plan](plans/shelter-cli.md) for module responsibilities and the no-prerequisites distribution contract. The structure of the website, collection service, and shared data formats will be considered after the integration scope is defined; they are not part of the current installer structure.
 Split files when shared code or tool-specific logic actually grows. The release workflow validates and packages released versions; add further checks and detailed documentation as features require them.
 Follow [Adding and Changing Directories in CONTRIBUTING](../CONTRIBUTING.md#adding-and-changing-directories) for when to create directories and update documentation.
 

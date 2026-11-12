@@ -21,7 +21,7 @@ CodexやClaude Codeなどのツールをまとめてインストール、管理�
 
 **Shelter Lite**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初期設定です。個別のツールを選択または除外する機能は提供しません。
 **正式版**は、インストール後も状態確認、セキュリティ通知、更新を継続して提供するCLIです。
-インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLIは別のPythonパッケージとして`src/shelter/`にあり、開発環境と依存関係はuvで管理します。パッケージ設定と、ヘルプとバージョンのみを表示する`shelter`エントリーポイントは実装済みで、ツール検出、更新情報の照会、Lite呼び出しは未実装です。[CLIの検出と更新情報の計画](plans/shelter-cli.md)を参照してください。
+インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLIは別のPythonパッケージとして`src/shelter/`にあり、開発環境と依存関係はuvで管理します。パッケージ設定、ヘルプとバージョンを表示する`shelter`エントリーポイント、ソースリポジトリから既存のOS別インストーラーを実行する`shelter lite`は実装済みで、ツール検出と更新情報の照会は未実装です。[CLIの検出と更新情報の計画](plans/shelter-cli.md)を参照してください。
 
 ## ライト版の固定インストール仕様
 
@@ -69,7 +69,7 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | ライト版のインストールとシェル設定 | Apple Silicon、zsh/bash。Intel、Rosettaは対象外 |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 固定ライト版の設定、WinGet、ユーザーPATH | x64とWindows PowerShell 5.1を実装、クリーンPCでの実機検証は未完了 |
 | Webサイトと情報収集 | 未定 | セキュリティ情報の収集、参照、ユーザー画面 | 技術選定前 |
-| CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | Python 3.14以上。ヘルプとバージョンのエントリーポイントのみ実装 |
+| CLI本体 | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) | 状態確認、通知、更新処理 | Python 3.14以上。ヘルプ、バージョン、`shelter lite`を実装 |
 | CLI開発ツール | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | コマンド構成、Python環境と依存関係の管理 | uvは開発用に採用。コマンドは標準の`argparse`を使用し、Typerは候補 |
 | Shelter Lite | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 固定仕様の初回インストールと実行環境の準備 | 実装済み。Bash 3.2.57で検査 |
 | macOSでの配布 | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black) | CLIのインストールとCLI自体の更新 | 配布方法の候補 |
@@ -109,6 +109,7 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       ├── validate.yml # macOS / Windows
+│       ├── test-cli.yml # Python CLIのpytest、macOS / Windows
 │       └── release.yml # リリースの検査、パッケージング、ファイル添付
 ├── docs/
 │   ├── specification.md
@@ -147,11 +148,13 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLIパッケージ
 │       ├── __init__.py
-│       ├── cli.py    # `shelter`エントリーポイント: ヘルプとバージョン
+│       ├── cli.py    # `shelter`エントリーポイント: ヘルプ、バージョン、コマンド分岐
+│       ├── lite.py   # `shelter lite`がOS別のLiteインストーラーを実行
 │       └── providers/ # パッケージ管理ツール別の照会処理
 │           └── __init__.py
 ├── tests/            # CLIテスト、インストーラーテストとは分離
-│   └── test_cli.py
+│   ├── test_cli.py
+│   └── test_lite.py
 ├── pyproject.toml    # Pythonパッケージ情報と`shelter`エントリーポイント
 ├── uv.lock           # 確定した開発用依存関係
 ├── scripts/
@@ -182,7 +185,7 @@ Windowsのロジックとパッケージングは隔離テストで確認しま�
 
 ライト版は`install.sh`で固定仕様全体のインストールを開始し、`tools.sh`の関数を呼び出します。正式版を提供する際も、同じエントリーポイントに正式版CLIのインストール処理を接続する予定です。現在の`--mode full`は準備中の案内を表示して終了します。バージョン別やツール別のインストールディレクトリは事前に分割しません。
 
-正式版CLIは`src/shelter/`、管理ツール別の照会処理は`providers/`、CLIテストはルートの`tests/`に用意しました。`pyproject.toml`と、ヘルプとバージョンを表示する`shelter`エントリーポイントがあります。ツール検出、更新情報の照会、Lite呼び出しは未実装です。モジュールの役割と事前インストールを不要にする配布方針は[CLI計画](plans/shelter-cli.md)を参照してください。Webサイト、情報収集サービス、共通データ形式の構成は連携範囲が決まってから検討し、現在のインストーラー構成には含めません。
+正式版CLIは`src/shelter/`、管理ツール別の照会処理は`providers/`、CLIテストはルートの`tests/`に用意しました。`pyproject.toml`、ヘルプとバージョンを表示する`shelter`エントリーポイント、`shelter lite`の実行連携があります。ツール検出と更新情報の照会は未実装です。モジュールの役割と事前インストールを不要にする配布方針は[CLI計画](plans/shelter-cli.md)を参照してください。Webサイト、情報収集サービス、共通データ形式の構成は連携範囲が決まってから検討し、現在のインストーラー構成には含めません。
 共通コードやツール固有の処理が実際に増えたときにファイルを分割します。リリースworkflowで対象バージョンを検証してパッケージングし、追加の検査と詳細ドキュメントは機能に応じて拡張します。
 ディレクトリを作成するタイミングと文書の更新手順は、[CONTRIBUTINGのディレクトリの追加と変更](../language/jp/CONTRIBUTING.md#ディレクトリの追加と変更)に従ってください。
 

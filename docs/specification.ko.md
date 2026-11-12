@@ -21,7 +21,7 @@ Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대
 
 **Shelter Lite**는 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
 **정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
-설치 스크립트는 운영체제별 `installers/macos/`와 `installers/windows/`에서 관리합니다. 정식 CLI는 별도 Python 패키지인 `src/shelter/`에 있으며, 개발 환경과 의존성은 uv로 관리합니다. 패키지 설정과 도움말, 버전만 출력하는 `shelter` 진입점은 구현했고, 도구 탐색, 업데이트 조회와 Lite 호출은 아직 구현하지 않았습니다. [CLI 탐색과 업데이트 조회 계획](plans/shelter-cli.md)을 참고하세요.
+설치 스크립트는 운영체제별 `installers/macos/`와 `installers/windows/`에서 관리합니다. 정식 CLI는 별도 Python 패키지인 `src/shelter/`에 있으며, 개발 환경과 의존성은 uv로 관리합니다. 패키지 설정, 도움말과 버전을 출력하는 `shelter` 진입점, 소스 저장소에서 기존 OS별 설치기를 실행하는 `shelter lite`는 구현했고, 도구 탐색과 업데이트 조회는 아직 구현하지 않았습니다. [CLI 탐색과 업데이트 조회 계획](plans/shelter-cli.md)을 참고하세요.
 
 ## 라이트 고정 설치 스펙
 
@@ -69,7 +69,7 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 | macOS | ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-000000?style=flat-square&logo=apple&logoColor=white) | 라이트 설치와 셸 설정 | Apple Silicon, zsh/bash. Intel과 Rosetta 제외 |
 | Windows | ![Windows 11 x64](https://img.shields.io/badge/Windows-11_x64-0078D4?style=flat-square) | 고정 라이트 설치, WinGet, 사용자 PATH | x64와 Windows PowerShell 5.1 구현, 깨끗한 PC의 전체 설치 검증 필요 |
 | 웹사이트와 정보 수집 | 미정                                                                                                                                                                                     | 보안 정보 수집, 조회와 사용자 화면          | 기술 선정 전                           |
-| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | Python 3.14 이상, 도움말과 버전 진입점만 구현                   |
+| CLI 본체             | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                      | 상태 확인, 알림, 업데이트 처리              | Python 3.14 이상, 도움말, 버전과 `shelter lite` 구현                   |
 | CLI 개발 도구        | ![Typer](https://img.shields.io/badge/Typer-009688?style=flat-square&logo=typer&logoColor=white) ![uv](https://img.shields.io/badge/uv-DE5FE9?style=flat-square&logo=uv&logoColor=white) | 명령 구성, Python 환경과 의존성 관리        | uv는 개발용으로 채택, 명령은 표준 `argparse` 사용, Typer는 후보                        |
 | Shelter Lite      | ![Bash 3.2.57](https://img.shields.io/badge/Bash-3.2.57-4EAA25?style=flat-square&logo=gnubash&logoColor=white) | 고정 스펙의 최초 설치와 실행 환경 준비 | 구현됨, Bash 3.2.57로 검사 |
 | macOS 배포           | ![Homebrew](https://img.shields.io/badge/Homebrew-FBB040?style=flat-square&logo=homebrew&logoColor=black)                                                                                | CLI 설치와 CLI 자체 업데이트                | 배포 후보                              |
@@ -109,6 +109,7 @@ shelter/
 ├── .github/
 │   └── workflows/
 │       ├── validate.yml # macOS / Windows
+│       ├── test-cli.yml # Python CLI pytest, macOS / Windows
 │       └── release.yml # 릴리스 검사, 패키징과 파일 첨부
 ├── docs/
 │   ├── specification.md
@@ -147,11 +148,13 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLI 패키지
 │       ├── __init__.py
-│       ├── cli.py    # `shelter` 진입점: 도움말과 버전
+│       ├── cli.py    # `shelter` 진입점: 도움말, 버전, 명령 분기
+│       ├── lite.py   # `shelter lite`가 OS별 Lite 설치기를 실행
 │       └── providers/ # 패키지 관리자별 조회 처리 위치
 │           └── __init__.py
 ├── tests/            # CLI 테스트, 설치기 테스트와 구분
-│   └── test_cli.py
+│   ├── test_cli.py
+│   └── test_lite.py
 ├── pyproject.toml    # Python 패키지 정보와 `shelter` 진입점
 ├── uv.lock           # 확정된 개발 의존성
 ├── scripts/
@@ -182,7 +185,7 @@ Windows 로직과 패키징은 격리 테스트로 확인하며 실제 Windows 1
 
 라이트는 `install.sh`에서 고정 스펙 전체의 설치를 시작하고 `tools.sh`의 함수를 호출합니다. 정식 버전을 제공할 때도 같은 진입점에 정식 CLI 설치 흐름을 연결할 계획입니다. 현재 `--mode full`은 준비 중 안내와 함께 종료합니다. 버전별 설치 디렉터리나 도구별 하위 폴더는 미리 나누지 않습니다.
 
-정식 CLI의 구조는 `src/shelter/`, 관리자별 조회 처리는 `providers/`, CLI 테스트는 루트 `tests/`에 준비했습니다. `pyproject.toml`과 도움말, 버전을 출력하는 `shelter` 진입점이 있습니다. 도구 탐색, 업데이트 조회와 Lite 호출은 미구현입니다. 모듈 책임과 사전 설치 없는 배포 방향은 [CLI 계획](plans/shelter-cli.md)을 따릅니다. 웹사이트와 수집 서비스, 공통 데이터 규격의 구조는 연동 범위가 정해지면 검토하며, 현재 설치기 구조에 포함하지 않습니다.
+정식 CLI의 구조는 `src/shelter/`, 관리자별 조회 처리는 `providers/`, CLI 테스트는 루트 `tests/`에 준비했습니다. `pyproject.toml`, 도움말과 버전을 출력하는 `shelter` 진입점, `shelter lite` 실행 연결이 있습니다. 도구 탐색과 업데이트 조회는 미구현입니다. 모듈 책임과 사전 설치 없는 배포 방향은 [CLI 계획](plans/shelter-cli.md)을 따릅니다. 웹사이트와 수집 서비스, 공통 데이터 규격의 구조는 연동 범위가 정해지면 검토하며, 현재 설치기 구조에 포함하지 않습니다.
 공통 코드나 도구별 처리가 실제로 커질 때 파일을 분리합니다. 릴리스 workflow는 해당 버전을 검증하고 패키징하며, 추가 검사와 상세 문서는 기능에 맞춰 확장합니다.
 디렉터리를 만드는 시점과 문서 갱신 절차는 [CONTRIBUTING의 디렉터리 추가와 변경](../language/ko/CONTRIBUTING.md#디렉터리-추가와-변경)을 따릅니다.
 

@@ -190,7 +190,7 @@ macOS 실행 코드는 `install.sh`, `messages.sh`, `scripts/version.sh`, `tools
 
 1. **라이트의 설치 흐름을 관리합니다.** `installers/macos/install.sh`에 환경 확인, 고정 스펙과 설치 순서를 두고, `tools.sh`에 도구별 상태 확인, 설치와 셸 설정 함수를 둡니다. 별도 `lib/`, `tools/`, `profiles/` 디렉터리는 실제 분리 필요성이 생기면 검토합니다.
 2. **정식 버전의 설치를 연결합니다.** 정식 CLI와 배포물이 준비되면 같은 `install.sh`의 `full` 모드에 설치 흐름을 추가하고 도구 설치 함수는 재사용합니다. 현재는 준비 중 안내 후 종료합니다.
-3. **정식 CLI 본체는 별도로 구현합니다.** Python 패키지는 `src/shelter/`, 관리자별 조회 처리는 `src/shelter/providers/`, CLI 테스트는 루트 `tests/`에 둡니다. Python 3.14 개발 환경과 의존성은 루트 `pyproject.toml`과 `uv.lock`을 기준으로 uv가 관리합니다. 저장소 루트에서 `uv run shelter --version`을 실행하면 `VERSION`의 버전이 출력되고, `uv run pytest`로 CLI 테스트를 실행합니다. 구현된 것은 도움말과 버전뿐이며, 도구 탐색, 업데이트 조회, Lite 호출과 사용자용 CLI 설치기는 아직 없습니다. 저장소 루트에서 작업하며 구현과 검증 순서는 [CLI 탐색과 업데이트 조회 계획](../../docs/plans/shelter-cli.md)을 따릅니다. Lite 설치 로직은 기존 OS별 설치기에 유지하고 향후 CLI에서 호출합니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
+3. **정식 CLI 본체는 별도로 구현합니다.** Python 패키지는 `src/shelter/`, 관리자별 조회 처리는 `src/shelter/providers/`, CLI 테스트는 루트 `tests/`에 둡니다. Python 3.14 개발 환경과 의존성은 루트 `pyproject.toml`과 `uv.lock`을 기준으로 uv가 관리합니다. 저장소 루트에서 `uv run shelter --version`을 실행하면 `VERSION`의 버전이 출력되고, `uv run pytest`로 CLI 테스트를 실행합니다. `uv run shelter lite [옵션]`은 옵션을 그대로 `installers/macos/install.sh` 또는 `installers/windows/install.ps1`에 넘기므로, 확인할 때는 `--dry-run`이나 `--check`를 붙입니다. 도구 탐색, 업데이트 조회와 사용자용 CLI 설치기는 아직 없습니다. 저장소 루트에서 작업하며 구현과 검증 순서는 [CLI 탐색과 업데이트 조회 계획](../../docs/plans/shelter-cli.md)을 따릅니다. Lite 설치 로직은 기존 OS별 설치기에 유지하고 향후 CLI에서 호출합니다. 설치기에 지속적인 보안 알림과 업데이트 관리 기능을 중복 구현하지 않습니다.
 
 Shell 설치기 테스트는 `installers/macos/tests/`에서 관리합니다. 버전별 동작을 추가할 때 공통 설치 흐름과 각 버전의 동작을 함께 확인하고, 실제 실행 위치와 명령을 이 문서에 기록합니다.
 웹사이트는 이 저장소 밖에서 관리합니다. 정보 수집 서비스와 데이터 형식은 연동 범위를 정한 뒤 구조를 정합니다. Windows 스크립트, 실행기, 테스트와 패키징은 `installers/windows/`에서 관리합니다. [Windows 구현과 실기기 검증 항목](../../docs/plans/windows-lite.md)을 참고하세요.
@@ -437,6 +437,8 @@ cat dist/VERSION
 [release.yml](../../.github/workflows/release.yml)은 사전 릴리스를 포함한 GitHub 릴리스 게시 시 실행됩니다. [validate.yml](../../.github/workflows/validate.yml)을 호출해 릴리스 태그와 `VERSION` 일치 여부, 원본과 ZIP 설치기 테스트, 두 플랫폼 빌드, 체크섬과 포함된 버전을 확인합니다. macOS는 macOS 15 runner에서, Windows는 Windows 2025 runner의 기본 PowerShell 5.1에서 모의 테스트를 실행합니다. 두 작업이 모두 성공해야 플랫폼별 설치기 2개와 체크섬 2개, 공통 `VERSION`을 합한 파일 9개를 게시 작업이 업로드합니다.
 
 검증 workflow는 `main`에 구현 변경을 push할 때도 실행되며 수동 실행도 가능합니다. 이 경우 릴리스 파일을 게시하지 않습니다.
+
+[test-cli.yml](../../.github/workflows/test-cli.yml)은 `uv sync --locked`로 환경을 만들고, `shelter --version`이 `VERSION`과 같은지 확인한 뒤 macOS 15와 Windows 2025에서 pytest를 실행합니다. CLI, 설치기, 버전 변경을 `main`에 push할 때 실행되며 수동 실행도 가능합니다. 릴리스 workflow는 이 workflow를 호출하지 않으므로 Lite 릴리스는 CLI 테스트 결과에 영향을 받지 않습니다.
 
 1. workflow와 설치기 소스를 커밋하고 GitHub에 push합니다. 릴리스 태그는 이 workflow와 배포할 소스를 포함한 커밋으로 지정합니다.
 2. GitHub **Releases**에서 해당 태그로 릴리스를 만들고 **Publish release**를 누릅니다. 초안 저장이나 태그 push만으로는 이 workflow가 실행되지 않습니다.

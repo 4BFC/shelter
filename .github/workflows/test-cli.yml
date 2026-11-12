@@ -1,0 +1,49 @@
+name: Test Shelter CLI
+
+# Kept separate from validate.yml, which the release workflow calls, so Lite releases
+# do not depend on the CLI while it is still under development.
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+      - .python-version
+      - pyproject.toml
+      - uv.lock
+      - src/**
+      - tests/**
+      - installers/**
+      - scripts/**
+      - .github/workflows/test-cli.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    name: Run CLI tests on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - name: Check out the selected revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Install the locked environment
+        run: uv sync --locked
+
+      - name: Check the entry point version
+        shell: bash
+        run: test "$(uv run --locked shelter --version)" = "shelter $(tr -d '[:space:]' < VERSION)"
+
+      - name: Run pytest
+        run: uv run --locked pytest -q

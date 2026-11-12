@@ -190,7 +190,7 @@ macOSの実行コードは`install.sh`、`messages.sh`、`scripts/version.sh`、
 
 1. **ライト版のインストール処理を管理します。** `installers/macos/install.sh`に環境確認、固定仕様、インストール順序を置き、`tools.sh`にツールごとの状態確認、インストール、シェル設定の関数を置きます。`lib/`、`tools/`、`profiles/`などの別ディレクトリは、実際に分割が必要になったときに検討します。
 2. **正式版のインストールを接続します。** 正式版CLIと配布物が用意できたら、同じ`install.sh`の`full`モードに処理を追加し、ツールのインストール関数を再利用します。現在は準備中の案内を表示して終了します。
-3. **正式版CLI本体は別に実装します。** Pythonパッケージは`src/shelter/`、管理ツール別の照会処理は`src/shelter/providers/`、CLIテストはルートの`tests/`に置きます。Python 3.14の開発環境と依存関係は、ルートの`pyproject.toml`と`uv.lock`を基準にuvで管理します。リポジトリのルートで`uv run shelter --version`を実行すると`VERSION`のバージョンが表示され、`uv run pytest`でCLIテストを実行します。実装済みなのはヘルプとバージョンのみで、ツール検出、更新情報の照会、Lite呼び出し、ユーザー向けCLIインストーラーはまだありません。リポジトリのルートで作業し、実装と検証の順序は[CLIの検出と更新情報の計画](../../docs/plans/shelter-cli.md)に従ってください。Liteのインストール処理は既存のOS別インストーラーに残し、将来のCLIから呼び出します。継続的なセキュリティ通知と更新管理機能をインストーラーに重複実装しないでください。
+3. **正式版CLI本体は別に実装します。** Pythonパッケージは`src/shelter/`、管理ツール別の照会処理は`src/shelter/providers/`、CLIテストはルートの`tests/`に置きます。Python 3.14の開発環境と依存関係は、ルートの`pyproject.toml`と`uv.lock`を基準にuvで管理します。リポジトリのルートで`uv run shelter --version`を実行すると`VERSION`のバージョンが表示され、`uv run pytest`でCLIテストを実行します。`uv run shelter lite [オプション]`はオプションをそのまま`installers/macos/install.sh`または`installers/windows/install.ps1`に渡すため、確認時は`--dry-run`か`--check`を付けます。ツール検出、更新情報の照会、ユーザー向けCLIインストーラーはまだありません。リポジトリのルートで作業し、実装と検証の順序は[CLIの検出と更新情報の計画](../../docs/plans/shelter-cli.md)に従ってください。Liteのインストール処理は既存のOS別インストーラーに残し、将来のCLIから呼び出します。継続的なセキュリティ通知と更新管理機能をインストーラーに重複実装しないでください。
 
 シェルインストーラーのテストは`installers/macos/tests/`で管理します。バージョン別の動作を追加するときは、共通のインストール処理と各バージョンの動作を確認し、実際の実行場所とコマンドをこの文書に記録します。
 Webサイトはこのリポジトリの外で管理します。情報収集サービスとデータ形式は、連携範囲を決めた後に構成を検討します。Windowsのスクリプト、ランチャー、テスト、パッケージングは`installers/windows/`で管理します。[Windowsの実装と実機検証項目](../../docs/plans/windows-lite.md)を参照してください。
@@ -437,6 +437,8 @@ cat dist/VERSION
 [release.yml](../../.github/workflows/release.yml)はプレリリースを含むGitHubリリースの公開時に実行します。[validate.yml](../../.github/workflows/validate.yml)を呼び出し、タグと`VERSION`の一致、ソースとZIPのテスト、両プラットフォームのビルド、チェックサム、埋め込みバージョンを確認します。macOSはmacOS 15 runner、WindowsはWindows 2025 runnerの標準PowerShell 5.1でモックテストを実行します。両ジョブの成功後に、各プラットフォームのインストーラー2つとチェックサム2つ、共通の`VERSION`を合わせた9ファイルを公開ジョブがアップロードします。
 
 検証workflowは`main`への実装変更のpush時と手動でも実行できます。この場合はリリースファイルを公開しません。
+
+[test-cli.yml](../../.github/workflows/test-cli.yml)は`uv sync --locked`で環境を作り、`shelter --version`が`VERSION`と一致するか確認したうえで、macOS 15とWindows 2025でpytestを実行します。CLI、インストーラー、バージョンの変更を`main`にpushしたときと手動で実行できます。リリースworkflowはこのworkflowを呼び出さないため、LiteのリリースはCLIテストの結果に影響されません。
 
 1. workflowとインストーラーのソースをコミットしてGitHubにpushします。このworkflowと配布するソースを含むコミットをリリースタグの対象にします。
 2. GitHubの**Releases**で対象のタグからリリースを作成し、**Publish release**をクリックします。下書きの保存やタグのpushだけではworkflowは実行しません。
