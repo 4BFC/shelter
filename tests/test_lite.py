@@ -72,8 +72,11 @@ def test_windows_command_matches_launcher(tmp_path, monkeypatch):
 
 def test_windows_child_drops_powershell7_module_path(monkeypatch):
     monkeypatch.setenv("PSModulePath", r"C:\Program Files\PowerShell\7\Modules")
-    assert "PSModulePath" not in lite.child_environment("Windows")
-    assert "PSModulePath" in lite.child_environment("Darwin")
+    def has_module_path(env):
+        return any(key.upper() == "PSMODULEPATH" for key in env)
+
+    assert not has_module_path(lite.child_environment("Windows"))
+    assert has_module_path(lite.child_environment("Darwin"))
 
 
 def test_bundled_installers_are_preferred(tmp_path, monkeypatch):

@@ -62,12 +62,12 @@ def installer_command(system: str, installer: Path, args: Sequence[str]) -> list
 
 
 def child_environment(system: str) -> dict[str, str]:
-    env = dict(os.environ)
-    if system == "Windows":
-        # PowerShell 7 exports its own module path; Windows PowerShell 5.1 inheriting it
-        # loads incompatible core modules and loses cmdlets such as Get-FileHash.
-        env.pop("PSModulePath", None)
-    return env
+    if system != "Windows":
+        return dict(os.environ)
+    # PowerShell 7 exports its own module path; Windows PowerShell 5.1 inheriting it
+    # loads incompatible core modules and loses cmdlets such as Get-FileHash.
+    # Windows Python upper-cases environment keys, so compare without case.
+    return {key: value for key, value in os.environ.items() if key.upper() != "PSMODULEPATH"}
 
 
 def find_installer(system: str) -> Path:
