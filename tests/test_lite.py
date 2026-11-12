@@ -70,6 +70,13 @@ def test_windows_command_matches_launcher(tmp_path, monkeypatch):
     ]
 
 
+def test_bundled_installers_are_preferred(tmp_path, monkeypatch):
+    monkeypatch.setattr(lite, "BUNDLE_DIR", str(tmp_path))
+    paths = lite._installer_paths()
+    assert paths["Darwin"] == tmp_path / "lite" / "shelter-lite-macos.sh"
+    assert paths["Windows"] == tmp_path / "lite" / "shelter-lite-windows.ps1"
+
+
 def test_source_installers_exist():
     assert lite.INSTALLERS["Darwin"].is_file()
     assert lite.INSTALLERS["Windows"].is_file()

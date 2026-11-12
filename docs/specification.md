@@ -21,7 +21,7 @@ Integrated installation and management of tools such as Codex and Claude Code ma
 
 **Shelter Lite** is an initial setup that uses a shell installer to prepare and verify the entire fixed specification. It does not allow individual tools to be selected or excluded.
 The **full version** will be a CLI that continues to provide status checks, security notifications, and updates after installation.
-Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI is a separate Python package in `src/shelter/`, with development environments and dependencies managed by uv. Package configuration, the `shelter` entry point with help and version, and `shelter lite`, which runs the existing OS installer from a source checkout, exist; discovery and update reporting are not implemented yet. See the [CLI discovery and update reporting plan](plans/shelter-cli.md).
+Installation scripts are managed by operating system in `installers/macos/` and `installers/windows/`. The full CLI is a separate Python package in `src/shelter/`, with development environments and dependencies managed by uv. Package configuration, the `shelter` entry point with help and version, and `shelter lite`, which runs the existing OS installer, exist. A PyInstaller build bundles the generated standalone Lite installer inside the executable; discovery and update reporting are not implemented yet. See the [CLI discovery and update reporting plan](plans/shelter-cli.md).
 
 ## Lite Installation Specification
 
@@ -62,7 +62,7 @@ Working installations are retained. New Node.js is constrained to 24.x even if t
 ## Technical Direction
 
 **Shelter Lite 0.2.0 has separate macOS and Windows installers.** macOS targets macOS 15+ on native Apple Silicon; Windows targets Windows 11 x64 with native Windows PowerShell 5.1. See the [Windows implementation and acceptance checks](plans/windows-lite.md). Windows 10, Windows Server, ARM64, and 32-bit processes are excluded from this Windows release.
-Lite uses the Bash included in macOS or Windows PowerShell included in Windows. Node.js and Python are not prerequisites. The Python CLI requires Python 3.14 or later for development and uses the standard library `argparse` for commands. The bundling tool remains undecided. Website technologies remain under consideration.
+Lite uses the Bash included in macOS or Windows PowerShell included in Windows. Node.js and Python are not prerequisites. The Python CLI requires Python 3.14 or later for development and uses the standard library `argparse` for commands. Standalone executables are built with PyInstaller 6.22.3, which bundles a private Python runtime so users do not need Python or uv. Website technologies remain under consideration.
 
 | Area | Technology under consideration | Role | Status |
 | --- | --- | --- | --- |
@@ -148,6 +148,7 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLI package
 │       ├── __init__.py
+│       ├── __main__.py # Entry script for `python -m shelter` and PyInstaller
 │       ├── cli.py    # `shelter` entry point: help, version, command dispatch
 │       ├── lite.py   # Runs the OS Lite installer for `shelter lite`
 │       └── providers/ # Package-manager adapter scaffold
@@ -158,6 +159,7 @@ shelter/
 ├── pyproject.toml    # Python package metadata and `shelter` entry point
 ├── uv.lock           # Resolved development dependencies
 ├── scripts/
+│   ├── build_cli.py  # Builds the standalone `shelter` executable with Lite inside
 │   ├── version.ps1   # PowerShell SemVer reader
 │   └── version.sh    # Product version format, validation, and file reading
 ├── language/

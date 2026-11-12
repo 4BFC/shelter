@@ -438,7 +438,7 @@ cat dist/VERSION
 
 The validation workflow also runs for implementation changes pushed to `main` and can be started manually. These runs do not publish release assets.
 
-[test-cli.yml](./.github/workflows/test-cli.yml) runs `uv sync --locked`, checks that `shelter --version` matches `VERSION`, and runs pytest on macOS 15 and Windows 2025. It runs for CLI, installer, or version changes pushed to `main` and can be started manually. The release workflow does not call it, so Lite releases do not depend on the CLI tests.
+[test-cli.yml](./.github/workflows/test-cli.yml) runs `uv sync --locked`, checks that `shelter --version` matches `VERSION`, and runs pytest on macOS 15 and Windows 2025. Its build job then runs `uv run --locked --group build python scripts/build_cli.py`, which builds the Lite installer into a temporary directory, bundles it into `dist/cli/shelter` (`shelter.exe` on Windows) with PyInstaller, and checks `shelter --version` and `shelter lite --version` with a minimal PATH. The executable is kept as a workflow artifact for 7 days. Run the same command locally to build for the current OS. It runs for CLI, installer, or version changes pushed to `main` and can be started manually. The release workflow does not call it, so Lite releases do not depend on the CLI tests.
 
 1. Commit and push the workflow and installer sources to GitHub. Choose a release tag whose commit includes this workflow and the intended source version.
 2. In GitHub **Releases**, create a release with that tag and click **Publish release**. Saving a draft or pushing a tag alone does not trigger this workflow.

@@ -21,7 +21,7 @@ Codex, Claude Code 같은 도구의 통합 설치와 관리는 이후 확장 대
 
 **Shelter Lite**는 정해진 스펙 전체를 Shell 설치기로 준비하고 결과를 확인하는 초기 설정입니다. 개별 도구를 선택하거나 제외하는 기능은 제공하지 않습니다.
 **정식 버전**은 설치 후에도 상태 확인, 보안 알림과 업데이트를 지속적으로 제공할 CLI입니다.
-설치 스크립트는 운영체제별 `installers/macos/`와 `installers/windows/`에서 관리합니다. 정식 CLI는 별도 Python 패키지인 `src/shelter/`에 있으며, 개발 환경과 의존성은 uv로 관리합니다. 패키지 설정, 도움말과 버전을 출력하는 `shelter` 진입점, 소스 저장소에서 기존 OS별 설치기를 실행하는 `shelter lite`는 구현했고, 도구 탐색과 업데이트 조회는 아직 구현하지 않았습니다. [CLI 탐색과 업데이트 조회 계획](plans/shelter-cli.md)을 참고하세요.
+설치 스크립트는 운영체제별 `installers/macos/`와 `installers/windows/`에서 관리합니다. 정식 CLI는 별도 Python 패키지인 `src/shelter/`에 있으며, 개발 환경과 의존성은 uv로 관리합니다. 패키지 설정, 도움말과 버전을 출력하는 `shelter` 진입점, 기존 OS별 설치기를 실행하는 `shelter lite`는 구현했습니다. PyInstaller 빌드는 생성된 단일 파일 Lite 설치기를 실행 파일 안에 포함합니다. 도구 탐색과 업데이트 조회는 아직 구현하지 않았습니다. [CLI 탐색과 업데이트 조회 계획](plans/shelter-cli.md)을 참고하세요.
 
 ## 라이트 고정 설치 스펙
 
@@ -62,7 +62,7 @@ macOS 개발 도구의 `/usr/bin/python3`는 사용자용 Python과 구분합니
 ## 기술 방향
 
 **Shelter Lite 0.2.0은 macOS와 Windows 설치기를 각각 제공합니다.** macOS는 macOS 15 이상과 기본 Apple Silicon 환경, Windows는 Windows 11 x64와 기본 64비트 Windows PowerShell 5.1이 대상입니다. [Windows 구현과 실기기 검증 항목](plans/windows-lite.md)을 참고하세요. 이번 Windows 버전은 Windows 10, Windows Server, ARM64와 32비트 프로세스를 지원하지 않습니다.
-라이트는 macOS 기본 Bash 또는 Windows 기본 PowerShell을 사용하며 Node.js와 Python 사전 설치가 필요 없습니다. Python CLI는 개발 시 Python 3.14 이상을 사용하고 명령은 표준 라이브러리 `argparse`로 구성합니다. 실행 파일 패키징 도구는 미정입니다. 웹사이트 기술은 아직 검토 중입니다.
+라이트는 macOS 기본 Bash 또는 Windows 기본 PowerShell을 사용하며 Node.js와 Python 사전 설치가 필요 없습니다. Python CLI는 개발 시 Python 3.14 이상을 사용하고 명령은 표준 라이브러리 `argparse`로 구성합니다. 단독 실행 파일은 PyInstaller 6.22.3으로 만들며, 내부에 Python 실행 환경을 포함해 사용자에게 Python이나 uv가 필요 없습니다. 웹사이트 기술은 아직 검토 중입니다.
 
 | 영역                 | 검토 기술                                                                                                                                                                                | 역할                                        | 상태                                   |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------- |
@@ -148,6 +148,7 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLI 패키지
 │       ├── __init__.py
+│       ├── __main__.py # `python -m shelter`와 PyInstaller 진입 스크립트
 │       ├── cli.py    # `shelter` 진입점: 도움말, 버전, 명령 분기
 │       ├── lite.py   # `shelter lite`가 OS별 Lite 설치기를 실행
 │       └── providers/ # 패키지 관리자별 조회 처리 위치
@@ -158,6 +159,7 @@ shelter/
 ├── pyproject.toml    # Python 패키지 정보와 `shelter` 진입점
 ├── uv.lock           # 확정된 개발 의존성
 ├── scripts/
+│   ├── build_cli.py  # Lite 설치기를 포함한 단독 `shelter` 실행 파일 빌드
 │   ├── version.ps1
 │   └── version.sh    # 제품 버전 형식 검증과 파일 읽기
 ├── language/

@@ -72,7 +72,7 @@ Python executes Shelter code. uv manages Python versions, dependencies, environm
 
 Developers run `uv run shelter` and `uv run pytest` from the repository root. `uv run shelter --version` prints the version read from `VERSION` through package metadata. Do not document a subcommand until it exists and is verified.
 
-The end-user installation contract is independent: Shelter must be installable before user Python, uv, Homebrew, or WinGet exists. Evaluate an OS-specific bundle containing a private Python runtime; [PyInstaller](https://pyinstaller.org/en/stable/operating-mode.html) is a candidate, not an adopted or pinned dependency. Such bundles require builds and launch checks on each supported OS/architecture. A Python wheel or `uv tool install` alone does not satisfy the no-prerequisites contract.
+The end-user installation contract is independent: Shelter must be installable before user Python, uv, Homebrew, or WinGet exists. Shelter ships as an OS-specific bundle containing a private Python runtime, built with [PyInstaller](https://pyinstaller.org/en/stable/operating-mode.html) 6.22.3, pinned in the `build` dependency group of `pyproject.toml`. Such bundles require builds and launch checks on each supported OS/architecture. A Python wheel or `uv tool install` alone does not satisfy the no-prerequisites contract.
 
 The intended flow is the Shelter installer, then the installed `shelter` command, then `shelter lite` when initial setup is requested. Bundle the existing Lite scripts with the CLI so their installation behavior has one source. Keep current standalone Lite downloads working. Homebrew and WinGet registration can provide additional distribution paths later. Their presence is not required to print help or discover local tools.
 
@@ -81,14 +81,14 @@ The intended flow is the Shelter installer, then the installed `shelter` command
 The end-user installation flow comes before discovery features, because the goal is that a non-developer can install Shelter and run `shelter lite` on a computer without developer tools. The order was revised on 2026-11-12.
 
 1. Define the supported Python runtime and package metadata, derive the version from `VERSION`, and implement help/version with a verified local entry point. Done.
-2. Implement `shelter lite` delegation to the existing OS installer. Test OS selection, argument forwarding, exit codes, and interruption with a stub installer. Do not install tools in automated CLI tests. Done for running from a source checkout.
-3. Build self-contained artifacts with the Lite installer bundled inside, and verify `shelter --version` and `shelter lite --dry-run` without external Python, uv, or package managers.
+2. Implement `shelter lite` delegation to the existing OS installer. Test OS selection, argument forwarding, exit codes, and interruption with a stub installer. Do not install tools in automated CLI tests. Done.
+3. Build self-contained artifacts with the Lite installer bundled inside, and verify `shelter --version` and `shelter lite --dry-run` without external Python, uv, or package managers. Done with PyInstaller 6.22.3 one-file builds; see below.
 4. Provide a Shelter installer that copies the executable into a user directory and registers it on the user PATH, following Lite's existing PATH backup rules.
 5. Connect artifact builds and the Shelter installer to the release workflow while keeping the standalone Lite downloads.
 6. Implement `status` with fixtures for missing managers, duplicate installations, aliases, and broken executables; do not change the real computer during tests.
 7. Implement `outdated` with provider fixtures, policy decisions, timeouts, and source freshness reporting. Verify that report commands never call package installation or upgrade actions.
 
-Step 1 is verified by `tests/test_cli.py`: help output without arguments, version output matching `VERSION`, and exit code 2 for an unknown option. Step 2 is verified by `tests/test_lite.py`. Existing Lite implementations and release workflows are unchanged.
+Step 1 is verified by `tests/test_cli.py`: help output without arguments, version output matching `VERSION`, and exit code 2 for an unknown option. Step 2 is verified by `tests/test_lite.py`. Step 3 is verified by `scripts/build_cli.py` in the `test-cli.yml` build job on macOS 15 and Windows 2025. Existing Lite implementations and release workflows are unchanged.
 
 ### `shelter lite` delegation
 
@@ -99,7 +99,15 @@ Step 1 is verified by `tests/test_cli.py`: help output without arguments, versio
 | macOS | `/bin/bash installers/macos/install.sh [options]` |
 | Windows | `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File installers\windows\install.ps1 [options]`, using `Sysnative` from a 32-bit host like `launch.cmd` |
 
-The installer is currently located through the source checkout, because the source installers read `messages`, `tools`, `scripts/version`, and `VERSION` by relative path. Step 3 adds a bundled location for the generated standalone installers. Other operating systems, or a missing installer, exit with status 1 and a message on standard error. An interrupted run returns 130, and a child ended by a signal returns 128 plus the signal number.
+A PyInstaller executable runs the generated standalone installer bundled under `lite/` in its unpacked directory. Outside a bundle, the source installers are used, which read `messages`, `tools`, `scripts/version`, and `VERSION` by relative path and therefore only work from a source checkout. Other operating systems, or a missing installer, exit with status 1 and a message on standard error. An interrupted run returns 130, and a child ended by a signal returns 128 plus the signal number.
+
+### Standalone executable
+
+`scripts/build_cli.py` builds for the OS it runs on; PyInstaller does not cross-compile. It runs the existing Lite build script into a temporary directory, then runs PyInstaller in one-file mode with the generated `shelter-lite-macos.sh` or `shelter-lite-windows.ps1` added under `lite/` and the package metadata copied so `shelter --version` still derives from `VERSION`. Output goes to `dist/cli/`, and intermediate files to `build/cli/`; both are ignored by Git.
+
+Verified on 2026-11-12 on macOS 26.6 arm64: a copy outside the repository, run with `PATH=/usr/bin:/bin`, printed `shelter 0.2.0`, ran the bundled Lite help and `--dry-run` with no changes, and started in about 0.4 seconds because one-file mode unpacks to a temporary directory on each run. The macOS build is arm64 only, matching Lite's Apple Silicon requirement.
+
+Open items before distribution: the executables are unsigned, so macOS Gatekeeper and Windows SmartScreen warnings are expected, as with Lite; whether to sign or notarize is a separate decision. If the 0.4 second startup becomes a problem, PyInstaller's one-folder mode avoids the unpacking at the cost of shipping a directory.
 
 ## References
 

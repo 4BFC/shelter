@@ -21,7 +21,7 @@ CodexやClaude Codeなどのツールをまとめてインストール、管理�
 
 **Shelter Lite**は、決められた仕様全体をシェルインストーラーで準備し、結果を確認する初期設定です。個別のツールを選択または除外する機能は提供しません。
 **正式版**は、インストール後も状態確認、セキュリティ通知、更新を継続して提供するCLIです。
-インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLIは別のPythonパッケージとして`src/shelter/`にあり、開発環境と依存関係はuvで管理します。パッケージ設定、ヘルプとバージョンを表示する`shelter`エントリーポイント、ソースリポジトリから既存のOS別インストーラーを実行する`shelter lite`は実装済みで、ツール検出と更新情報の照会は未実装です。[CLIの検出と更新情報の計画](plans/shelter-cli.md)を参照してください。
+インストールスクリプトはOS別に`installers/macos/`と`installers/windows/`で管理します。正式版CLIは別のPythonパッケージとして`src/shelter/`にあり、開発環境と依存関係はuvで管理します。パッケージ設定、ヘルプとバージョンを表示する`shelter`エントリーポイント、既存のOS別インストーラーを実行する`shelter lite`は実装済みです。PyInstallerのビルドは、生成した単一ファイルのLiteインストーラーを実行ファイルに含めます。ツール検出と更新情報の照会は未実装です。[CLIの検出と更新情報の計画](plans/shelter-cli.md)を参照してください。
 
 ## ライト版の固定インストール仕様
 
@@ -62,7 +62,7 @@ macOS開発ツールの`/usr/bin/python3`は、ユーザー用Pythonと区別し
 ## 技術方針
 
 **Shelter Lite 0.2.0はmacOSとWindowsのインストーラーを個別に提供します。** macOSはmacOS 15以降とネイティブApple Silicon、WindowsはWindows 11 x64と標準64ビットWindows PowerShell 5.1が対象です。[Windowsの実装と実機検証項目](plans/windows-lite.md)を参照してください。Windows 10、Windows Server、ARM64、32ビットプロセスは今回のWindows版の対象外です。
-ライト版はmacOS標準のBashまたはWindows標準のPowerShellを使い、Node.jsやPythonの事前インストールは不要です。Python CLIは開発時にPython 3.14以上を使い、コマンドは標準ライブラリの`argparse`で構成します。実行ファイルの作成ツールは未定です。Webサイトの技術は引き続き検討中です。
+ライト版はmacOS標準のBashまたはWindows標準のPowerShellを使い、Node.jsやPythonの事前インストールは不要です。Python CLIは開発時にPython 3.14以上を使い、コマンドは標準ライブラリの`argparse`で構成します。単体の実行ファイルはPyInstaller 6.22.3で作成し、Python実行環境を内蔵するため、ユーザーにPythonやuvは不要です。Webサイトの技術は引き続き検討中です。
 
 | 領域 | 検討している技術 | 役割 | 状態 |
 | --- | --- | --- | --- |
@@ -148,6 +148,7 @@ shelter/
 ├── src/
 │   └── shelter/      # Python CLIパッケージ
 │       ├── __init__.py
+│       ├── __main__.py # `python -m shelter`とPyInstallerのエントリースクリプト
 │       ├── cli.py    # `shelter`エントリーポイント: ヘルプ、バージョン、コマンド分岐
 │       ├── lite.py   # `shelter lite`がOS別のLiteインストーラーを実行
 │       └── providers/ # パッケージ管理ツール別の照会処理
@@ -158,6 +159,7 @@ shelter/
 ├── pyproject.toml    # Pythonパッケージ情報と`shelter`エントリーポイント
 ├── uv.lock           # 確定した開発用依存関係
 ├── scripts/
+│   ├── build_cli.py  # Liteインストーラーを含む単体の`shelter`実行ファイルをビルド
 │   ├── version.ps1
 │   └── version.sh    # 製品バージョンの形式検証とファイル読み込み
 ├── language/

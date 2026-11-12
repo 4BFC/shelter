@@ -438,7 +438,7 @@ cat dist/VERSION
 
 検証workflowは`main`への実装変更のpush時と手動でも実行できます。この場合はリリースファイルを公開しません。
 
-[test-cli.yml](../../.github/workflows/test-cli.yml)は`uv sync --locked`で環境を作り、`shelter --version`が`VERSION`と一致するか確認したうえで、macOS 15とWindows 2025でpytestを実行します。CLI、インストーラー、バージョンの変更を`main`にpushしたときと手動で実行できます。リリースworkflowはこのworkflowを呼び出さないため、LiteのリリースはCLIテストの結果に影響されません。
+[test-cli.yml](../../.github/workflows/test-cli.yml)は`uv sync --locked`で環境を作り、`shelter --version`が`VERSION`と一致するか確認したうえで、macOS 15とWindows 2025でpytestを実行します。続いてbuild jobが`uv run --locked --group build python scripts/build_cli.py`を実行します。このスクリプトはLiteインストーラーを一時フォルダーにビルドし、PyInstallerで`dist/cli/shelter`(Windowsは`shelter.exe`)に含めたうえで、最小限のPATHで`shelter --version`と`shelter lite --version`を確認します。実行ファイルはworkflow artifactとして7日間保管されます。現在のOS向けのビルドはローカルで同じコマンドを実行します。CLI、インストーラー、バージョンの変更を`main`にpushしたときと手動で実行できます。リリースworkflowはこのworkflowを呼び出さないため、LiteのリリースはCLIテストの結果に影響されません。
 
 1. workflowとインストーラーのソースをコミットしてGitHubにpushします。このworkflowと配布するソースを含むコミットをリリースタグの対象にします。
 2. GitHubの**Releases**で対象のタグからリリースを作成し、**Publish release**をクリックします。下書きの保存やタグのpushだけではworkflowは実行しません。

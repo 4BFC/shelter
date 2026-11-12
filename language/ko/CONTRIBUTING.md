@@ -438,7 +438,7 @@ cat dist/VERSION
 
 검증 workflow는 `main`에 구현 변경을 push할 때도 실행되며 수동 실행도 가능합니다. 이 경우 릴리스 파일을 게시하지 않습니다.
 
-[test-cli.yml](../../.github/workflows/test-cli.yml)은 `uv sync --locked`로 환경을 만들고, `shelter --version`이 `VERSION`과 같은지 확인한 뒤 macOS 15와 Windows 2025에서 pytest를 실행합니다. CLI, 설치기, 버전 변경을 `main`에 push할 때 실행되며 수동 실행도 가능합니다. 릴리스 workflow는 이 workflow를 호출하지 않으므로 Lite 릴리스는 CLI 테스트 결과에 영향을 받지 않습니다.
+[test-cli.yml](../../.github/workflows/test-cli.yml)은 `uv sync --locked`로 환경을 만들고, `shelter --version`이 `VERSION`과 같은지 확인한 뒤 macOS 15와 Windows 2025에서 pytest를 실행합니다. 이어서 build job이 `uv run --locked --group build python scripts/build_cli.py`를 실행합니다. 이 스크립트는 Lite 설치기를 임시 폴더에 빌드하고, PyInstaller로 `dist/cli/shelter`(Windows는 `shelter.exe`)에 포함한 뒤, 최소한의 PATH로 `shelter --version`과 `shelter lite --version`을 확인합니다. 실행 파일은 workflow artifact로 7일간 보관됩니다. 현재 OS용 빌드는 로컬에서 같은 명령으로 만듭니다. CLI, 설치기, 버전 변경을 `main`에 push할 때 실행되며 수동 실행도 가능합니다. 릴리스 workflow는 이 workflow를 호출하지 않으므로 Lite 릴리스는 CLI 테스트 결과에 영향을 받지 않습니다.
 
 1. workflow와 설치기 소스를 커밋하고 GitHub에 push합니다. 릴리스 태그는 이 workflow와 배포할 소스를 포함한 커밋으로 지정합니다.
 2. GitHub **Releases**에서 해당 태그로 릴리스를 만들고 **Publish release**를 누릅니다. 초안 저장이나 태그 push만으로는 이 workflow가 실행되지 않습니다.

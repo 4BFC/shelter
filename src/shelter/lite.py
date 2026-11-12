@@ -6,14 +6,28 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-# The source installers read sibling files and the root VERSION by relative path,
-# so they only run from inside a checkout until bundled standalone installers exist.
-SOURCE_ROOT = Path(__file__).resolve().parents[2]
+# PyInstaller sets _MEIPASS to the unpacked bundle; scripts/build_cli.py puts the
+# generated standalone installers under lite/ there.
+BUNDLE_DIR = getattr(sys, "_MEIPASS", None)
 
-INSTALLERS = {
-    "Darwin": SOURCE_ROOT / "installers" / "macos" / "install.sh",
-    "Windows": SOURCE_ROOT / "installers" / "windows" / "install.ps1",
-}
+
+def _installer_paths() -> dict[str, Path]:
+    if BUNDLE_DIR is not None:
+        lite_dir = Path(BUNDLE_DIR) / "lite"
+        return {
+            "Darwin": lite_dir / "shelter-lite-macos.sh",
+            "Windows": lite_dir / "shelter-lite-windows.ps1",
+        }
+    # The source installers read sibling files and the root VERSION by relative path,
+    # so outside a bundle they only run from inside a checkout.
+    source_root = Path(__file__).resolve().parents[2]
+    return {
+        "Darwin": source_root / "installers" / "macos" / "install.sh",
+        "Windows": source_root / "installers" / "windows" / "install.ps1",
+    }
+
+
+INSTALLERS = _installer_paths()
 
 
 class LiteUnavailable(Exception):
