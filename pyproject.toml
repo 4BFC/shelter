@@ -1,0 +1,29 @@
+[project]
+name = "shelter"
+description = "Inspect and set up a fixed developer tool environment."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.14"
+dependencies = []
+dynamic = ["version"]
+
+[project.scripts]
+shelter = "shelter.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# VERSION is the only manually maintained product version; installers read it too.
+[tool.hatch.version]
+path = "VERSION"
+pattern = "^(?P<version>\\S+)\\s*$"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shelter"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

@@ -1,6 +1,11 @@
 # Generated distribution files. Rebuild from installers/macos/build.sh.
 /dist/
 
+# Python environments and bytecode created by uv and pytest.
+.venv/
+__pycache__/
+.pytest_cache/
+
 # Personal Claude/Codex configuration, skills, caches, and session data.
 .claude/
 .codex/

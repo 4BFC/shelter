@@ -1,6 +1,6 @@
 # Shelter CLI: discovery and update reporting
 
-Status: directory scaffold only. Updated 2026-11-05. Python is the implementation direction and uv is the development environment and dependency manager. No CLI commands, package-manager adapters, Python package metadata, or standalone CLI artifacts are implemented yet.
+Status: implementation step 1 done (package metadata and help/version entry point). Updated 2026-11-12. Python 3.14 or later is the development runtime, uv manages environments and dependencies, and commands use the standard library `argparse`; Typer remains a candidate once subcommands are added. `status`, `outdated`, `lite`, package-manager adapters, and standalone CLI artifacts are not implemented yet.
 
 ## Initial scope
 
@@ -70,7 +70,7 @@ Provider foundations: [Homebrew command reference](https://docs.brew.sh/Manpage)
 
 Python executes Shelter code. uv manages Python versions, dependencies, environments, and development commands; it does not supply a desktop UI or automatically make an application self-contained. Electron is a desktop application framework using Chromium and Node.js. Neither Electron nor a GUI layer is required for this terminal CLI.
 
-Developers will use Python and uv after `pyproject.toml` and dependencies are defined. Do not document `uv run shelter` as available until the entry point exists and is verified.
+Developers run `uv run shelter` and `uv run pytest` from the repository root. `uv run shelter --version` prints the version read from `VERSION` through package metadata. Do not document a subcommand until it exists and is verified.
 
 The end-user installation contract is independent: Shelter must be installable before user Python, uv, Homebrew, or WinGet exists. Evaluate an OS-specific bundle containing a private Python runtime; [PyInstaller](https://pyinstaller.org/en/stable/operating-mode.html) is a candidate, not an adopted or pinned dependency. Such bundles require builds and launch checks on each supported OS/architecture. A Python wheel or `uv tool install` alone does not satisfy the no-prerequisites contract.
 
@@ -84,7 +84,7 @@ The intended flow is the Shelter installer, then the installed `shelter` command
 4. Add Lite delegation tests for OS selection, argument forwarding, process I/O, interruption, and exit codes, using a stub installer. Do not install tools in automated CLI tests.
 5. Build self-contained artifacts, verify launch without external Python/uv/managers, and verify bundled Lite resources. Only then connect CLI installation and optional package-manager registration to release workflows.
 
-This scaffold is validated through Python source parsing, local documentation links, and `git diff --check`. It adds no runnable CLI or behavior tests yet. Existing Lite implementations and release workflows are unchanged.
+Step 1 is verified by `tests/test_cli.py`: help output without arguments, version output matching `VERSION`, and exit code 2 for an unknown option. Existing Lite implementations and release workflows are unchanged.
 
 ## References
 
