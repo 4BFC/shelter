@@ -38,7 +38,9 @@ LITE_BUILDS = {
 
 def build_lite(system: str, lite_dir: Path) -> Path:
     command, artifact = LITE_BUILDS[system]
-    subprocess.run([*command, str(lite_dir)], check=True)
+    # Same reason as shelter.lite.child_environment: a PowerShell 7 parent breaks 5.1 cmdlets.
+    env = {key: value for key, value in os.environ.items() if key != "PSModulePath"}
+    subprocess.run([*command, str(lite_dir)], check=True, env=env)
     return lite_dir / artifact
 
 

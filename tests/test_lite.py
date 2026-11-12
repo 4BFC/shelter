@@ -43,7 +43,7 @@ def test_unsupported_os_fails(capsys):
 
 
 def test_interrupt_returns_130(stub_installer, monkeypatch):
-    def interrupted(command):
+    def interrupted(command, **kwargs):
         raise KeyboardInterrupt
 
     monkeypatch.setattr(lite.subprocess, "run", interrupted)
@@ -68,6 +68,12 @@ def test_windows_command_matches_launcher(tmp_path, monkeypatch):
         "install.ps1",
         "--dry-run",
     ]
+
+
+def test_windows_child_drops_powershell7_module_path(monkeypatch):
+    monkeypatch.setenv("PSModulePath", r"C:\Program Files\PowerShell\7\Modules")
+    assert "PSModulePath" not in lite.child_environment("Windows")
+    assert "PSModulePath" in lite.child_environment("Darwin")
 
 
 def test_bundled_installers_are_preferred(tmp_path, monkeypatch):

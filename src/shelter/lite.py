@@ -61,6 +61,15 @@ def installer_command(system: str, installer: Path, args: Sequence[str]) -> list
     raise LiteUnavailable(f"Shelter Lite supports macOS and Windows, not {system}.")
 
 
+def child_environment(system: str) -> dict[str, str]:
+    env = dict(os.environ)
+    if system == "Windows":
+        # PowerShell 7 exports its own module path; Windows PowerShell 5.1 inheriting it
+        # loads incompatible core modules and loses cmdlets such as Get-FileHash.
+        env.pop("PSModulePath", None)
+    return env
+
+
 def find_installer(system: str) -> Path:
     installer = INSTALLERS.get(system)
     if installer is None:
@@ -85,6 +94,6 @@ def run(args: Sequence[str], system: str | None = None) -> int:
         print(f"shelter: {error}", file=sys.stderr)
         return 1
     try:
-        return exit_code(subprocess.run(command).returncode)
+        return exit_code(subprocess.run(command, env=child_environment(system)).returncode)
     except KeyboardInterrupt:
         return 128 + signal.SIGINT
